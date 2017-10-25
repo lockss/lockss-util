@@ -1,0 +1,7 @@
+# Maven
+target/
+
+# Eclipse artifacts
+.classpath
+.project
+.settings/
