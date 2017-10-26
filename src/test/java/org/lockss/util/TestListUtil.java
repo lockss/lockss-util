@@ -47,14 +47,28 @@ import static org.hamcrest.Matchers.*;
  */
 public class TestListUtil {
 
-  private void assertModifiable(List<?> lst) {
+  private static void assertImmutable(List<?> lst) {
+    try {
+      lst.add(null);
+      fail("Expected unmodifiable list but got modifiable list");
+    }
+    catch (UnsupportedOperationException expected) {
+      // Expected
+    }
+  }
+  
+  private static void assertModifiable(List<?> lst) {
     try {
       lst.add(null);
     }
     catch (UnsupportedOperationException uoe) {
-      fail("Unmodifable list");
+      fail("Expected modifiable list but got unmodifiable list");
     }
     lst.remove(lst.size() - 1);
+  }
+
+  private static <T> LinkedList<T> linkedList(T... elements) {
+    return new LinkedList<T>(Arrays.asList(elements));
   }
   
   @Test
@@ -63,19 +77,16 @@ public class TestListUtil {
     assertEquals(0, ls1.size());
     assertModifiable(ls1);
     
-    final String NULL_STRING = null;
-    List<String> ls2 = ListUtil.list(NULL_STRING);
+    List<String> ls2 = ListUtil.list((String)null);
     assertEquals(1, ls2.size());
     assertNull(ls2.get(0));
     assertModifiable(ls2);
     
-    final String[] NULL_ARRAY = null;
-    List<String> ls3 = ListUtil.list(NULL_ARRAY);
+    List<String> ls3 = ListUtil.list((String[])null);
     assertEquals(0, ls3.size());
     assertModifiable(ls3);
     
-    final String[] EMPTY_ARRAY = {};
-    List<String> ls4 = ListUtil.list(EMPTY_ARRAY);
+    List<String> ls4 = ListUtil.list(new String[] {});
     assertEquals(0, ls4.size());
     assertModifiable(ls4);
     
@@ -94,26 +105,20 @@ public class TestListUtil {
   
   @Test
   public void testAppend() {
-    List<String> ls1 = ListUtil.append();
-    assertEquals(0, ls1.size());
+    assertThat(ListUtil.append(), empty());
     
-    List<String> ls2 = ListUtil.append(null);
-    assertEquals(0, ls2.size());
+    assertThat(ListUtil.append(null), empty());
     
-    List<String> ls3 = ListUtil.append(null, null, null);
-    assertEquals(0, ls3.size());
+    assertThat(ListUtil.append(null, null, null), empty());
     
-    List<String> ls4 = ListUtil.append(ListUtil.list("1a", "1b", "1c"), ListUtil.list("2a"), ListUtil.list("3a", "3b"));
-    assertEquals(6, ls4.size());
-    assertThat(ls4, contains("1a", "1b", "1c", "2a", "3a", "3b"));
-    
-    List<String> ls5 = ListUtil.append(ListUtil.list("1a", "1b", "1c"), null, ListUtil.list("3a", "3b"));
-    assertEquals(5, ls5.size());
-    assertThat(ls5, contains("1a", "1b", "1c", "3a", "3b"));
+    assertThat(ListUtil.append(ListUtil.list("1a", "1b", "1c"), ListUtil.list("2a"), ListUtil.list("3a", "3b")),
+               contains("1a", "1b", "1c", "2a", "3a", "3b"));
 
-    List<String> ls6 = ListUtil.append(ListUtil.list("1a", "1b", "1c"), ListUtil.list(), ListUtil.list("3a", "3b"));
-    assertEquals(5, ls6.size());
-    assertThat(ls6, contains("1a", "1b", "1c", "3a", "3b"));
+    assertThat(ListUtil.append(ListUtil.list("1a", "1b", "1c"), null, ListUtil.list("3a", "3b")),
+               contains("1a", "1b", "1c", "3a", "3b"));
+
+    assertThat(ListUtil.append(ListUtil.list("1a", "1b", "1c"), ListUtil.list(), ListUtil.list("3a", "3b")), 
+               contains("1a", "1b", "1c", "3a", "3b"));
   }
   
 //  @Test
@@ -122,6 +127,48 @@ public class TestListUtil {
 //    assertIsomorphic(arr, ListUtil.fromArray(arr));
 //  }
 
+  @Test
+  public void testPrependAll() {
+    assertThat(ListUtil.prependAll(null, null), empty());
+
+    assertThat(ListUtil.prependAll(ListUtil.list(), null), empty());
+    
+    assertThat(ListUtil.prependAll(ListUtil.list("1", "2", "3"), null),
+               contains("1", "2", "3"));
+
+    assertThat(ListUtil.prependAll(null, linkedList()), empty());
+    
+    assertThat(ListUtil.prependAll(ListUtil.list(), linkedList()), empty());
+    
+    assertThat(ListUtil.prependAll(ListUtil.list("1", "2", "3"), linkedList()),
+               contains("1", "2", "3"));
+    
+    assertThat(ListUtil.prependAll(null, linkedList("4", "5", "6")),
+               contains("4", "5", "6"));
+    
+    assertThat(ListUtil.prependAll(ListUtil.list(), linkedList("4", "5", "6")),
+               contains("4", "5", "6"));
+
+    assertThat(ListUtil.prependAll(ListUtil.list("1", "2", "3"), linkedList("4", "5", "6")),
+               contains("1", "2", "3", "4", "5", "6"));
+  }
+  
+  @Test
+  public void testMinimalArrayList() {
+    List<String> lst1 = new ArrayList<>(4);
+    lst1.addAll(Arrays.asList("1", "2", "3"));
+    List<String> lst1constructor = new ArrayList<String>(lst1);
+    List<String> lst1minimal = ListUtil.minimalArrayList(lst1);
+    assertEquals(lst1minimal, lst1constructor);
+    assertSame(lst1minimal, lst1);
+
+    List<String> lst2 = new LinkedList<>();
+    lst2.addAll(Arrays.asList("1", "2", "3"));
+    ArrayList<String> lst2minimal = ListUtil.minimalArrayList(lst2);
+    assertEquals(lst2, lst2minimal);
+    assertThat(lst2minimal, isA(ArrayList.class));
+  }
+  
   @Test
   public void testFromIterator() {
     assertThrows(NullPointerException.class, () -> ListUtil.fromIterator(null));
@@ -144,48 +191,18 @@ public class TestListUtil {
                  ListUtil.fromIterable(IteratorUtils.asIterable(new ArrayIterator<String>(arr))));
   }
 
-//  @Test
-//  public void testFromCSV() {
-//    String csv = "1,2,4";
-//    String arr[] = {"1", "2", "4"};
-//    assertIsomorphic(arr, ListUtil.fromCSV(csv));
-//  }
-//
-//  LinkedList lList(List lst) {
-//    return new LinkedList(lst);
-//  }
-//
-//  @Test
-//  public void testPrependAll() {
-//    assertEquals(Collections.EMPTY_LIST,
-//		 ListUtil.prependAll(null, (LinkedList)null));
-//    assertEquals(ListUtil.list("1"),
-//		 ListUtil.prependAll(ListUtil.list("1"), (LinkedList)null));
-//    assertEquals(ListUtil.list("1"),
-//		 ListUtil.prependAll(null, lList(ListUtil.list("1"))));
-//    assertEquals(Collections.EMPTY_LIST,
-//		 ListUtil.prependAll(Collections.EMPTY_LIST,
-//				     lList(Collections.EMPTY_LIST)));
-//    assertEquals(ListUtil.list("1"),
-//		 ListUtil.prependAll(ListUtil.list("1"),
-//				     lList(Collections.EMPTY_LIST)));
-//    assertEquals(ListUtil.list("1"),
-//		 ListUtil.prependAll(Collections.EMPTY_LIST,
-//				     lList(ListUtil.list("1"))));
-//    assertEquals(ListUtil.list("1", "2", "3"),
-//		 ListUtil.prependAll(Collections.EMPTY_LIST,
-//				     lList(ListUtil.list("1", "2", "3"))));
-//    assertEquals(ListUtil.list("1", "2", "3"),
-//		 ListUtil.prependAll(ListUtil.list("1", "2", "3"),
-//				     lList(Collections.EMPTY_LIST)));
-//    assertEquals(ListUtil.list("1", "2", "3"),
-//		 ListUtil.prependAll(ListUtil.list("1"),
-//				     lList(ListUtil.list("2", "3"))));
-//    assertEquals(ListUtil.list("1", "2", "3"),
-//		 ListUtil.prependAll(ListUtil.list("1", "2"),
-//				     lList(ListUtil.list("3"))));
-//  }
-//
+  @Test
+  public void testFromCSV() {
+    assertThrows(NullPointerException.class, () -> ListUtil.fromCSV(null));
+
+    assertEquals(0, ListUtil.fromCSV("").size());
+
+    assertEquals(0, ListUtil.fromCSV(",,,").size());
+
+    String[] arr = {"1", "2", "4"};
+    assertThat(ListUtil.fromCSV(String.join(",", arr)), contains(arr));
+  }
+
 //  @Test
 //  public void testAppend() {
 //    List l1 = ListUtil.list("1", "2", "3");
@@ -206,7 +223,7 @@ public class TestListUtil {
     l0.add("21");
     assertEquals(l0.size(), l1.size() + 1);
     assertThat(l1, contains(arr1));
-    assertThrows(UnsupportedOperationException.class, () -> l1.add("d"), "Should not be able to add to immutable list");
+    assertImmutable(l1);
     
     List<Object> l2 = ListUtil.list(new Exception(), new LinkageError());
     List<Throwable> l3 = ListUtil.immutableListOfType(l2, Throwable.class);
@@ -231,20 +248,4 @@ public class TestListUtil {
     assertThat(rv1, contains(new Integer(7), null, "foo"));
   }
 
-  @Test
-  public void testMinimalArrayList() {
-    List<String> lst1 = new ArrayList<>(4);
-    lst1.addAll(Arrays.asList("1", "2", "3"));
-    List<String> lst1constructor = new ArrayList<String>(lst1);
-    List<String> lst1minimal = ListUtil.minimalArrayList(lst1);
-    assertEquals(lst1minimal, lst1constructor);
-    assertSame(lst1minimal, lst1);
-
-    List<String> lst2 = new LinkedList<>();
-    lst2.addAll(Arrays.asList("1", "2", "3"));
-    ArrayList<String> lst2minimal = ListUtil.minimalArrayList(lst2);
-    assertEquals(lst2, lst2minimal);
-    assertThat(lst2minimal, isA(ArrayList.class));
-  }
-  
 }

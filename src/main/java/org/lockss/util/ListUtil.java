@@ -123,22 +123,34 @@ public class ListUtil {
     return list(array);
   }
   
-  /** Add all elements of ofList to toList  */
-  public static LinkedList prependAll(List ofList, LinkedList toList) {
-    if (ofList == null) {
-      if (toList == null) {
-	return new LinkedList();
-      } else {
-	return toList;
-      }
-    }
+  /**
+   * <p>
+   * Prepends the elements of <code>ofList</code> to the linked list
+   * <code>toList</code>, creating a new linked list from <code>ofList</code> if
+   * <code>toList</code> is null.
+   * </p>
+   * <p>
+   * If <code>toList</code> is null, the result is a new linked list made from
+   * <code>ofList</code>. If <code>ofList</code> is null,
+   * </p>
+   * 
+   * @param ofList
+   *          The list whose elements are prepended.
+   * @param toList
+   *          The list to which elements are prepended.
+   * @since 1.0.0
+   * @see LinkedList#addFirst(Object)
+   **/
+  public static <T> LinkedList<T> prependAll(List<T> ofList, LinkedList<T> toList) {
     if (toList == null) {
-      return new LinkedList(ofList);
+      return ofList == null ? new LinkedList<T>() : new LinkedList<T>(ofList);
     }
-    List revOfList = new ArrayList(ofList);
-    Collections.reverse(revOfList);
-    for (Iterator iter = revOfList.iterator(); iter.hasNext(); ) {
-      toList.addFirst(iter.next());
+    if (ofList == null) {
+      return toList;
+    }
+    List<T> revOfList = reverseCopy(ofList);
+    for (T item : revOfList) {
+      toList.addFirst(item);
     }
     return toList;
   }
@@ -210,7 +222,26 @@ public class ListUtil {
     return IterableUtils.toList(iterable);
   }
 
-  /** Create a list containing the elements of a comma separated string */
+  /**
+   * <p>
+   * Creates a list containing the elements of a comma separated string, with
+   * the caveat that the processing is done by {@link StringTokenizer} with the
+   * delimiter <code>","</code>.
+   * <p>
+   * <p>
+   * {@link StringTokenizer} simplistically looks for separators without a
+   * quoting mechanism to return tokens containing the delimiter, nor does it
+   * trim whitespace between tokens and delimiters. It also does not return
+   * empty tokens, so calling this method with <code>",,,"</code> will return an
+   * empty list, not a list of four empty strings.
+   * </p>
+   *
+   * @param csv
+   *          A simplistic CSV string.
+   * @return A list of tokens as separated by commas in the given input string.
+   * @since 1.0.0
+   * @see StringTokenizer
+   **/
   public static List<String> fromCSV(String csv) {
     List<String> ret = list();
     StringTokenizer st = new StringTokenizer(csv, ",");
@@ -316,6 +347,7 @@ public class ListUtil {
    * @param list The list to reverse.
    * @return A new list with elements in reverse order from the original list.
    * @since 1.0.0
+   * @see Collections#reverse(List)
    */
   public static <T> List<T> reverseCopy(List<T> list) {
     List<T> ret = new ArrayList<T>(list);

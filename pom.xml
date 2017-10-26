@@ -88,19 +88,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <scope>test</scope>
     </dependency>
     
-    <!-- JUnit 5 Platform Launcher needed by Eclipse -->
-    <dependency>
-      <groupId>org.junit.platform</groupId>
-      <artifactId>junit-platform-launcher</artifactId>
-      <version>${junit.platform.version}</version>
-      <scope>test</scope>
-    </dependency>
-
     <!--  Hamcrest needed by numerous tests -->    
     <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest-library</artifactId>
       <version>1.3</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- JUnit 5 Platform Launcher needed by IDEs -->
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-launcher</artifactId>
+      <version>${junit.platform.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -111,19 +111,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <version>4.1</version>
     </dependency>
 
-    <!-- Apache Commons Lang needed by StringUtil -->
+    <!-- Apache Commons Lang needed by StringUtil
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
       <version>3.6</version>
-    </dependency>
+    </dependency> -->
 
-    <!--  SLF4J needed by pretty much everything -->
+    <!--  SLF4J needed by many classes
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>1.7.25</version>
-    </dependency>
+    </dependency> -->
 
   </dependencies>
   
