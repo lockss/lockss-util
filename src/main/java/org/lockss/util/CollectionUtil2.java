@@ -42,7 +42,7 @@ import java.util.function.*;
  * 
  * @since 1.1.0
  */
-public class CollectionUtil {
+public class CollectionUtil2 {
 
   /**
    * <p>
@@ -194,7 +194,7 @@ public class CollectionUtil {
    *          The type of collection.
    * @return A collection of tokens as separated by commas in the given input string.
    * @since 1.1.0
-   * @see CollectionUtil#fromCsvStringTokenizer(Supplier, String)
+   * @see CollectionUtil2#fromCsvStringTokenizer(Supplier, String)
    **/
   protected static <C extends Collection<String>> C fromCsvStringTokenizer(Supplier<C> funcEmptyCollection,
                                                                            String str) {

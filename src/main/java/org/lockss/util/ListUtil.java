@@ -73,10 +73,10 @@ public class ListUtil {
    * @return A modifiable {@link List} of those elements (an empty list if no
    *         elements).
    * @since 1.0.0
-   * @see CollectionUtil#addAll(Collection, Object...)
+   * @see CollectionUtil2#addAll(Collection, Object...)
    */
   public static <T> List<T> list(T... elements) {
-    return CollectionUtil.collection(ArrayList::new, elements);
+    return CollectionUtil2.collection(ArrayList::new, elements);
   }
   
   /**
@@ -206,10 +206,10 @@ public class ListUtil {
    *          The type of element contained in the list.
    * @return A list built from consuming the iterator.
    * @since 1.0.0
-   * @see CollectionUtil#fromIterator(Supplier, Iterator)
+   * @see CollectionUtil2#fromIterator(Supplier, Iterator)
    */
   public static <T> List<T> fromIterator(Iterator<T> iterator) {
-    return CollectionUtil.fromIterator(ArrayList::new, iterator);
+    return CollectionUtil2.fromIterator(ArrayList::new, iterator);
   }
 
   /**
@@ -223,10 +223,10 @@ public class ListUtil {
    *          The type of element contained in the list.
    * @return A list built from the elements in the iterable.
    * @since 1.0.0
-   * @see CollectionUtil#fromIterable(Supplier, Iterable)
+   * @see CollectionUtil2#fromIterable(Supplier, Iterable)
    */
   public static <T> List<T> fromIterable(Iterable<T> iterable) {
-    return CollectionUtil.fromIterable(ArrayList::new, iterable);
+    return CollectionUtil2.fromIterable(ArrayList::new, iterable);
   }
 
   /**
@@ -247,10 +247,10 @@ public class ListUtil {
    *          A simplistic CSV string.
    * @return A list of tokens as separated by commas in the given input string.
    * @since 1.0.0
-   * @see CollectionUtil#fromCsvStringTokenizer(Supplier, String)
+   * @see CollectionUtil2#fromCsvStringTokenizer(Supplier, String)
    **/
   public static List<String> fromCSV(String csv) {
-    return CollectionUtil.fromCsvStringTokenizer(ArrayList::new, csv);
+    return CollectionUtil2.fromCsvStringTokenizer(ArrayList::new, csv);
   }
 
   /**
@@ -328,7 +328,7 @@ public class ListUtil {
   private static <T> List<T> immutableListOfType(List<?> list,
                                                  Class<T> type,
 					         boolean nullOk) {
-    return CollectionUtil.immutableCollectionOfType((IntFunction<List<T>>)ArrayList::new,
+    return CollectionUtil2.immutableCollectionOfType((IntFunction<List<T>>)ArrayList::new,
                                                     Collections::unmodifiableList,
                                                     list,
                                                     type,

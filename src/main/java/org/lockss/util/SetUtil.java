@@ -35,8 +35,6 @@ package org.lockss.util;
 import java.util.*;
 import java.util.function.*;
 
-import org.apache.commons.collections4.*;
-
 /**
  * <p>
  * {@link Set} utilities.
@@ -69,10 +67,10 @@ public class SetUtil {
    * @param <T>
    *          The type of element contained in the set.
    * @since 1.1.0
-   * @see CollectionUtil#addAll(Collection, Object...)
+   * @see CollectionUtil2#addAll(Collection, Object...)
    */
   public static <T> Set<T> set(T... elements) {
-    return CollectionUtil.collection(() -> new HashSet<T>(), elements);
+    return CollectionUtil2.collection(HashSet::new, elements);
   }
   
   /**
@@ -144,12 +142,12 @@ public class SetUtil {
    * @throws ClassCastException
    *           if an item is not of the proper type.
    * @since 1.1.0
-   * @see CollectionUtil#immutableCollectionOfType(IntFunction, UnaryOperator, Collection, Class, boolean)
+   * @see CollectionUtil2#immutableCollectionOfType(IntFunction, UnaryOperator, Collection, Class, boolean)
    */
   private static <T> Set<T> immutableSetOfType(Set<?> set,
                                                Class<T> type,
                                                boolean nullOk) {
-    return CollectionUtil.immutableCollectionOfType((IntFunction<Set<T>>)HashSet::new,
+    return CollectionUtil2.immutableCollectionOfType((IntFunction<Set<T>>)HashSet::new,
                                                     Collections::unmodifiableSet,
                                                     set,
                                                     type,
@@ -221,10 +219,10 @@ public class SetUtil {
    *          The type of element contained in the set.
    * @return A set built from consuming the iterator.
    * @since 1.1.0
-   * @see CollectionUtil#fromIterator(Supplier, Iterator)
+   * @see CollectionUtil2#fromIterator(Supplier, Iterator)
    */
   public static <T> Set<T> fromIterator(Iterator<T> iterator) {
-    return CollectionUtil.fromIterator(HashSet::new, iterator);
+    return CollectionUtil2.fromIterator(HashSet::new, iterator);
   }
 
   /**
@@ -238,7 +236,7 @@ public class SetUtil {
    *          The type of element contained in the set.
    * @return A set built from the elements in the iterable.
    * @since 1.1.0
-   * @see CollectionUtil#fromIterable(Supplier, Iterable)
+   * @see CollectionUtil2#fromIterable(Supplier, Iterable)
    */
   public static <T> Set<T> fromIterable(Iterable<T> iterable) {
     return fromIterator(iterable.iterator());
@@ -262,9 +260,9 @@ public class SetUtil {
    *          A simplistic CSV string.
    * @return A set of tokens as separated by commas in the given input string.
    * @since 1.1.0
-   * @see CollectionUtil#fromCsvStringTokenizer(Supplier, String)
+   * @see CollectionUtil2#fromCsvStringTokenizer(Supplier, String)
    **/
   public static Set<String> fromCSV(String csv) {
-    return CollectionUtil.fromCsvStringTokenizer(HashSet::new, csv);
+    return CollectionUtil2.fromCsvStringTokenizer(HashSet::new, csv);
   }
 }
