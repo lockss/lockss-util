@@ -43,7 +43,12 @@ import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 
 /**
- * This is the test class for org.lockss.util.ListUtil
+ * <p>
+ * Tests the {@link ListUtil} class.
+ * </p>
+ * 
+ * @since 1.0.0
+ * @see ListUtil
  */
 public class TestListUtil {
 

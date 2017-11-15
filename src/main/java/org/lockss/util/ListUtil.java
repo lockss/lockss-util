@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.lockss.util;
 
 import java.util.*;
+import java.util.function.*;
 
 import org.apache.commons.collections4.*;
 
@@ -67,16 +68,15 @@ public class ListUtil {
    * 
    * @param elements
    *          A succession of elements (possibly zero).
+   * @param <T>
+   *          The type of element contained in the list.
    * @return A modifiable {@link List} of those elements (an empty list if no
-   *         items).
+   *         elements).
    * @since 1.0.0
+   * @see CollectionUtil#addAll(Collection, Object...)
    */
   public static <T> List<T> list(T... elements) {
-    ArrayList<T> ret = new ArrayList<T>();
-    if (elements != null) {
-      CollectionUtils.addAll(ret, elements);
-    }
-    return ret;
+    return CollectionUtil.collection(ArrayList::new, elements);
   }
   
   /**
@@ -89,6 +89,8 @@ public class ListUtil {
    * 
    * @param lists
    *          A succession of lists (possibly zero).
+   * @param <T>
+   *          The type of element contained in the list.
    * @return A new, single {@link List} made of the elements of all the non-null
    *         lists concatenated together.
    * @since 1.0.0
@@ -107,12 +109,14 @@ public class ListUtil {
   
   /**
    * <p>
-   * Now that {@link #list(Object...)} is generic, this method does
-   * exactly the same thing and simply calls it.
+   * Now that {@link #list(Object...)} is generic, this method does exactly the
+   * same thing and simply calls it.
    * </p>
    * 
    * @param array
    *          An array of objects.
+   * @param <T>
+   *          The type of element contained in the list.
    * @return A modifiable {@link List} made of the objects in the array.
    * @since 1.0.0
    * @deprecated Use {@link #list(Object...)} instead.
@@ -138,6 +142,8 @@ public class ListUtil {
    *          The list whose elements are prepended.
    * @param toList
    *          The list to which elements are prepended.
+   * @param <T>
+   *          The type of element contained in the list.
    * @since 1.0.0
    * @see LinkedList#addFirst(Object)
    **/
@@ -163,6 +169,8 @@ public class ListUtil {
    * 
    * @param lst
    *          A list.
+   * @param <T>
+   *          The type of element contained in the list.
    * @return An {@link ArrayList} instance of the same elements, trimmed to the
    *         size of the given list. If the input list is itself an
    *         {@link ArrayList} instance, that instance is trimmed an returned
@@ -194,32 +202,31 @@ public class ListUtil {
    * 
    * @param iterator
    *          An iterator.
+   * @param <T>
+   *          The type of element contained in the list.
    * @return A list built from consuming the iterator.
-   * @since 1.0.0 Collections instead.
-   * @see IteratorUtils#toList(Iterator)
+   * @since 1.0.0
+   * @see CollectionUtil#fromIterator(Supplier, Iterator)
    */
   public static <T> List<T> fromIterator(Iterator<T> iterator) {
-    return IteratorUtils.toList(iterator);
+    return CollectionUtil.fromIterator(ArrayList::new, iterator);
   }
 
   /**
    * <p>
    * Creates a list containing the elements of the given iterable.
    * </p>
-   * <p>
-   * The preferred way of doing this is with
-   * {@link IterableUtils#toList(Iterable)}, which behaves exactly the same way
-   * as this method.
-   * </p>
    * 
    * @param iterable
    *          An iterable.
+   * @param <T>
+   *          The type of element contained in the list.
    * @return A list built from the elements in the iterable.
    * @since 1.0.0
-   * @see IterableUtils#toList(Iterable)
+   * @see CollectionUtil#fromIterable(Supplier, Iterable)
    */
   public static <T> List<T> fromIterable(Iterable<T> iterable) {
-    return IterableUtils.toList(iterable);
+    return CollectionUtil.fromIterable(ArrayList::new, iterable);
   }
 
   /**
@@ -240,15 +247,10 @@ public class ListUtil {
    *          A simplistic CSV string.
    * @return A list of tokens as separated by commas in the given input string.
    * @since 1.0.0
-   * @see StringTokenizer
+   * @see CollectionUtil#fromCsvStringTokenizer(Supplier, String)
    **/
   public static List<String> fromCSV(String csv) {
-    List<String> ret = list();
-    StringTokenizer st = new StringTokenizer(csv, ",");
-    while (st.hasMoreTokens()) {
-      ret.add(st.nextToken());
-    }
-    return ret;
+    return CollectionUtil.fromCsvStringTokenizer(ArrayList::new, csv);
   }
 
   /**
@@ -262,6 +264,8 @@ public class ListUtil {
    * @param type
    *          The class with which all items of the list must be
    *          assignment-compatible.
+   * @param <T>
+   *          The type of element contained in the list.
    * @throws NullPointerException
    *           if the list is null or if any element is null.
    * @throws ClassCastException
@@ -285,6 +289,8 @@ public class ListUtil {
    * @param type
    *          The class with which all items of the list must be
    *          assignment-compatible.
+   * @param <T>
+   *          The type of element contained in the list.
    * @throws NullPointerException
    *           if the list is null
    * @throws ClassCastException
@@ -311,32 +317,22 @@ public class ListUtil {
    *          assignment-compatible.
    * @param nullOk
    *          Whether null elements are allowed.
+   * @param <T>
+   *          The type of element contained in the list.
    * @throws NullPointerException
    *           if the list is null or if any element is null.
    * @throws ClassCastException
    *           if an item is not of the proper type.
    * @since 1.0.0
-   * @see #immutableListOfType(List, Class, boolean)
    */
   private static <T> List<T> immutableListOfType(List<?> list,
                                                  Class<T> type,
 					         boolean nullOk) {
-    List<T> ret = new ArrayList<T>(list.size());
-    int index = 0;
-    for (Object item : list) {
-      if (item == null) {
-	if (!nullOk) {
-	  throw new NullPointerException(String.format("Item at index %d is null", index));
-	}
-      }
-      else if (!type.isInstance(item)) {
-        throw new ClassCastException(String.format("Item at index %d is not of type %s: %s",
-                                                   index, type.getName(), item.getClass().getName()));
-      }
-      ret.add(type.cast(item));
-      ++index;
-    }
-    return Collections.unmodifiableList(ret);
+    return CollectionUtil.immutableCollectionOfType((IntFunction<List<T>>)ArrayList::new,
+                                                    Collections::unmodifiableList,
+                                                    list,
+                                                    type,
+                                                    nullOk);
   }
 
   /**
@@ -344,7 +340,10 @@ public class ListUtil {
    * Returns a copy of the list, with elements in reverse order.
    * </p>
    * 
-   * @param list The list to reverse.
+   * @param list
+   *          The list to reverse.
+   * @param <T>
+   *          The type of element contained in the list.
    * @return A new list with elements in reverse order from the original list.
    * @since 1.0.0
    * @see Collections#reverse(List)
