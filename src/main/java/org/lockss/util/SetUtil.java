@@ -67,7 +67,7 @@ public class SetUtil {
    * @param <T>
    *          The type of element contained in the set.
    * @since 1.1.0
-   * @see CollectionUtil2#addAll(Collection, Object...)
+   * @see CollectionUtil2#collection(Supplier, Object...)
    */
   public static <T> Set<T> set(T... elements) {
     return CollectionUtil2.collection(HashSet::new, elements);

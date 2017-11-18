@@ -57,9 +57,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   
     <plugins>
     
+      <!--  For JUnit 5, because of https://github.com/junit-team/junit5/issues/809 -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.19.1</version><!-- because of https://github.com/junit-team/junit5/issues/809 -->
+        <version>2.19.1</version>
         <dependencies>
           <dependency>
             <groupId>org.junit.platform</groupId>
@@ -72,6 +73,36 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             <version>${junit.jupiter.version}</version>
           </dependency>
         </dependencies>
+      </plugin>
+      
+      <!--  To publish to Maven Central; see http://central.sonatype.org/pages/apache-maven.html -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.0.1</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    
+      <!--  To publish to Maven Central; see http://central.sonatype.org/pages/apache-maven.html -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.9.1</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       
     </plugins>

@@ -73,7 +73,7 @@ public class ListUtil {
    * @return A modifiable {@link List} of those elements (an empty list if no
    *         elements).
    * @since 1.0.0
-   * @see CollectionUtil2#addAll(Collection, Object...)
+   * @see CollectionUtil2#collection(Supplier, Object...)
    */
   public static <T> List<T> list(T... elements) {
     return CollectionUtil2.collection(ArrayList::new, elements);
@@ -144,6 +144,8 @@ public class ListUtil {
    *          The list to which elements are prepended.
    * @param <T>
    *          The type of element contained in the list.
+   * @return A linked list with the elements of the first prepended to the
+   *         elements of the second.
    * @since 1.0.0
    * @see LinkedList#addFirst(Object)
    **/
@@ -234,7 +236,7 @@ public class ListUtil {
    * Creates a list containing the elements of a comma separated string, with
    * the caveat that the processing is done by {@link StringTokenizer} with the
    * delimiter <code>","</code>.
-   * <p>
+   * </p>
    * <p>
    * {@link StringTokenizer} simplistically looks for separators without a
    * quoting mechanism to return tokens containing the delimiter, nor does it
@@ -266,6 +268,7 @@ public class ListUtil {
    *          assignment-compatible.
    * @param <T>
    *          The type of element contained in the list.
+   * @return An immutable copy of the list.
    * @throws NullPointerException
    *           if the list is null or if any element is null.
    * @throws ClassCastException
@@ -291,6 +294,7 @@ public class ListUtil {
    *          assignment-compatible.
    * @param <T>
    *          The type of element contained in the list.
+   * @return An immutable copy of the list.
    * @throws NullPointerException
    *           if the list is null
    * @throws ClassCastException
@@ -319,15 +323,16 @@ public class ListUtil {
    *          Whether null elements are allowed.
    * @param <T>
    *          The type of element contained in the list.
+   * @return An immutable copy of the list.
    * @throws NullPointerException
    *           if the list is null or if any element is null.
    * @throws ClassCastException
    *           if an item is not of the proper type.
    * @since 1.0.0
    */
-  private static <T> List<T> immutableListOfType(List<?> list,
-                                                 Class<T> type,
-					         boolean nullOk) {
+  protected static <T> List<T> immutableListOfType(List<?> list,
+                                                   Class<T> type,
+                                                   boolean nullOk) {
     return CollectionUtil2.immutableCollectionOfType((IntFunction<List<T>>)ArrayList::new,
                                                     Collections::unmodifiableList,
                                                     list,

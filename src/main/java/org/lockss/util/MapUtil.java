@@ -173,8 +173,8 @@ public class MapUtil {
   }
 
   /** Returns a copy of the map, treating keys as semicolon-separated list
-   * of alternative actual keys.  (<i>Eg</i>, the map [k1 => v1, k2;k3 =>
-   * v2] is transformed into [k1 => v1, k2 => v2, k3 => v2].  The keys are
+   * of alternative actual keys.  (<i>Eg</i>, the map [k1 =&gt; v1, k2;k3 =&gt;
+   * v2] is transformed into [k1 =&gt; v1, k2 =&gt; v2, k3 =&gt; v2].  The keys are
    * trimmed.
    */
   public static <V> Map<String, V> expandAlternativeKeyLists(Map<String, V> map) {

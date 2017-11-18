@@ -96,6 +96,7 @@ public class CollectionUtil2 {
    *          The type of element contained in the collection.
    * @param <C>
    *          The type of collection.
+   * @return An immutable copy of the collection.
    * @throws NullPointerException
    *           if the collection is null or if any element is null.
    * @throws ClassCastException
@@ -179,7 +180,7 @@ public class CollectionUtil2 {
    * Creates a collection containing the elements of a comma separated string, with
    * the caveat that the processing is done by {@link StringTokenizer} with the
    * delimiter <code>","</code>.
-   * <p>
+   * </p>
    * <p>
    * {@link StringTokenizer} simplistically looks for separators without a
    * quoting mechanism to return tokens containing the delimiter, nor does it
@@ -188,6 +189,8 @@ public class CollectionUtil2 {
    * empty collection, not a collection of four empty strings.
    * </p>
    *
+   * @param funcEmptyCollection
+   *          A {@link Supplier} functor that generates an empty collection.
    * @param csv
    *          A simplistic CSV string.
    * @param <C>
@@ -197,9 +200,9 @@ public class CollectionUtil2 {
    * @see CollectionUtil2#fromCsvStringTokenizer(Supplier, String)
    **/
   protected static <C extends Collection<String>> C fromCsvStringTokenizer(Supplier<C> funcEmptyCollection,
-                                                                           String str) {
+                                                                           String csv) {
     C ret = funcEmptyCollection.get();
-    StringTokenizer st = new StringTokenizer(str, ",");
+    StringTokenizer st = new StringTokenizer(csv, ",");
     while (st.hasMoreTokens()) {
        ret.add(st.nextToken());
     }
