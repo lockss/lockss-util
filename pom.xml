@@ -35,12 +35,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
+  <parent>
+    <groupId>org.lockss</groupId>
+    <artifactId>lockss-parent-pom</artifactId>
+    <version>1.0.0</version>
+  </parent>
+
   <groupId>org.lockss</groupId>
   <artifactId>lockss-util</artifactId>
-  <version>1.1.0-SNAPSHOT</version>
+  <version>1.1.0</version>
   <packaging>jar</packaging>
-  <name>lockss-util</name>
-  <description>Basic development and testing utilities used by almost all LOCKSS software projects</description>
+  <name>LOCKSS Development and Testing Utilities</name>
+  <description>Development and testing utilities common to most LOCKSS projects</description>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -73,36 +79,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             <version>${junit.jupiter.version}</version>
           </dependency>
         </dependencies>
-      </plugin>
-      
-      <!--  To publish to Maven Central; see http://central.sonatype.org/pages/apache-maven.html -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-        <version>3.0.1</version>
-        <executions>
-          <execution>
-            <id>attach-sources</id>
-            <goals>
-              <goal>jar-no-fork</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    
-      <!--  To publish to Maven Central; see http://central.sonatype.org/pages/apache-maven.html -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.9.1</version>
-        <executions>
-          <execution>
-            <id>attach-javadocs</id>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
       
     </plugins>
@@ -157,7 +133,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </dependency> -->
 
   </dependencies>
-  
+
+<!--   
   <distributionManagement>
     <snapshotRepository>
       <id>snapshots</id>
@@ -170,5 +147,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <url>http://artifacts.lockss.org:8081/artifactory/libs-release</url>
     </repository>
   </distributionManagement>
+-->
   
 </project>
