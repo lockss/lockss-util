@@ -118,12 +118,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <version>4.1</version>
     </dependency>
 
-    <!-- Apache Commons Lang needed by StringUtil
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
       <version>3.6</version>
-    </dependency> -->
+    </dependency>
 
     <!--  SLF4J needed by many classes
     <dependency>
