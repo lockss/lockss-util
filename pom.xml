@@ -80,6 +80,70 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         </dependencies>
       </plugin>
       
+      <!-- Atlassian plugin to assist with Git Flow workflows -->
+      <plugin>
+        <groupId>external.atlassian.jgitflow</groupId>
+        <artifactId>jgitflow-maven-plugin</artifactId>
+        <version>1.0-m5.1</version>
+        <configuration>
+          <!-- Whether to allow SNAPSHOT dependencies. Default is to fail when finding any SNAPSHOT; default: false -->
+          <allowSnapshots>true</allowSnapshots>
+          <!-- Whether to allow untracked files when checking if the working tree is clean; default: false -->
+          <allowUntracked>true</allowUntracked>
+          <!-- Whether to automatically assign submodules the parent version. If set to false, the user will be prompted for the version of each submodules; default: false -->
+          <autoVersionSubmodules>false</autoVersionSubmodules>
+          <!-- Whether to append the feature name to the version on the feature branch; default: false -->
+          <enableFeatureVersions>false</enableFeatureVersions>
+          <!-- Whether to enable using an ssh-agent; default: false -->
+          <enableSshAgent>true</enableSshAgent>
+          <!-- Whether to rebase the feature branch before merging; default: false -->
+          <featureRebase>false</featureRebase>
+          <!-- Naming conventions -->
+          <flowInitContext>
+            <masterBranchName>master</masterBranchName>
+            <developBranchName>develop</developBranchName>
+            <featureBranchPrefix>feature-</featureBranchPrefix>
+            <releaseBranchPrefix>release-</releaseBranchPrefix>
+            <hotfixBranchPrefix>hotfix-</hotfixBranchPrefix>
+            <versionTagPrefix>version-</versionTagPrefix>
+          </flowInitContext>
+          <!-- Whether to keep the feature branch after finishing the feature; default: false -->
+          <!-- Whether to keep the hotfix branch after finishing the hotfix; default: false -->
+          <!-- Whether to keep the release branch after finishing the release; default: false -->
+          <keepBranch>true</keepBranch>
+          <!-- Whether to turn off maven deployment. If false the "deploy" goal is called. If true the "install" goal is called; default: false -->
+          <noDeploy>true</noDeploy>
+          <!-- Whether to turn off project building. If true the project will NOT be built during feature finish; default: false -->
+          <noFeatureBuild>false</noFeatureBuild>
+          <!-- Whether to turn off merging changes from the feature branch to develop; default: false -->
+          <noFeatureMerge>false</noFeatureMerge>
+          <!-- Whether to turn off project building. If true the project will NOT be built during hotfix finish; default: false -->
+          <noHotfixBuild>false</noHotfixBuild>
+          <!-- Whether to turn off project building. If true the project will NOT be built during release finish; default: false -->
+          <noReleaseBuild>false</noReleaseBuild>
+          <!-- Whether to turn off merging changes from the release branch to master and develop; default: false -->
+          <noReleaseMerge>false</noReleaseMerge>
+          <!-- Whether to turn off tagging the release in git; default: false -->
+          <!-- Whether to turn off tagging the hotfix in git; default: false -->
+          <noTag>false</noTag>
+          <!-- Whether to push feature branches to the remote upstream; default: false -->
+          <pushFeatures>false</pushFeatures>
+          <!-- Whether to push hotfix branches to the remote upstream -->
+          <pushHotfixes>false</pushHotfixes>
+          <!-- Whether to push release branches to the remote upstream; default: false -->
+          <pushReleases>false</pushReleases>
+          <!-- The message prefix to use for all SCM changes; default: "" -->
+          <scmCommentPrefix></scmCommentPrefix>
+          <!-- Whether to squash commits into a single commit before merging; default: false -->
+          <squash>true</squash>
+          <!-- Whether, for modules which refer to each other within the same multi-module build, to update dependencies version to the release version; default: true -->
+          <!-- Whether to update dependencies version to the hotfix version; default: true -->
+          <updateDependencies>true</updateDependencies>
+          <!-- Whether to use the release profile that adds sources and javadocs to the released artifact, if appropriate. If set to true, the plugin sets the property "performRelease" to true, which activates the profile "release-profile", which is inherited from the super pom. Default: true -->
+          <useReleaseProfile>false</useReleaseProfile>
+        </configuration>
+      </plugin>
+  
     </plugins>
 
   </build>
