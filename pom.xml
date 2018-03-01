@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- 
 
-Copyright (c) 2000-2017, Board of Trustees of Leland Stanford Jr. University
+Copyright (c) 2000-2018, Board of Trustees of Leland Stanford Jr. University
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <parent>
     <groupId>org.lockss</groupId>
     <artifactId>lockss-parent-pom</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
   </parent>
   
   <artifactId>lockss-util</artifactId>
@@ -131,19 +131,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <version>4.1</version>
     </dependency>
 
-    <!-- Apache Commons Lang needed by StringUtil
+    <!-- Apache Commons Lang needed by StringUtil -->
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
       <version>3.6</version>
-    </dependency> -->
+    </dependency>
 
-    <!--  SLF4J needed by many classes
+    <!-- ORO needed by StringUtil -->
+    <dependency>
+      <groupId>oro</groupId>
+      <artifactId>oro</artifactId>
+      <version>2.0.8</version>
+    </dependency>
+
+    <!--  SLF4J needed by many classes -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>1.7.25</version>
-    </dependency> -->
+    </dependency>
 
   </dependencies>
 
