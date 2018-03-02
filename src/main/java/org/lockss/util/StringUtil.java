@@ -1205,7 +1205,7 @@ public class StringUtil {
    * character using the default encoding*/
   public static String fromInputStream(InputStream in) throws IOException {
     // use our default encoding rather than system default
-    return fromReader(new InputStreamReader(in, Constants.DEFAULT_ENCODING));
+    return fromReader(new InputStreamReader(in, EncodingUtil.DEFAULT_ENCODING));
   }
 
   /** Return a string with lines from an InputStream separated by a newline
@@ -1214,7 +1214,7 @@ public class StringUtil {
   public static String fromInputStream(InputStream in, int maxSize)
       throws IOException {
     // use our default encoding rather than system default
-    return fromReader(new InputStreamReader(in, Constants.DEFAULT_ENCODING),
+    return fromReader(new InputStreamReader(in, EncodingUtil.DEFAULT_ENCODING),
 		      maxSize);
   }
 
@@ -1483,12 +1483,12 @@ public class StringUtil {
 	} else {
 	  numstr = str.substring(0, len - 1);
 	  switch (Character.toUpperCase(suffix)) {
-	  case 'S': mult = Constants.SECOND; break;
-	  case 'M': mult = Constants.MINUTE; break;
-	  case 'H': mult = Constants.HOUR; break;
-	  case 'D': mult = Constants.DAY; break;
-	  case 'W': mult = Constants.WEEK; break;
-	  case 'Y': mult = Constants.YEAR; break;
+	  case 'S': mult = TimeUtil.SECOND; break;
+	  case 'M': mult = TimeUtil.MINUTE; break;
+	  case 'H': mult = TimeUtil.HOUR; break;
+	  case 'D': mult = TimeUtil.DAY; break;
+	  case 'W': mult = TimeUtil.WEEK; break;
+	  case 'Y': mult = TimeUtil.YEAR; break;
 	  default:
 	    throw new NumberFormatException("Illegal time interval suffix: " +
 					    str);
@@ -1603,11 +1603,11 @@ public class StringUtil {
   }
 
   static UD units[] = {
-    new UD("w", Constants.WEEK, 3, "h"),
-    new UD("d", Constants.DAY, 1, "m"),
-    new UD("h", Constants.HOUR),
-    new UD("m", Constants.MINUTE),
-    new UD("s", Constants.SECOND, 0),
+    new UD("w", TimeUtil.WEEK, 3, "h"),
+    new UD("d", TimeUtil.DAY, 1, "m"),
+    new UD("h", TimeUtil.HOUR),
+    new UD("m", TimeUtil.MINUTE),
+    new UD("s", TimeUtil.SECOND, 0),
   };
 
   public static String protectedDivide(long numerator, long denominator) {
@@ -1638,7 +1638,7 @@ public class StringUtil {
   }
 
   private static String posTimeIntervalToString(long millis, StringBuilder sb) {
-    if (millis < 10 * Constants.SECOND) {
+    if (millis < 10 * TimeUtil.SECOND) {
       sb.append(millis);
       sb.append("ms");
     } else {
@@ -1679,33 +1679,33 @@ public class StringUtil {
       sb.append("-");
       millis = -millis;
     }
-    if (millis >= Constants.SECOND) {
-      temp = millis / Constants.DAY;
+    if (millis >= TimeUtil.SECOND) {
+      temp = millis / TimeUtil.DAY;
       if (temp > 0) {
 	sb.append(numberOfUnits(temp, "day"));
-	millis -= temp * Constants.DAY;
-	if (millis >= Constants.MINUTE) {
+	millis -= temp * TimeUtil.DAY;
+	if (millis >= TimeUtil.MINUTE) {
 	  sb.append(DEFAULT_COLLECTION_SEPARATOR);
 	}
       }
-      temp = millis / Constants.HOUR;
+      temp = millis / TimeUtil.HOUR;
       if (temp > 0) {
 	sb.append(numberOfUnits(temp, "hour"));
-	millis -= temp * Constants.HOUR;
-	if (millis >= Constants.MINUTE) {
+	millis -= temp * TimeUtil.HOUR;
+	if (millis >= TimeUtil.MINUTE) {
 	  sb.append(DEFAULT_COLLECTION_SEPARATOR);
 	}
       }
-      temp = millis / Constants.MINUTE;
+      temp = millis / TimeUtil.MINUTE;
       if (temp > 0) {
 	sb.append(numberOfUnits(temp, "minute"));
-	millis -= temp * Constants.MINUTE;
+	millis -= temp * TimeUtil.MINUTE;
 
-	if(millis >= Constants.SECOND) {
+	if(millis >= TimeUtil.SECOND) {
 	  sb.append(DEFAULT_COLLECTION_SEPARATOR);
 	}
       }
-      temp = millis / Constants.SECOND;
+      temp = millis / TimeUtil.SECOND;
       if (temp > 0) {
 	sb.append(numberOfUnits(temp, "second"));
       }

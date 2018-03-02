@@ -124,18 +124,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <scope>test</scope>
     </dependency>
 
-    <!-- Apache Commons Collections needed by ListUtil -->    
+    <!-- Apache Commons Collections 4 needed by ListUtil, RegexpUtil, etc. -->
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
       <version>4.1</version>
     </dependency>
 
-    <!-- Apache Commons Lang needed by StringUtil -->
+    <!-- Apache Commons Lang 3 needed by StringUtil -->
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <version>3.6</version>
+      <version>3.7</version>
     </dependency>
 
     <!-- ORO needed by StringUtil -->
