@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2000, Board of Trustees of Leland Stanford Jr. University
+Copyright (c) 2000-2018, Board of Trustees of Leland Stanford Jr. University,
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -36,8 +36,7 @@ import java.util.*;
 
 import org.apache.commons.collections4.iterators.ArrayIterator;
 import org.junit.jupiter.api.*;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.lockss.util.test.LockssTestCase5;
 
 /**
  * <p>
@@ -47,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @since 1.1.0
  * @see SetUtil
  */
-public class TestSetUtil {
+public class TestSetUtil extends LockssTestCase5 {
   
   private Set<String> s1;
 

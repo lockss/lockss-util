@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2000, Board of Trustees of Leland Stanford Jr. University
+Copyright (c) 2000-2018, Board of Trustees of Leland Stanford Jr. University,
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -37,10 +37,7 @@ import java.util.*;
 import org.apache.commons.collections4.*;
 import org.apache.commons.collections4.iterators.ArrayIterator;
 import org.junit.jupiter.api.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
+import org.lockss.util.test.LockssTestCase5;
 
 /**
  * <p>
@@ -50,9 +47,9 @@ import static org.hamcrest.Matchers.*;
  * @since 1.0.0
  * @see ListUtil
  */
-public class TestListUtil {
+public class TestListUtil extends LockssTestCase5 {
 
-  private static void assertImmutable(List<?> lst) {
+  private void assertImmutable(List<?> lst) {
     try {
       lst.add(null);
       fail("Expected unmodifiable list but got modifiable list");
@@ -62,7 +59,7 @@ public class TestListUtil {
     }
   }
   
-  private static void assertModifiable(List<?> lst) {
+  private void assertModifiable(List<?> lst) {
     try {
       lst.add(null);
     }
@@ -72,7 +69,7 @@ public class TestListUtil {
     lst.remove(lst.size() - 1);
   }
 
-  private static <T> LinkedList<T> linkedList(T... elements) {
+  private <T> LinkedList<T> linkedList(T... elements) {
     return new LinkedList<T>(Arrays.asList(elements));
   }
   
