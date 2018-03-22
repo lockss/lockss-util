@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2000, Board of Trustees of Leland Stanford Jr. University
+Copyright (c) 2000-2018, Board of Trustees of Leland Stanford Jr. University,
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -34,10 +34,9 @@ package org.lockss.util;
 
 import java.util.*;
 import org.junit.jupiter.api.Test;
+import org.lockss.util.test.LockssTestCase5;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-public class TestMapUtil {
+public class TestMapUtil extends LockssTestCase5 {
   
   @Test
   public void testGoodArgs() {
