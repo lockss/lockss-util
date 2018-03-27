@@ -42,13 +42,13 @@ import java.util.Comparator;
  * 
  * @since 1.5.0
  */
-public class SlashFirstComparator implements Comparator<String> {
+public class PreOrderComparator implements Comparator<String> {
 
-  public static final Comparator<String> INSTANCE = new SlashFirstComparator();
+  public static final Comparator<String> INSTANCE = new PreOrderComparator();
   
   @Override
   public int compare(String str1, String str2) {
-    return compareToSlashFirst(str1, str2);
+    return preOrderCompareTo(str1, str2);
   }
 
   /** 
@@ -56,7 +56,7 @@ public class SlashFirstComparator implements Comparator<String> {
    * Differs from natural sort order in that '/' sorts before any other
    * char, because the tree traversal is pre-order.
    */
-  public static int compareToSlashFirst(String str1, String str2) {
+  public static int preOrderCompareTo(String str1, String str2) {
     int len1 = str1.length();
     int len2 = str2.length();
     int n = Math.min(len1, len2);
@@ -83,14 +83,14 @@ public class SlashFirstComparator implements Comparator<String> {
    * char, because the tree traversal is pre-order.  Null sorts after all
    * nun-null strings.
    */
-  public static int compareToSlashFirstNullHigh(String str1, String str2) {
+  public static int preOrderCompareToNullHigh(String str1, String str2) {
     if (str1 == null) {
       return (str2 == null) ? 0 : 1;
     }
     if (str2 == null) {
       return -1;
     }
-    return compareToSlashFirst(str1, str2);
+    return preOrderCompareTo(str1, str2);
   }
 
 }
