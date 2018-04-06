@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <parent>
     <groupId>org.lockss</groupId>
     <artifactId>lockss-parent-pom</artifactId>
-    <version>1.4.0</version>
+    <version>1.7.0</version>
   </parent>
   
   <groupId>org.lockss</groupId>
@@ -61,87 +61,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <junit.platform.version>1.1.0</junit.platform.version>
   </properties>
 
-  <build>
-  
-    <plugins>
-    
-      <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.19.1</version><!-- because of https://github.com/junit-team/junit5/issues/809 -->
-        <dependencies>
-          <dependency>
-            <groupId>org.junit.platform</groupId>
-            <artifactId>junit-platform-surefire-provider</artifactId>
-            <version>${junit.platform.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>${junit.jupiter.version}</version>
-          </dependency>
-        </dependencies>
-      </plugin>
-      
-    </plugins>
-
-  </build>
-
   <dependencies>
 
-    <!-- 
-        See JUnit 5 diagram at:
-        http://junit.org/junit5/docs/current/user-guide/#dependency-diagram .
-    -->
-  
     <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-params</artifactId>
-      <version>${junit.jupiter.version}</version>
+      <groupId>org.lockss</groupId>
+      <artifactId>lockss-junit5-bundle</artifactId>
+      <version>${lockss.junit5.bundleVersion}</version>
+      <type>pom</type>
+      <!-- not in scope 'test' here: LockssTestCase5 is defined in the main tree -->
     </dependency>
     
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-engine</artifactId>
-      <version>${junit.jupiter.version}</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.junit.platform</groupId>
-      <artifactId>junit-platform-runner</artifactId>
-      <version>${junit.platform.version}</version>
-    </dependency>
-
-    <!-- 
-        end JUnit 5
-    -->
-    
-    <!--  Hamcrest needed by numerous tests -->    
-    <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest-library</artifactId>
-      <version>1.3</version>
-    </dependency>
-
     <!-- Apache Commons Collections needed by ListUtil -->    
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
       <version>4.1</version>
     </dependency>
-
-    <!-- Apache Commons Lang needed by StringUtil
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-      <version>3.6</version>
-    </dependency> -->
-
-    <!--  SLF4J needed by many classes
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>1.7.25</version>
-    </dependency> -->
 
   </dependencies>
 
