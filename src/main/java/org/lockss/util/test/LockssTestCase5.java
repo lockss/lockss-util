@@ -49,7 +49,10 @@ import org.hamcrest.core.AnyOf;
 import org.hamcrest.core.CombinableMatcher.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.function.*;
+import org.lockss.util.*;
+import org.lockss.util.os.PlatformUtil;
 import org.lockss.util.test.matcher.*;
+import org.lockss.util.time.TimerUtil;
 import org.opentest4j.MultipleFailuresError;
 import org.slf4j.*;
 import org.w3c.dom.Node;
@@ -68,8 +71,81 @@ import org.w3c.dom.Node;
  */
 public class LockssTestCase5 {
 
-  private static Logger log = LoggerFactory.getLogger(LockssTestCase5.class);
+  private static final Logger log = LoggerFactory.getLogger(LockssTestCase5.class);
   
+  /** Timeout duration for timeouts that are expected to time out.  Setting
+   * this higher makes normal tests take longer, setting it too low might
+   * cause failing tests to erroneously succeed on slow or busy
+   * machines. */
+  public static int TIMEOUT_SHOULD = 300;
+
+  /** Timeout duration for timeouts that are expected not to time out.
+   * This should be set high to ensure catching failures. */
+  public static final int DEFAULT_TIMEOUT_SHOULDNT = 2000;
+
+  public static int TIMEOUT_SHOULDNT = DEFAULT_TIMEOUT_SHOULDNT;
+
+  List<DoLater> doLaters = null;
+  
+  /**
+   * Remove any temp dirs, cancel any outstanding {@link
+   * org.lockss.test.LockssTestCase.DoLater}s
+   * @throws Exception
+   */
+  @AfterEach
+  public void afterEachDoLaters() throws Exception {
+    if (doLaters != null) {
+      List<DoLater> copy;
+      synchronized (this) {
+        copy = new ArrayList<DoLater>(doLaters);
+      }
+      for (DoLater doer : copy) {
+        doer.cancel();
+      }
+      // do NOT set doLaters to null here.  It may be referenced by
+      // exiting DoLaters.  It won't hurt anything because the next test
+      // will create a new instance of the test case, and get a different
+      // doLaters list
+    }
+//    // XXX this should be folded into LockssDaemon shutdown
+//    ConfigManager cfg = ConfigManager.getConfigManager();
+//    if (cfg != null) {
+//      cfg.stopService();
+//    }
+//
+//    TimerQueue.stopTimerQueue();
+//
+//    // delete temp dirs
+//    if (tmpDirs != null && !isKeepTempFiles()) {
+//      for (ListIterator iter = tmpDirs.listIterator(); iter.hasNext(); ) {
+//        File dir = (File)iter.next();
+//        File idFile = new File(dir, TEST_ID_FILE_NAME);
+//        String idContent = null;
+//        if (idFile.exists()) {
+//          idContent = StringUtil.fromFile(idFile);
+//        }
+//        if (FileUtil.delTree(dir)) {
+//          log.debug2("deltree(" + dir + ") = true");
+//          iter.remove();
+//        } else {
+//          log.debug2("deltree(" + dir + ") = false");
+//          if (idContent != null) {
+//            FileTestUtil.writeFile(idFile, idContent);
+//          }
+//        }
+//      }
+//    }
+//    if (!StringUtil.isNullString(javaIoTmpdir)) {
+//      System.setProperty("java.io.tmpdir", javaIoTmpdir);
+//    }
+//    super.tearDown();
+//    if (Boolean.getBoolean("org.lockss.test.threadDump")) {
+//      PlatformUtil.getInstance().threadDump(true);
+//    }
+//    // don't reenable the watchdog; some threads may not have exited yet
+////     enableThreadWatchdog();
+  }
+
   public <V> V fail(String message) {
 
     return Assertions.fail(message);
@@ -1686,6 +1762,180 @@ public class LockssTestCase5 {
 
   public Matcher<String> matchesPattern(String regex) {
     return MatchesPattern.matchesPattern(regex);
+  }
+
+  /** Abstraction to do something in another thread, after a delay,
+   * unless cancelled.  If the scheduled activity is still pending when the
+   * test completes, it is cancelled by tearDown().
+   * <br>For one-off use:<pre>
+   *  final Object obj = ...;
+   *  DoLater doer = new DoLater(1000) {
+   *      protected void doit() {
+   *        obj.method(...);
+   *      }
+   *    };
+   *  doer.start();</pre>
+   *
+   * Or, for convenient repeated use of a particular delayed operation,
+   * define a class that extends <code>DoLater</code>,
+   * with a constructor that calls
+   * <code>super(wait)</code> and stores any other necessary args into
+   * instance vars, and a <code>doit()</code> method that does whatever needs
+   * to be done.  And a convenience method to create and start it.
+   * For example, <code>Interrupter</code> is defined as:<pre>
+   *  public class Interrupter extends DoLater {
+   *    private Thread thread;
+   *    Interrupter(long waitMs, Thread thread) {
+   *      super(waitMs);
+   *      this.thread = thread;
+   *    }
+   *
+   *    protected void doit() {
+   *      thread.interrupt();
+   *    }
+   *  }
+   *
+   *  public Interrupter interruptMeIn(long ms) {
+   *    Interrupter i = new Interrupter(ms, Thread.currentThread());
+   *    i.start();
+   *    return i;
+   *  }</pre>
+   *
+   * Then, to protect a test with a timeout:<pre>
+   *  Interrupter intr = null;
+   *  try {
+   *    intr = interruptMeIn(1000);
+   *    // perform a test that should complete in less than one second
+   *    intr.cancel();
+   *  } finally {
+   *    if (intr.did()) {
+   *      fail("operation failed to complete in one second");
+   *    }
+   *  }</pre>
+   * The <code>cancel()</code> ensures that the interrupt will not
+   * happen after the try block completes.  (This is not necessary at the
+   * end of a test case, as any pending interrupters will be cancelled
+   * by tearDown.)
+   */
+  public abstract class DoLater extends Thread {
+    
+    private long wait;
+    
+    private boolean want = true;
+    
+    private boolean did = false;
+    
+    private boolean threadDump = false;
+
+    protected DoLater(long waitMs) {
+      wait = waitMs;
+    }
+
+    /** Must override this to perform desired action */
+    protected abstract void doit();
+
+    /**
+     * Return true iff action was taken
+     * @return true iff taken
+     */
+    public boolean did() {
+      return did;
+    }
+
+    /** Cancel the action iff it hasn't already started.  If it has started,
+     * wait until it completes.  (Thus when <code>cancel()</code> returns, it
+     * is safe to destroy any environment on which the action relies.)
+     */
+    public synchronized void cancel() {
+      if (want) {
+        want = false;
+        this.interrupt();
+      }
+    }
+
+    public final void run() {
+      try {
+        synchronized (LockssTestCase5.this) {
+          if (doLaters == null) {
+            doLaters = new LinkedList<DoLater>();
+          }
+          doLaters.add(this);
+        }
+        if (wait != 0) {
+          TimerUtil.sleep(wait);
+        }
+        synchronized (this) {
+          if (want) {
+            want = false;
+            did = true;
+            if (threadDump) {
+              try {
+                PlatformUtil.getInstance().threadDump(true);
+              } catch (Exception e) {
+              }
+            }
+            doit();
+          }
+        }
+      } catch (InterruptedException e) {
+        // exit thread
+      } finally {
+        synchronized (LockssTestCase5.this) {
+          doLaters.remove(this);
+        }
+      }
+    }
+
+    /** Get a thread dump before triggering the event */
+    public void setThreadDump() {
+      threadDump = true;
+    }
+
+  }
+  
+  /** Interrupter interrupts a thread in a while */
+  public class Interrupter extends DoLater {
+  
+    private Thread thread;
+
+    Interrupter(long waitMs, Thread thread) {
+      super(waitMs);
+      setPriority(thread.getPriority() + 1);
+      this.thread = thread;
+    }
+
+    /** Interrupt the thread */
+    protected void doit() {
+      log.debug("Interrupting");
+      thread.interrupt();
+    }
+
+  }
+
+  /**
+   * Interrupt current thread in a while
+   * @param ms interval to wait before interrupting
+   * @return an Interrupter
+   */
+  public Interrupter interruptMeIn(long ms) {
+    Interrupter i = new Interrupter(ms, Thread.currentThread());
+    i.start();
+    return i;
+  }
+
+  /**
+   * Interrupt current thread in a while, first printing a thread dump
+   * @param ms interval to wait before interrupting
+   * @param threadDump true if thread dump wanted
+   * @return an Interrupter
+   */
+  public Interrupter interruptMeIn(long ms, boolean threadDump) {
+    Interrupter i = new Interrupter(ms, Thread.currentThread());
+    if (threadDump) {
+      i.setThreadDump();
+    }
+    i.start();
+    return i;
   }
 
 }
