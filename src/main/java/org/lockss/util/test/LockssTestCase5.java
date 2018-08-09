@@ -42,6 +42,7 @@ import java.util.stream.Stream;
 
 import javax.xml.namespace.NamespaceContext;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.*;
 import org.hamcrest.collection.IsArray;
@@ -49,7 +50,7 @@ import org.hamcrest.core.AnyOf;
 import org.hamcrest.core.CombinableMatcher.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.function.*;
-import org.lockss.util.*;
+import org.lockss.util.io.FileUtil;
 import org.lockss.util.os.PlatformUtil;
 import org.lockss.util.test.matcher.*;
 import org.lockss.util.time.TimerUtil;
@@ -71,6 +72,10 @@ import org.w3c.dom.Node;
  */
 public class LockssTestCase5 {
 
+  public static final String SYSPROP_KEEP_TEMP_FILES = "org.lockss.keepTempFiles";
+
+  public static final String TEST_ID_FILE_NAME = ".locksstestcase";
+
   private static final Logger log = LoggerFactory.getLogger(LockssTestCase5.class);
   
   /** Timeout duration for timeouts that are expected to time out.  Setting
@@ -85,8 +90,29 @@ public class LockssTestCase5 {
 
   public static int TIMEOUT_SHOULDNT = DEFAULT_TIMEOUT_SHOULDNT;
 
-  List<DoLater> doLaters = null;
+  List<File> tmpDirs;
   
+  List<DoLater> doLaters;
+
+  String javaIoTmpdir;
+  
+  /**
+   *
+   */
+  private static int failures;
+  
+  @BeforeEach
+  public void beforeEachJavaIoTmpdir() {
+    javaIoTmpdir = System.getProperty(PlatformUtil.SYSPROP_JAVA_IO_TMPDIR);
+  }
+  
+  @AfterEach
+  public void afterEachJavaIoTmpdir() {
+    if (!StringUtils.isEmpty(javaIoTmpdir)) {
+      System.setProperty(PlatformUtil.SYSPROP_JAVA_IO_TMPDIR, javaIoTmpdir);
+    }
+  }
+
   /**
    * Remove any temp dirs, cancel any outstanding {@link
    * org.lockss.test.LockssTestCase.DoLater}s
@@ -107,43 +133,116 @@ public class LockssTestCase5 {
       // will create a new instance of the test case, and get a different
       // doLaters list
     }
-//    // XXX this should be folded into LockssDaemon shutdown
-//    ConfigManager cfg = ConfigManager.getConfigManager();
-//    if (cfg != null) {
-//      cfg.stopService();
-//    }
-//
-//    TimerQueue.stopTimerQueue();
-//
-//    // delete temp dirs
-//    if (tmpDirs != null && !isKeepTempFiles()) {
-//      for (ListIterator iter = tmpDirs.listIterator(); iter.hasNext(); ) {
-//        File dir = (File)iter.next();
-//        File idFile = new File(dir, TEST_ID_FILE_NAME);
-//        String idContent = null;
-//        if (idFile.exists()) {
-//          idContent = StringUtil.fromFile(idFile);
-//        }
-//        if (FileUtil.delTree(dir)) {
-//          log.debug2("deltree(" + dir + ") = true");
-//          iter.remove();
-//        } else {
-//          log.debug2("deltree(" + dir + ") = false");
-//          if (idContent != null) {
-//            FileTestUtil.writeFile(idFile, idContent);
-//          }
-//        }
-//      }
-//    }
-//    if (!StringUtil.isNullString(javaIoTmpdir)) {
-//      System.setProperty("java.io.tmpdir", javaIoTmpdir);
-//    }
-//    super.tearDown();
-//    if (Boolean.getBoolean("org.lockss.test.threadDump")) {
-//      PlatformUtil.getInstance().threadDump(true);
-//    }
-//    // don't reenable the watchdog; some threads may not have exited yet
-////     enableThreadWatchdog();
+  }
+
+  @AfterEach
+  public void afterEachTmpDirs() throws Exception {
+    if (tmpDirs != null && !isKeepTempFiles()) {
+      for (Iterator<File> iter = tmpDirs.iterator() ; iter.hasNext() ; ) {
+        File dir = iter.next();
+        File idFile = new File(dir, TEST_ID_FILE_NAME);
+        String idContent = null;
+        if (idFile.exists()) {
+          idContent = IOUtils.toString(new FileReader(idFile));
+        }
+        if (FileUtil.delTree(dir)) {
+          log.trace("deltree(" + dir + ") = true");
+          iter.remove();
+        } else {
+          log.trace("deltree(" + dir + ") = false");
+          if (idContent != null) {
+            FileTestUtil.writeFile(idFile, idContent);
+          }
+        }
+      }
+    }
+  }
+
+  public void setUpSuccessRate(RepetitionInfo repetitionInfo) {
+    if (repetitionInfo.getCurrentRepetition() == 1) {
+      failures = 0;
+    }
+  }
+  
+  public void signalFailure(RepetitionInfo repetitionInfo) {
+    ++failures; // currently ignores repetitionInfo, could be extended later
+  }
+  
+  public void assertSuccessRate(RepetitionInfo repetitionInfo, float rate) {
+    int total = repetitionInfo.getTotalRepetitions();
+    if (repetitionInfo.getCurrentRepetition() == total) {
+      float achieved = ((float)total - failures) / total;
+      if (achieved < rate) {
+        fail(String.format("Test failed %d of %d tries, not achieving a %f success rate.", failures, total, rate));
+      }
+    }
+  }
+
+  /**
+   * Create and return the name of a temp dir.  The dir is created within
+   * the default temp file dir.
+   * It will be deleted following the test, by tearDown().  (So if you
+   * override tearDown(), be sure to call <code>super.tearDown()</code>.)
+   * @return The newly created directory
+   * @throws IOException
+   */
+  public File getTempDir() throws IOException {
+    File res =  getTempDir("locksstest");
+    // To aid in finding the cause of temp dirs that don't get deleted,
+    // setting -Dorg.lockss.test.idTempDirs=true will record the name of
+    // the test creating the dir in <dir>/.locksstestcase .  This may cause
+    // tests to fail (expecting empty dir).
+    if (!isKeepTempFiles()
+        && Boolean.getBoolean("org.lockss.test.idTempDirs")) {
+      FileTestUtil.writeFile(new File(res, TEST_ID_FILE_NAME),
+                             StringUtils.substringAfterLast(getClass().getName(), "."));
+    }
+    return res;
+  }
+
+  /**
+   * Create and return the name of a temp dir.  The dir is created within
+   * the default temp file dir.
+   * It will be deleted following the test, by tearDown().  (So if you
+   * override tearDown(), be sure to call <code>super.tearDown()</code>.)
+   * @param prefix the prefix of the name of the directory
+   * @return The newly created directory
+   * @throws IOException
+   */
+  public File getTempDir(String prefix) throws IOException {
+    File tmpdir = FileUtil.createTempDir(prefix, null);
+    if (tmpdir != null) {
+      if (tmpDirs == null) {
+        tmpDirs = new LinkedList<File>();
+      }
+      tmpDirs.add(tmpdir);
+    }
+    return tmpdir;
+  }
+
+  /**
+   * Create and return the name of a temp file.  The file is created within
+   * the default temp dir.
+   * It will be deleted following the test, by tearDown().  (So if you
+   * override tearDown(), be sure to call <code>super.tearDown()</code>.)
+   * @param prefix the prefix of the name of the file
+   * @param suffix the suffix of the name of the file
+   * @return The newly created file
+   * @throws IOException
+   */
+  public File getTempFile(String prefix, String suffix) throws IOException {
+    File tmpfile = FileUtil.createTempFile(prefix, suffix);
+    if (tmpfile != null) {
+      if (tmpDirs == null) {
+        tmpDirs = new LinkedList<File>();
+      }
+      tmpDirs.add(tmpfile);
+    }
+    return tmpfile;
+  }
+
+  public static boolean isKeepTempFiles() {
+    return Boolean.getBoolean(SYSPROP_KEEP_TEMP_FILES);
   }
 
   public <V> V fail(String message) {
@@ -1476,7 +1575,7 @@ public class LockssTestCase5 {
     assertFalse(iter.hasNext());
   }
 
-  /** Assert that the Executable throws an instnace of the expected class,
+  /** Assert that the Executable throws an instance of the expected class,
    * and that the expected pattern is found in the Throwable's message . */
   public <T extends Throwable> T assertThrowsMatch(Class<T> expectedType,
                                                    String pattern,
@@ -1763,7 +1862,7 @@ public class LockssTestCase5 {
   public Matcher<String> matchesPattern(String regex) {
     return MatchesPattern.matchesPattern(regex);
   }
-
+  
   /** Abstraction to do something in another thread, after a delay,
    * unless cancelled.  If the scheduled activity is still pending when the
    * test completes, it is cancelled by tearDown().
@@ -1937,5 +2036,5 @@ public class LockssTestCase5 {
     i.start();
     return i;
   }
-
+  
 }

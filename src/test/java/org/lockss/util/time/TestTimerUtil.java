@@ -32,55 +32,73 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.lockss.util.time;
 
-import java.util.TimeZone;
-import java.util.stream.Stream;
-
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.*;
+import org.junit.jupiter.api.Test;
 import org.lockss.util.test.LockssTestCase5;
 
-public class TestTimeZoneUtil extends LockssTestCase5 {
+public class TestTimerUtil extends LockssTestCase5 {
 
-  @BeforeAll
-  public static void beforeAllSanityCheck() {
-    Assertions.assertTrue(TimeZoneUtil.isBasicTimeZoneDataAvailable());
-  }
-  
-  @ParameterizedTest
-  @MethodSource("argsGoodTimeZones")
-  public void testGoodTimeZones(String tzid) {
-    TimeZone tz = TimeZoneUtil.getExactTimeZone(tzid);
-    assertEquals(tzid, tz.getID());
-    assertEquals("GMT".equals(tzid), "GMT".equals(tz.getID()));
-  }
-  
-  public static Stream<String> argsGoodTimeZones() {
-    return TimeZoneUtil.BASIC_TIME_ZONES.stream();
-  }
-
-  @ParameterizedTest
-  @MethodSource("argsBadTimeZones")
-  public void testBadTimeZones(String tzid) {
+  @Test
+  public void testSleep() {
+    long start;
+    
     try {
-      TimeZone tz = TimeZoneUtil.getExactTimeZone(tzid);
-      fail("Should have thrown IllegalArgumentException: " + tzid);
+      start = System.currentTimeMillis();
+      TimerUtil.sleep(100L);
+      assertTrue(System.currentTimeMillis() - start >= 100L);
     }
-    catch (IllegalArgumentException iae) {
-      if (tzid == null) {
-        assertEquals("Time zone identifier cannot be null", iae.getMessage());
+    catch (InterruptedException ie) {
+      fail("Thread was not interrupted but threw InterruptedException");
+    }
+    
+    Thread sleeper = new Thread() {
+      @Override
+      public void run() {
+        long mystart = System.currentTimeMillis();
+        try {
+          TimerUtil.sleep(100L);
+          fail("Thread was supposed to be interrupted but was not");
+        }
+        catch (InterruptedException ie) {
+          assertTrue(System.currentTimeMillis() - mystart < 100L);
+        }
       }
-      else {
-        assertEquals("Unknown time zone identifier: " + tzid, iae.getMessage());
-      }
+    };
+    try {
+      sleeper.start();
+      Thread.sleep(50L);
+      sleeper.interrupt();
+      sleeper.join();
+    }
+    catch (InterruptedException ie) {
+      fail("Main thread was interrupted");
     }
   }
   
-  public static Stream<String> argsBadTimeZones() {
-    return Stream.of(null,
-                     "Foo",
-                     "America/Copenhagen",
-                     "Europe/Tokyo");
+  @Test
+  public void testGuaranteedSleep() {
+    long start;
+    
+    start = System.currentTimeMillis();
+    TimerUtil.guaranteedSleep(100L);
+    assertTrue(System.currentTimeMillis() - start >= 100L);
+    
+    Thread sleeper = new Thread() {
+      @Override
+      public void run() {
+        long mystart = System.currentTimeMillis();
+        TimerUtil.guaranteedSleep(100L);
+        assertTrue(System.currentTimeMillis() - mystart < 100L);
+      }
+    };
+    try {
+      sleeper.start();
+      Thread.sleep(50L);
+      sleeper.interrupt();
+      sleeper.join();
+    }
+    catch (InterruptedException ie) {
+      fail("Main thread was interrupted");
+    }
   }
   
 }

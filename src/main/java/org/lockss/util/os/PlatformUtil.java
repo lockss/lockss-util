@@ -42,6 +42,7 @@ import java.util.regex.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.*;
 import org.lockss.util.lang.EncodingUtil;
+import org.lockss.util.net.IPAddr;
 import org.lockss.util.time.TimeConstants;
 //import org.lockss.config.*;
 import org.slf4j.*;
@@ -55,12 +56,12 @@ public class PlatformUtil {
   public static final String SYSPROP_UNFILTERED_TCP_PORTS = "org.lockss.platform.unfilteredTcpPorts";
   public static final String SYSPROP_UNFILTERED_UDP_PORTS = "org.lockss.platform.unfilteredUdpPorts";
 
-  public static final String SYSPROP_JAVA_TMPDIR = "java.io.tmpdir";
+  public static final String SYSPROP_JAVA_IO_TMPDIR = "java.io.tmpdir";
 
   public static final String SYSPROP_LOCKSS_OS_NAME = "lockss.os.name";
-  public static final String SYSPROP_JAVA_OS_NAME = "os.name";
+  public static final String SYSPROP_OS_NAME = "os.name";
 
-  public static final String SYSPROP_LOCAL_HOSTNAME = "org.lockss.localHostname";
+  public static final String SYSPROP_PLATFORM_HOSTNAME = "org.lockss.platformHostname";
 
   private static final Logger log = LoggerFactory.getLogger(PlatformUtil.class);
   
@@ -76,7 +77,7 @@ public class PlatformUtil {
     if (instance == null) {
       String os = System.getProperty(SYSPROP_LOCKSS_OS_NAME);
       if (StringUtils.isEmpty(os)) {
-	os = System.getProperty(SYSPROP_JAVA_OS_NAME);
+	os = System.getProperty(SYSPROP_OS_NAME);
       }
       if ("linux".equalsIgnoreCase(os)) {
 	instance = new Linux();
@@ -117,7 +118,7 @@ public class PlatformUtil {
    * ConfigManager#PARAM_TMPDIR}
    */
   public static String getSystemTempDir() {
-    return System.getProperty(SYSPROP_JAVA_TMPDIR);
+    return System.getProperty(SYSPROP_JAVA_IO_TMPDIR);
   }
 
   /** Return the current working dir name */
@@ -277,8 +278,7 @@ public class PlatformUtil {
    * Return true if the exception was caused by a full filesystem
    */
   public boolean isDiskFullError(IOException e) {
-    return StringUtils.indexOfIgnoreCase("No space left on device",
-                                         e.getMessage()) >= 0;
+    return StringUtils.indexOfIgnoreCase(e.getMessage(), "No space left on device") >= 0;
   }
   
   static Runtime rt() {
@@ -502,10 +502,18 @@ public class PlatformUtil {
   }
   
   public static String getLocalHostname() {
-    // Formerly in lockss-core, now in ConfigManager and stores result in sysprop
-    return System.getProperty(SYSPROP_LOCAL_HOSTNAME);
+    String host = System.getProperty(SYSPROP_PLATFORM_HOSTNAME);
+    if (host == null) {
+      try {
+        host = IPAddr.getLocalHost().getHostName();
+      } catch (UnknownHostException ex) {
+        log.error("Couldn't determine localhost.", ex);
+        return null;
+      }
+    }
+    return host;
   }
-
+  
   public static double parseDouble(String str) {
     if (isBuggyDoubleString(str)) {
       throw new NumberFormatException("Buggy double string");

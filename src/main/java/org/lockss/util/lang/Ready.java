@@ -38,17 +38,17 @@ import org.lockss.util.time.Deadline;
 
 /**
  * <p>
- * An interface for a resource that has a startup process then becomes ready.
+ * An interface for a resource or service that can indicate whether it is ready.
  * </p>
  */
 public interface Ready {
 
   /**
    * <p>
-   * Determines if this resource has become ready.
+   * Determines if this resource is ready.
    * </p>
    * 
-   * @return {@code true} if and only if this resource has become ready.
+   * @return {@code true} if this resource is ready.
    */
   boolean isReady();
   

@@ -37,22 +37,22 @@ import java.util.TimeZone;
 public class TimeConstants {
 
   /** The number of milliseconds in a second */
-  public static final long SECOND = 1000;
+  public static final long SECOND = 1000L;
   
   /** The number of milliseconds in a minute */
-  public static final long MINUTE = 60 * SECOND;
+  public static final long MINUTE = 60L * SECOND;
 
   /** The number of milliseconds in an hour */  
-  public static final long HOUR = 60 * MINUTE;
+  public static final long HOUR = 60L * MINUTE;
   
   /** The number of milliseconds in a day */
-  public static final long DAY = 24 * HOUR;
+  public static final long DAY = 24L * HOUR;
 
   /** The number of milliseconds in a week */
-  public static final long WEEK = 7 * DAY;
+  public static final long WEEK = 7L * DAY;
   
   /** The number of milliseconds in a (non-leap) year */
-  public static final long YEAR = 365 * DAY;
+  public static final long YEAR = 365L * DAY;
 
   /**
    * <p>
@@ -67,6 +67,20 @@ public class TimeConstants {
    * </p>
    */
   public static final TimeZone TIMEZONE_GMT = TimeZoneUtil.getExactTimeZone(TIMEZONE_ID_GMT);
+  
+  /**
+   * <p>
+   * The ID for the UTC time zone.
+   * </p>
+   */
+  public static final String TIMEZONE_ID_UTC = "UTC";
+
+  /**
+   * <p>
+   * The UTCtime zone.
+   * </p>
+   */
+  public static final TimeZone TIMEZONE_UTC = TimeZoneUtil.getExactTimeZone(TIMEZONE_ID_UTC);
   
   /** The default timezone, GMT */
   public static final TimeZone DEFAULT_TIMEZONE = TIMEZONE_GMT;

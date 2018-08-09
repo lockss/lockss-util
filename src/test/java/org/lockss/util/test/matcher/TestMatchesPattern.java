@@ -38,7 +38,7 @@ import org.lockss.util.test.LockssTestCase5;
 public class TestMatchesPattern extends LockssTestCase5 {
 
   @Test
-  public void testMatchPattern() {
+  public void testMatchesPattern() {
     assertThat("123", MatchesPattern.matchesPattern("1.3"));
     assertThat("123", not(MatchesPattern.matchesPattern("1.32")));
     assertThat("string string", not(MatchesPattern.matchesPattern("g st")));

@@ -32,51 +32,56 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.lockss.util.time;
 
+import java.util.stream.Stream;
+
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.*;
 import org.lockss.util.test.LockssTestCase5;
 
 public class TestTimeUtil extends LockssTestCase5 {
 
-  @Test
-  public void testTimeIntervalToString() throws Exception {
-    assertEquals("0ms", TimeUtil.timeIntervalToString(0));
-    assertEquals("1000ms", TimeUtil.timeIntervalToString(TimeConstants.SECOND));
-    assertEquals("-1000ms", TimeUtil.timeIntervalToString(- TimeConstants.SECOND));
-    assertEquals("9000ms", TimeUtil.timeIntervalToString(TimeConstants.SECOND * 9));
-    assertEquals("-9000ms", TimeUtil.timeIntervalToString(- TimeConstants.SECOND * 9));
-    assertEquals("10s", TimeUtil.timeIntervalToString(TimeConstants.SECOND * 10));
-    assertEquals("1m0s", TimeUtil.timeIntervalToString(TimeConstants.MINUTE));
-    assertEquals("1h0m0s", TimeUtil.timeIntervalToString(TimeConstants.HOUR));
-    assertEquals("2d3h0m",
-                 TimeUtil.timeIntervalToString(TimeConstants.DAY * 2 + TimeConstants.HOUR * 3));
-    assertEquals("20d23h0m",
-                 TimeUtil.timeIntervalToString(TimeConstants.WEEK * 3 - (TimeConstants.HOUR * 1)));
-    assertEquals("-20d23h0m",
-                 TimeUtil.timeIntervalToString(- (TimeConstants.WEEK * 3 - (TimeConstants.HOUR * 1))));
-    assertEquals("3w0d0h", TimeUtil.timeIntervalToString(TimeConstants.WEEK * 3));
+  @ParameterizedTest
+  @MethodSource("argsTimeIntervalToString")
+  public void testTimeIntervalToString(String expected, long input) throws Exception {
+    assertEquals(expected, TimeUtil.timeIntervalToString(input));
+  }
+  
+  public static Stream<Arguments> argsTimeIntervalToString() {
+    return Stream.of(Arguments.of("0ms", 0L),
+                     Arguments.of("1000ms", TimeConstants.SECOND),
+                     Arguments.of("-1000ms", - TimeConstants.SECOND),
+                     Arguments.of("9000ms", 9L * TimeConstants.SECOND),
+                     Arguments.of("-9000ms", - 9L * TimeConstants.SECOND),
+                     Arguments.of("10s", 10L * TimeConstants.SECOND),
+                     Arguments.of("1m0s", TimeConstants.MINUTE),
+                     Arguments.of("1h0m0s", TimeConstants.HOUR),
+                     Arguments.of("2d3h0m", 2L * TimeConstants.DAY + 3L * TimeConstants.HOUR),
+                     Arguments.of("20d23h0m", 3L * TimeConstants.WEEK - 1L * TimeConstants.HOUR),
+                     Arguments.of("-20d23h0m", - (3L * TimeConstants.WEEK - 1L * TimeConstants.HOUR)),
+                     Arguments.of("3w0d0h", 3L * TimeConstants.WEEK));
   }
 
+  @ParameterizedTest
+  @MethodSource("argsTimeIntervalToLongString")
+  public void testTimeIntervalToLongString(String expected, long input) throws Exception {
+    assertEquals(expected, TimeUtil.timeIntervalToLongString(input));
+  }
+  
   @Test
-  public void testTimeIntervalToLong() throws Exception {
-    assertEquals("0 seconds", TimeUtil.timeIntervalToLongString(0));
-    assertEquals("1 second", TimeUtil.timeIntervalToLongString(TimeConstants.SECOND));
-    assertEquals("-1 second", TimeUtil.timeIntervalToLongString(- TimeConstants.SECOND));
-    assertEquals("9 seconds", TimeUtil.timeIntervalToLongString(TimeConstants.SECOND * 9));
-    assertEquals("-9 seconds",
-                 TimeUtil.timeIntervalToLongString(- TimeConstants.SECOND * 9));
-    assertEquals("10 seconds",
-                 TimeUtil.timeIntervalToLongString(TimeConstants.SECOND * 10));
-    assertEquals("1 minute", TimeUtil.timeIntervalToLongString(TimeConstants.MINUTE));
-    assertEquals("1 hour", TimeUtil.timeIntervalToLongString(TimeConstants.HOUR));
-    assertEquals("2 days, 3 hours",
-                 TimeUtil.timeIntervalToLongString(TimeConstants.DAY * 2 + TimeConstants.HOUR * 3));
-    assertEquals("20 days, 23 hours, 45 minutes",
-                 TimeUtil.timeIntervalToLongString(TimeConstants.WEEK * 3 - (TimeConstants.HOUR * 1)
-                                                     + TimeConstants.MINUTE * 45));
-    assertEquals("12 days, 13 minutes, 1 second",
-                 TimeUtil.timeIntervalToLongString(TimeConstants.DAY * 12 + TimeConstants.MINUTE * 13
-                                                     + TimeConstants.SECOND));
-    assertEquals("21 days", TimeUtil.timeIntervalToLongString(TimeConstants.WEEK * 3));
+  public static Stream<Arguments> argsTimeIntervalToLongString() throws Exception {
+    return Stream.of(Arguments.of("0 seconds", 0L),
+                     Arguments.of("1 second", TimeConstants.SECOND),
+                     Arguments.of("-1 second", - TimeConstants.SECOND),
+                     Arguments.of("9 seconds", 9L * TimeConstants.SECOND),
+                     Arguments.of("-9 seconds", - 9L * TimeConstants.SECOND),
+                     Arguments.of("10 seconds", 10L * TimeConstants.SECOND),
+                     Arguments.of("1 minute", TimeConstants.MINUTE),
+                     Arguments.of("1 hour", TimeConstants.HOUR),
+                     Arguments.of("2 days, 3 hours", 2L * TimeConstants.DAY + 3L * TimeConstants.HOUR),
+                     Arguments.of("20 days, 23 hours, 45 minutes", 3L * TimeConstants.WEEK - TimeConstants.HOUR + 45L * TimeConstants.MINUTE),
+                     Arguments.of("12 days, 13 minutes, 1 second", 12L * TimeConstants.DAY + 13L * TimeConstants.MINUTE + TimeConstants.SECOND),
+                     Arguments.of("21 days", 3L * TimeConstants.WEEK));
   }
   
 }

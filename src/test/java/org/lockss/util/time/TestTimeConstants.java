@@ -35,52 +35,47 @@ package org.lockss.util.time;
 import java.util.TimeZone;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
 import org.lockss.util.test.LockssTestCase5;
 
-public class TestTimeZoneUtil extends LockssTestCase5 {
+public class TestTimeConstants extends LockssTestCase5 {
 
-  @BeforeAll
-  public static void beforeAllSanityCheck() {
-    Assertions.assertTrue(TimeZoneUtil.isBasicTimeZoneDataAvailable());
-  }
+  private static final long _SECOND = 1000L;
+  private static final long _MINUTE = 1000L * 60L;
+  private static final long _HOUR   = 1000L * 60L * 60L;
+  private static final long _DAY    = 1000L * 60L * 60L * 24L;
+  private static final long _WEEK   = 1000L * 60L * 60L * 24L * 7L;
+  private static final long _YEAR   = 1000L * 60L * 60L * 24L * 365L;
+  
+  private static final String _GMT = "GMT";
+  private static final String _UTC = "UTC";
   
   @ParameterizedTest
-  @MethodSource("argsGoodTimeZones")
-  public void testGoodTimeZones(String tzid) {
-    TimeZone tz = TimeZoneUtil.getExactTimeZone(tzid);
-    assertEquals(tzid, tz.getID());
-    assertEquals("GMT".equals(tzid), "GMT".equals(tz.getID()));
+  @MethodSource("argsMilliseconds")
+  public void testMilliseconds(long expected, long actual) {
+    assertEquals(expected, actual);
   }
   
-  public static Stream<String> argsGoodTimeZones() {
-    return TimeZoneUtil.BASIC_TIME_ZONES.stream();
+  public static Stream<Arguments> argsMilliseconds() {
+    return Stream.of(Arguments.of(_SECOND, TimeConstants.SECOND),
+                     Arguments.of(_MINUTE, TimeConstants.MINUTE),
+                     Arguments.of(_HOUR, TimeConstants.HOUR),
+                     Arguments.of(_DAY, TimeConstants.DAY),
+                     Arguments.of(_WEEK, TimeConstants.WEEK),
+                     Arguments.of(_YEAR, TimeConstants.YEAR));
   }
 
   @ParameterizedTest
-  @MethodSource("argsBadTimeZones")
-  public void testBadTimeZones(String tzid) {
-    try {
-      TimeZone tz = TimeZoneUtil.getExactTimeZone(tzid);
-      fail("Should have thrown IllegalArgumentException: " + tzid);
-    }
-    catch (IllegalArgumentException iae) {
-      if (tzid == null) {
-        assertEquals("Time zone identifier cannot be null", iae.getMessage());
-      }
-      else {
-        assertEquals("Unknown time zone identifier: " + tzid, iae.getMessage());
-      }
-    }
+  @MethodSource("argsTimeZones")
+  public void testTimeZones(String expectedId, String actualId, TimeZone actualTz) {
+    assertEquals(expectedId, actualId);
+    assertEquals(expectedId, actualTz.getID());
   }
   
-  public static Stream<String> argsBadTimeZones() {
-    return Stream.of(null,
-                     "Foo",
-                     "America/Copenhagen",
-                     "Europe/Tokyo");
+  public static Stream<Arguments> argsTimeZones() {
+    return Stream.of(Arguments.of(_GMT, TimeConstants.TIMEZONE_ID_GMT, TimeConstants.TIMEZONE_GMT),
+                     Arguments.of(_UTC, TimeConstants.TIMEZONE_ID_UTC, TimeConstants.TIMEZONE_UTC));
   }
   
 }

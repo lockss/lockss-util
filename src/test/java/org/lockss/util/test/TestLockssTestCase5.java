@@ -35,7 +35,7 @@ package org.lockss.util.test;
 import java.io.*;
 
 import org.apache.commons.io.input.ReaderInputStream;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.opentest4j.AssertionFailedError;
 
 
@@ -108,6 +108,76 @@ public class TestLockssTestCase5 extends LockssTestCase5 {
 		      "after 0 chars, actual stream threw " + STREAM_CLOSED_PAT,
 		      () -> {assertSameCharacters(new StringReader("foo"),
 						  closedRdr);});
+  }
+  
+  @RepeatedTest(5)
+  public void testSuccessRateFails(RepetitionInfo repetitionInfo) {
+    try {
+      setUpSuccessRate(repetitionInfo);
+      if (repetitionInfo.getCurrentRepetition() <= 4) {
+        fail("4 intentional failures: " + repetitionInfo.getCurrentRepetition());
+      }
+    }
+    catch (Throwable thr) {
+      signalFailure(repetitionInfo);
+    }
+    finally {
+      if (repetitionInfo.getCurrentRepetition() < repetitionInfo.getTotalRepetitions()) {
+        try {
+          assertSuccessRate(repetitionInfo, 0.5f);
+        }
+        catch (AssertionFailedError afe) {
+          fail("Assertion should not have failed");
+        }
+      }
+      else {
+        assertThrowsMatch(AssertionFailedError.class,
+                          "4 of 5 tries, not achieving a 0.50* success rate",
+                          () -> assertSuccessRate(repetitionInfo, 0.5f));
+      }
+    }
+  }
+
+  @RepeatedTest(5)
+  public void testSuccessRateSucceeds(RepetitionInfo repetitionInfo) {
+    try {
+      setUpSuccessRate(repetitionInfo);
+      if (repetitionInfo.getCurrentRepetition() == 2) {
+        fail("1 intentional failure: " + repetitionInfo.getCurrentRepetition());
+      }
+    }
+    catch (Throwable thr) {
+      signalFailure(repetitionInfo);
+    }
+    finally {
+      try {
+        assertSuccessRate(repetitionInfo, 0.5f);
+      }
+      catch (AssertionFailedError afe) {
+        fail("Assertion should not have failed");
+      }
+    }
+  }
+
+  @RepeatedTest(5)
+  public void testSuccessRateExactRateSucceeds(RepetitionInfo repetitionInfo) {
+    try {
+      setUpSuccessRate(repetitionInfo);
+      if (repetitionInfo.getCurrentRepetition() == 2) {
+        fail("1 intentional failure: " + repetitionInfo.getCurrentRepetition());
+      }
+    }
+    catch (Throwable thr) {
+      signalFailure(repetitionInfo);
+    }
+    finally {
+      try {
+        assertSuccessRate(repetitionInfo, 0.8f);
+      }
+      catch (AssertionFailedError afe) {
+        fail("Assertion should not have failed");
+      }
+    }
   }
 
 }
