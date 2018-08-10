@@ -54,11 +54,14 @@ public class Deadline implements Comparable, LockssSerializable {
   private static final Logger log = LoggerFactory.getLogger(Deadline.class);
 
   private static LockssRandom random = null;
+  
   protected Date expiration;
-  protected long duration;		// only for testing
-  private transient List subscribers;	// those who wish to be notified
-					// if/when this Deadline's duration
-					// changes
+  
+  protected long duration;                        // only for testing
+  
+  protected transient List<Callback> subscribers; // those who wish to be notified
+                                                  // if/when this Deadline's duration
+                                                  // changes
 
   /** Create a Deadline that expires at the specified Date, with the
    * specified duration.  Done this way so factory methods don't risk a
@@ -70,7 +73,7 @@ public class Deadline implements Comparable, LockssSerializable {
    * @param checkReasonable if true, log a warning if the Deadline is
    * either in the past or unreasonably far in the future.
    */
-  private Deadline(Date at, long duration, boolean checkReasonable) {
+  protected Deadline(Date at, long duration, boolean checkReasonable) {
     expiration = at;
     this.duration = duration;
     if (checkReasonable) {
@@ -86,35 +89,35 @@ public class Deadline implements Comparable, LockssSerializable {
    * @param at the Date
    * @param duration the duration
    */
-  private Deadline(Date at, long duration) {
+  protected Deadline(Date at, long duration) {
     this(at, duration, true);
   }
 
   /** Create a Deadline that expires at the specified Date.
    * @param at the Date
    */
-  private Deadline(Date at, boolean checkReasonable) {
+  protected Deadline(Date at, boolean checkReasonable) {
     this(at, at.getTime() - nowMs(), checkReasonable);
   }
 
   /** Create a Deadline that expires at the specified Date.
    * @param at the Date
    */
-  private Deadline(Date at) {
+  protected Deadline(Date at) {
     this(at, false);
   }
 
   /** Create a Deadline that expires at the specified date.
    * @param at the time in ms
    */
-  private Deadline(long at, boolean checkReasonable) {
+  protected Deadline(long at, boolean checkReasonable) {
     this(new Date(at), checkReasonable);
   }
 
   /** Create a Deadline that expires at the specified date.
    * @param at the time in ms
    */
-  private Deadline(long at) {
+  protected Deadline(long at) {
     this(at, true);
   }
 
@@ -234,7 +237,7 @@ public class Deadline implements Comparable, LockssSerializable {
 //     super(meanDuration + (long)(stddev * getRandom().nextGaussian()));
 //   }
 
-  private void checkReasonable() {
+  protected void checkReasonable() {
     if (TimeBase.isSimulated()) {
       // don't complain during testing
       return;
@@ -247,8 +250,8 @@ public class Deadline implements Comparable, LockssSerializable {
     }
   }
 
-  private static long minDelta = 0;
-  private static long maxDelta = (4 * TimeConstants.WEEK);
+  protected static long minDelta = 0;
+  protected static long maxDelta = (4 * TimeConstants.WEEK);
 
   /** Set the "reasonable" Deadline range.
    * @param maxInPast longest reasonable time in past (as a positive number
@@ -407,7 +410,7 @@ public class Deadline implements Comparable, LockssSerializable {
    */
   public synchronized void registerCallback(Callback callback) {
     if (subscribers == null) {
-      subscribers = new LinkedList();
+      subscribers = new LinkedList<Callback>();
     }
     subscribers.add(callback);
   }
@@ -424,12 +427,11 @@ public class Deadline implements Comparable, LockssSerializable {
    * be synchronized, nor called from a synchronized method  */
   protected void changed() {
     // Make copy so can iterate unsynchronized
-    List subs = getSubscriberSnapshot();
+    List<Callback> subs = getSubscriberSnapshot();
     if (subs != null) {
-      for (Iterator iter = subs.iterator(); iter.hasNext(); ) {
+      for (Callback cb : subs) {
 	// tk - run these in a separate thread
 	try {
-	  Callback cb = (Callback)iter.next();
 	  cb.changed(this);
 	} catch (Exception e) {
 	  log.error("Callback threw", e);
@@ -438,8 +440,8 @@ public class Deadline implements Comparable, LockssSerializable {
     }
   }
 
-  private synchronized List getSubscriberSnapshot() {
-    return subscribers == null ? null : new ArrayList(subscribers);
+  private synchronized List<Callback> getSubscriberSnapshot() {
+    return subscribers == null ? null : new ArrayList<Callback>(subscribers);
   }
 
   protected static Date now() {
@@ -452,7 +454,7 @@ public class Deadline implements Comparable, LockssSerializable {
 //     return System.currentTimeMillis();
   }
 
-  private static LockssRandom getRandom() {
+  protected static LockssRandom getRandom() {
     if (random == null) {
       random = new LockssRandom();
     }
@@ -608,7 +610,7 @@ public class Deadline implements Comparable, LockssSerializable {
   }
 
   // for testing
-  private long getDuration() {
+  protected long getDuration() {
     return duration;
   }
 }

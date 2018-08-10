@@ -471,7 +471,8 @@ public class PrivilegedAccessor {
     private Object value;
     private Class cls;
 
-    private Instance() {
+    // Should return to private when lockss-core shim is gone
+    protected Instance() {
     }
 
     /**
