@@ -34,6 +34,19 @@ package org.lockss.util.time;
 
 public class TimeUtil {
 
+  /** The number of milliseconds in a second */
+  public static final long SECOND = 1000L;
+  /** The number of milliseconds in a minute */
+  public static final long MINUTE = 60L * SECOND;
+  /** The number of milliseconds in an hour */  
+  public static final long HOUR = 60L * MINUTE;
+  /** The number of milliseconds in a day */
+  public static final long DAY = 24L * HOUR;
+  /** The number of milliseconds in a week */
+  public static final long WEEK = 7L * DAY;
+  /** The number of milliseconds in a (non-leap) year */
+  public static final long YEAR = 365L * DAY;
+
   /** Generate a string representing the time interval.
    * @param millis the time interval in milliseconds
    * @return a string in the form dDhHmMsS
@@ -49,7 +62,7 @@ public class TimeUtil {
   }
 
   private static String posTimeIntervalToString(long millis, StringBuilder sb) {
-    if (millis < 10 * TimeConstants.SECOND) {
+    if (millis < 10 * TimeUtil.SECOND) {
       sb.append(millis);
       sb.append("ms");
     } else {
@@ -90,33 +103,33 @@ public class TimeUtil {
       sb.append("-");
       millis = -millis;
     }
-    if (millis >= TimeConstants.SECOND) {
-      temp = millis / TimeConstants.DAY;
+    if (millis >= TimeUtil.SECOND) {
+      temp = millis / TimeUtil.DAY;
       if (temp > 0) {
         sb.append(numberOfUnits(temp, "day"));
-        millis -= temp * TimeConstants.DAY;
-        if (millis >= TimeConstants.MINUTE) {
+        millis -= temp * TimeUtil.DAY;
+        if (millis >= TimeUtil.MINUTE) {
           sb.append(", ");
         }
       }
-      temp = millis / TimeConstants.HOUR;
+      temp = millis / TimeUtil.HOUR;
       if (temp > 0) {
         sb.append(numberOfUnits(temp, "hour"));
-        millis -= temp * TimeConstants.HOUR;
-        if (millis >= TimeConstants.MINUTE) {
+        millis -= temp * TimeUtil.HOUR;
+        if (millis >= TimeUtil.MINUTE) {
           sb.append(", ");
         }
       }
-      temp = millis / TimeConstants.MINUTE;
+      temp = millis / TimeUtil.MINUTE;
       if (temp > 0) {
         sb.append(numberOfUnits(temp, "minute"));
-        millis -= temp * TimeConstants.MINUTE;
+        millis -= temp * TimeUtil.MINUTE;
 
-        if(millis >= TimeConstants.SECOND) {
+        if(millis >= TimeUtil.SECOND) {
           sb.append(", ");
         }
       }
-      temp = millis / TimeConstants.SECOND;
+      temp = millis / TimeUtil.SECOND;
       if (temp > 0) {
         sb.append(numberOfUnits(temp, "second"));
       }
@@ -155,11 +168,10 @@ public class TimeUtil {
   }
 
   static UD units[] = {
-    new UD("w", TimeConstants.WEEK, 3, "h"),
-    new UD("d", TimeConstants.DAY, 1, "m"),
-    new UD("h", TimeConstants.HOUR),
-    new UD("m", TimeConstants.MINUTE),
-    new UD("s", TimeConstants.SECOND, 0),
+    new UD("w", TimeUtil.WEEK, 3, "h"),
+    new UD("d", TimeUtil.DAY, 1, "m"),
+    new UD("h", TimeUtil.HOUR),
+    new UD("m", TimeUtil.MINUTE),
+    new UD("s", TimeUtil.SECOND, 0),
   };
-
 }

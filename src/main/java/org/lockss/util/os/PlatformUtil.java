@@ -43,7 +43,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.*;
 import org.lockss.util.lang.EncodingUtil;
 import org.lockss.util.net.IPAddr;
-import org.lockss.util.time.TimeConstants;
+import org.lockss.util.time.TimeUtil;
 //import org.lockss.config.*;
 import org.slf4j.*;
 
@@ -188,7 +188,7 @@ public class PlatformUtil {
       p.waitFor();
       if (wait) {
 	try {
-	  Thread.sleep(TimeConstants.SECOND);
+	  Thread.sleep(TimeUtil.SECOND);
 	} catch (InterruptedException ignore) {}
       }
     } catch (IOException e) {
@@ -231,7 +231,7 @@ public class PlatformUtil {
       p.waitFor();
       if (wait) {
 	try {
-	  Thread.sleep(TimeConstants.SECOND);
+	  Thread.sleep(TimeUtil.SECOND);
 	} catch (InterruptedException ignore) {}
       }
     } catch (IOException e) {

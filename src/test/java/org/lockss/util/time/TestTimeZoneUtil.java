@@ -42,6 +42,21 @@ import org.lockss.util.test.LockssTestCase5;
 
 public class TestTimeZoneUtil extends LockssTestCase5 {
 
+  private static final String _GMT = "GMT";
+  private static final String _UTC = "UTC";
+  
+  @ParameterizedTest
+  @MethodSource("argsTimeZones")
+  public void testTimeZones(String expectedId, String actualId, TimeZone actualTz) {
+    assertEquals(expectedId, actualId);
+    assertEquals(expectedId, actualTz.getID());
+  }
+  
+  public static Stream<Arguments> argsTimeZones() {
+    return Stream.of(Arguments.of(_GMT, TimeZoneUtil.TIMEZONE_ID_GMT, TimeZoneUtil.TIMEZONE_GMT),
+                     Arguments.of(_UTC, TimeZoneUtil.TIMEZONE_ID_UTC, TimeZoneUtil.TIMEZONE_UTC));
+  }
+  
   @BeforeAll
   public static void beforeAllSanityCheck() {
     Assertions.assertTrue(TimeZoneUtil.isBasicTimeZoneDataAvailable());

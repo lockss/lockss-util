@@ -86,7 +86,7 @@ public class TimeBase {
    */
   public static void setSimulated(String dateTime) throws ParseException {
     DateFormat fmt = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-    fmt.setTimeZone(TimeConstants.DEFAULT_TIMEZONE);
+    fmt.setTimeZone(TimeZoneUtil.DEFAULT_TIMEZONE);
     fmt.setLenient(true);
     simulatedTime = fmt.parse(dateTime).getTime();
     isSimulated = true;

@@ -41,6 +41,28 @@ import org.lockss.util.test.LockssTestCase5;
 
 public class TestTimeUtil extends LockssTestCase5 {
 
+  private static final long _SECOND = 1000L;
+  private static final long _MINUTE = 1000L * 60L;
+  private static final long _HOUR   = 1000L * 60L * 60L;
+  private static final long _DAY    = 1000L * 60L * 60L * 24L;
+  private static final long _WEEK   = 1000L * 60L * 60L * 24L * 7L;
+  private static final long _YEAR   = 1000L * 60L * 60L * 24L * 365L;
+  
+  @ParameterizedTest
+  @MethodSource("argsMilliseconds")
+  public void testMilliseconds(long expected, long actual) {
+    assertEquals(expected, actual);
+  }
+  
+  public static Stream<Arguments> argsMilliseconds() {
+    return Stream.of(Arguments.of(_SECOND, TimeUtil.SECOND),
+                     Arguments.of(_MINUTE, TimeUtil.MINUTE),
+                     Arguments.of(_HOUR, TimeUtil.HOUR),
+                     Arguments.of(_DAY, TimeUtil.DAY),
+                     Arguments.of(_WEEK, TimeUtil.WEEK),
+                     Arguments.of(_YEAR, TimeUtil.YEAR));
+  }
+
   @ParameterizedTest
   @MethodSource("argsTimeIntervalToString")
   public void testTimeIntervalToString(String expected, long input) throws Exception {
@@ -49,17 +71,17 @@ public class TestTimeUtil extends LockssTestCase5 {
   
   public static Stream<Arguments> argsTimeIntervalToString() {
     return Stream.of(Arguments.of("0ms", 0L),
-                     Arguments.of("1000ms", TimeConstants.SECOND),
-                     Arguments.of("-1000ms", - TimeConstants.SECOND),
-                     Arguments.of("9000ms", 9L * TimeConstants.SECOND),
-                     Arguments.of("-9000ms", - 9L * TimeConstants.SECOND),
-                     Arguments.of("10s", 10L * TimeConstants.SECOND),
-                     Arguments.of("1m0s", TimeConstants.MINUTE),
-                     Arguments.of("1h0m0s", TimeConstants.HOUR),
-                     Arguments.of("2d3h0m", 2L * TimeConstants.DAY + 3L * TimeConstants.HOUR),
-                     Arguments.of("20d23h0m", 3L * TimeConstants.WEEK - 1L * TimeConstants.HOUR),
-                     Arguments.of("-20d23h0m", - (3L * TimeConstants.WEEK - 1L * TimeConstants.HOUR)),
-                     Arguments.of("3w0d0h", 3L * TimeConstants.WEEK));
+                     Arguments.of("1000ms", TimeUtil.SECOND),
+                     Arguments.of("-1000ms", - TimeUtil.SECOND),
+                     Arguments.of("9000ms", 9L * TimeUtil.SECOND),
+                     Arguments.of("-9000ms", - 9L * TimeUtil.SECOND),
+                     Arguments.of("10s", 10L * TimeUtil.SECOND),
+                     Arguments.of("1m0s", TimeUtil.MINUTE),
+                     Arguments.of("1h0m0s", TimeUtil.HOUR),
+                     Arguments.of("2d3h0m", 2L * TimeUtil.DAY + 3L * TimeUtil.HOUR),
+                     Arguments.of("20d23h0m", 3L * TimeUtil.WEEK - 1L * TimeUtil.HOUR),
+                     Arguments.of("-20d23h0m", - (3L * TimeUtil.WEEK - 1L * TimeUtil.HOUR)),
+                     Arguments.of("3w0d0h", 3L * TimeUtil.WEEK));
   }
 
   @ParameterizedTest
@@ -71,17 +93,17 @@ public class TestTimeUtil extends LockssTestCase5 {
   @Test
   public static Stream<Arguments> argsTimeIntervalToLongString() throws Exception {
     return Stream.of(Arguments.of("0 seconds", 0L),
-                     Arguments.of("1 second", TimeConstants.SECOND),
-                     Arguments.of("-1 second", - TimeConstants.SECOND),
-                     Arguments.of("9 seconds", 9L * TimeConstants.SECOND),
-                     Arguments.of("-9 seconds", - 9L * TimeConstants.SECOND),
-                     Arguments.of("10 seconds", 10L * TimeConstants.SECOND),
-                     Arguments.of("1 minute", TimeConstants.MINUTE),
-                     Arguments.of("1 hour", TimeConstants.HOUR),
-                     Arguments.of("2 days, 3 hours", 2L * TimeConstants.DAY + 3L * TimeConstants.HOUR),
-                     Arguments.of("20 days, 23 hours, 45 minutes", 3L * TimeConstants.WEEK - TimeConstants.HOUR + 45L * TimeConstants.MINUTE),
-                     Arguments.of("12 days, 13 minutes, 1 second", 12L * TimeConstants.DAY + 13L * TimeConstants.MINUTE + TimeConstants.SECOND),
-                     Arguments.of("21 days", 3L * TimeConstants.WEEK));
+                     Arguments.of("1 second", TimeUtil.SECOND),
+                     Arguments.of("-1 second", - TimeUtil.SECOND),
+                     Arguments.of("9 seconds", 9L * TimeUtil.SECOND),
+                     Arguments.of("-9 seconds", - 9L * TimeUtil.SECOND),
+                     Arguments.of("10 seconds", 10L * TimeUtil.SECOND),
+                     Arguments.of("1 minute", TimeUtil.MINUTE),
+                     Arguments.of("1 hour", TimeUtil.HOUR),
+                     Arguments.of("2 days, 3 hours", 2L * TimeUtil.DAY + 3L * TimeUtil.HOUR),
+                     Arguments.of("20 days, 23 hours, 45 minutes", 3L * TimeUtil.WEEK - TimeUtil.HOUR + 45L * TimeUtil.MINUTE),
+                     Arguments.of("12 days, 13 minutes, 1 second", 12L * TimeUtil.DAY + 13L * TimeUtil.MINUTE + TimeUtil.SECOND),
+                     Arguments.of("21 days", 3L * TimeUtil.WEEK));
   }
   
 }

@@ -251,7 +251,7 @@ public class Deadline implements Comparable, LockssSerializable {
   }
 
   protected static long minDelta = 0;
-  protected static long maxDelta = (4 * TimeConstants.WEEK);
+  protected static long maxDelta = (4 * TimeUtil.WEEK);
 
   /** Set the "reasonable" Deadline range.
    * @param maxInPast longest reasonable time in past (as a positive number
@@ -515,9 +515,9 @@ public class Deadline implements Comparable, LockssSerializable {
       StringBuffer sb = new StringBuffer();
       long nowMs = TimeBase.nowMs();
       long fromNow = expMs - nowMs;
-      long dayDiff = (expMs / TimeConstants.DAY) - (nowMs / TimeConstants.DAY);
-      if (fromNow >= (-2 * TimeConstants.SECOND) &&
-	  fromNow <= (2 * TimeConstants.SECOND)) {
+      long dayDiff = (expMs / TimeUtil.DAY) - (nowMs / TimeUtil.DAY);
+      if (fromNow >= (-2 * TimeUtil.SECOND) &&
+	  fromNow <= (2 * TimeUtil.SECOND)) {
 	sb.append(dfms.format(expiration));
       } else {
 	sb.append(dfsec.format(expiration));

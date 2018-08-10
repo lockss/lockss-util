@@ -36,6 +36,37 @@ public class TimeZoneUtil {
 
   /**
    * <p>
+   * The ID for the GMT time zone.
+   * </p>
+   */
+  public static final String TIMEZONE_ID_GMT = "GMT";
+  
+  /**
+   * <p>
+   * The GMT time zone.
+   * </p>
+   */
+  public static final TimeZone TIMEZONE_GMT = getExactTimeZone(TIMEZONE_ID_GMT);
+  
+  /**
+   * <p>
+   * The ID for the UTC time zone.
+   * </p>
+   */
+  public static final String TIMEZONE_ID_UTC = "UTC";
+  
+  /**
+   * <p>
+   * The UTCtime zone.
+   * </p>
+   */
+  public static final TimeZone TIMEZONE_UTC = getExactTimeZone(TIMEZONE_ID_UTC);
+
+  /** The default timezone, GMT */
+  public static final TimeZone DEFAULT_TIMEZONE = TIMEZONE_GMT;
+  
+  /**
+   * <p>
    * Returns a {@link TimeZone} instance with exactly the given identifier, or
    * throws {@link IllegalArgumentException}.
    * </p>
@@ -107,5 +138,5 @@ public class TimeZoneUtil {
       "US/Pacific",
       "US/Eastern"
   );
-  
+
 }
