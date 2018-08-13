@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+
+  <!-- Define LOCKSS log levels that aren't present in log4j -->
+  <!-- These are currently duplicated in org.lockss.log.Logger  -->
+  <CustomLevels>
+    <CustomLevel name="SITE_ERROR" intLevel="210" />
+    <CustomLevel name="SITE_WARNING" intLevel="310" />
+    <CustomLevel name="DEBUG2" intLevel="550" />
+    <CustomLevel name="DEBUG3" intLevel="600" />
+  </CustomLevels>
+
+  <Appenders>
+    <Console name="Console" target="SYSTEM_OUT">
+      <PatternLayout
+	  header="%d{HH:mm:ss.SSS}"
+	  pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36}: %msg%n"/>
+    </Console>
+  </Appenders>
+
+  <Loggers>
+    <Root level="INFO">
+      <AppenderRef ref="Console"/>
+    </Root>
+    <Logger name="org.apache.http" level="INFO"/>
+  </Loggers>
+</Configuration>

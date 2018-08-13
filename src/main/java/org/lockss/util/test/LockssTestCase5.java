@@ -52,6 +52,7 @@ import org.junit.jupiter.api.function.*;
 import org.lockss.util.test.matcher.*;
 import org.opentest4j.MultipleFailuresError;
 import org.slf4j.*;
+// import org.lockss.log.Logger;
 import org.w3c.dom.Node;
 
 /**
@@ -69,6 +70,7 @@ import org.w3c.dom.Node;
 public class LockssTestCase5 {
 
   private static Logger log = LoggerFactory.getLogger(LockssTestCase5.class);
+//   private static Logger log = Logger.getLogger(LockssTestCase5.class);
   
   public <V> V fail(String message) {
 
@@ -1391,7 +1393,7 @@ public class LockssTestCase5 {
   /** Assert that Iterable has no elements */
   public void assertEmpty(Iterable iter) {
     assertNotNull(iter);
-    assertFalse(iter.iterator().hasNext());
+    assertFalse(iter.iterator().hasNext(), "Expected empty, wasn't");
   }
 
   /** Assert that Iterator has no elements */
