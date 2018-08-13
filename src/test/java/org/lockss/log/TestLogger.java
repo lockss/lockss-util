@@ -86,13 +86,11 @@ public class TestLogger extends LockssTestCase5 {
     } else {
       try {
 	origDefLevel = Logger.levelOf(origSysProp);
-	System.err.println("origDefLevel: " + origDefLevel);
       } catch (Exception e) {
 	Assertions.fail("org.lockss.defaultLogLevel set to illegal level string: " +
 			origSysProp);
       }
     }
-    System.err.println("origDefLevel: " + origDefLevel);
 
     // Add testing config file to logj4's config.
     System.setProperty("log4j.configurationFile",
