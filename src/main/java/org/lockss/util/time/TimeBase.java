@@ -169,8 +169,8 @@ public class TimeBase {
       try {
         observer.accept(simulatedTime);
       }
-      catch (Throwable thr) {
-        log.debug(String.format("Observer %s threw %s", observer, thr));
+      catch (Exception exc) {
+        log.debug(String.format("Observer %s threw %s", observer, exc));
       }
     }
   }

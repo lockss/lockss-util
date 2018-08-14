@@ -114,8 +114,12 @@ public class PlatformUtil {
     return instance;
   }
 
-  /** Return the system temp directory; see {@link
-   * ConfigManager#PARAM_TMPDIR}
+  /**
+   * <p>
+   * Return the system temp directory.
+   * </p>
+   * 
+   * @see #SYSPROP_JAVA_IO_TMPDIR
    */
   public static String getSystemTempDir() {
     return System.getProperty(SYSPROP_JAVA_IO_TMPDIR);
@@ -126,10 +130,16 @@ public class PlatformUtil {
     return new File(".").getAbsoluteFile().getParent();
   }
 
+  /**
+   * @see #SYSPROP_UNFILTERED_TCP_PORTS
+   */
   public List<String> getUnfilteredTcpPorts() {
     return Arrays.asList(StringUtils.split(System.getProperty(SYSPROP_UNFILTERED_TCP_PORTS, ""), ";"));
   }
 
+  /**
+   * @see #SYSPROP_UNFILTERED_UDP_PORTS
+   */
   public List<String> getUnfilteredUdpPorts() {
     return Arrays.asList(StringUtils.split(System.getProperty(SYSPROP_UNFILTERED_UDP_PORTS, ""), ";"));
   }

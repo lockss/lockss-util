@@ -101,25 +101,41 @@ public class LockssTestCase5 {
    */
   private static int failures;
   
+  /**
+   * <p>
+   * Sets up {@link PlatformUtil#SYSPROP_JAVA_IO_TMPDIR} before each test.
+   * </p>
+   * 
+   * @see #afterEachJavaIoTmpdir()
+   */
   @BeforeEach
-  public void beforeEachJavaIoTmpdir() {
+  public final void beforeEachJavaIoTmpdir() {
     javaIoTmpdir = System.getProperty(PlatformUtil.SYSPROP_JAVA_IO_TMPDIR);
   }
   
+  /**
+   * <p>
+   * Resets {@link PlatformUtil#SYSPROP_JAVA_IO_TMPDIR} before each test.
+   * </p>
+   * 
+   * @see #afterEachJavaIoTmpdir()
+   */
   @AfterEach
-  public void afterEachJavaIoTmpdir() {
+  public final void afterEachJavaIoTmpdir() {
     if (!StringUtils.isEmpty(javaIoTmpdir)) {
       System.setProperty(PlatformUtil.SYSPROP_JAVA_IO_TMPDIR, javaIoTmpdir);
     }
   }
 
   /**
-   * Remove any temp dirs, cancel any outstanding {@link
-   * org.lockss.test.LockssTestCase.DoLater}s
-   * @throws Exception
+   * <p>
+   * Cancels the {@link DoLater} tasks after each test.
+   * </p>
+   *
+   * @see DoLater
    */
   @AfterEach
-  public void afterEachDoLaters() throws Exception {
+  public final void afterEachDoLaters() {
     if (doLaters != null) {
       List<DoLater> copy;
       synchronized (this) {
@@ -135,8 +151,16 @@ public class LockssTestCase5 {
     }
   }
 
+  /**
+   * <p>
+   * Cleans up temporary directories after each test.
+   * </p>
+   * 
+   * @throws Exception
+   *           if I/O exceptions occur in the process.
+   */
   @AfterEach
-  public void afterEachTmpDirs() throws Exception {
+  public final void afterEachTmpDirs() throws Exception {
     if (tmpDirs != null && !isKeepTempFiles()) {
       for (Iterator<File> iter = tmpDirs.iterator() ; iter.hasNext() ; ) {
         File dir = iter.next();
@@ -158,17 +182,84 @@ public class LockssTestCase5 {
     }
   }
 
+  /**
+   * <p>
+   * Sets up a repeated test for {@link #assertSuccessRate(RepetitionInfo, float)}.
+   * </p>
+   * 
+   * @param repetitionInfo
+   *          The {@link RepetitionInfo} instance associated with
+   *          {@link RepeatedTest}
+   * @see #assertSuccessRate(RepetitionInfo, float)
+   */
   public void setUpSuccessRate(RepetitionInfo repetitionInfo) {
     if (repetitionInfo.getCurrentRepetition() == 1) {
       failures = 0;
     }
   }
   
+  /**
+   * <p>
+   * In a repeated test that has been set up for counting failures, signals that
+   * one of the test tries has failed.
+   * </p>
+   * 
+   * @param repetitionInfo
+   *          The {@link RepetitionInfo} instance associated with
+   *          {@link RepeatedTest}
+   * @see #assertSuccessRate(RepetitionInfo, float)
+   */
   public void signalFailure(RepetitionInfo repetitionInfo) {
-    ++failures; // currently ignores repetitionInfo, could be extended later
+    ++failures;
+    log.warn(String.format("Test failed try %d of %d (%d %s)",
+                           repetitionInfo.getCurrentRepetition(),
+                           repetitionInfo.getTotalRepetitions(),
+                           failures,
+                           failures == 1 ? "failure" : "failures"));
   }
-  
+
+  /**
+   * <p>
+   * In a repeated test that has been set up for counting failures, asserts that
+   * the test has succeeded at the given rate or greater (e.g. {@code .8f} means
+   * 80% of the time or greater).
+   * </p>
+   * <p>
+   * This is used in conjunction with {@link RepeatedTest},
+   * {@link #setUpSuccessRate(RepetitionInfo)} and
+   * {@link #signalFailure(RepetitionInfo)} in a
+   * {@code try}/{@code catch}/{@code finally} block, in this manner:
+   * </p>
+<pre>
+&#64;RepeatedTest($totalrepetitions)
+public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
+  try {
+    setUpSuccessRate(repetitionInfo);
+    // code block to be repeated $totalrepetitions times
+  }
+  catch (Exception exc) {
+    signalFailure(repetitionInfo);
+  }
+  finally {
+    assertSuccessRate(repetitionInfo, $successrate);
+  }
+}
+</pre>
+   * 
+   * @param repetitionInfo
+   *          The {@link RepetitionInfo} instance associated with
+   *          {@link RepeatedTest}
+   * @param rate
+   *          A desired success rate
+   * @see #setUpSuccessRate(RepetitionInfo)
+   * @see #signalFailure(RepetitionInfo)
+   * @see RepeatedTest
+   * @see RepetitionInfo
+   */
   public void assertSuccessRate(RepetitionInfo repetitionInfo, float rate) {
+    if (rate < 0.0f || 1.0f < rate) {
+      throw new IllegalArgumentException("Success rate outside the range 0.0-1.0");
+    }
     int total = repetitionInfo.getTotalRepetitions();
     if (repetitionInfo.getCurrentRepetition() == total) {
       float achieved = ((float)total - failures) / total;
