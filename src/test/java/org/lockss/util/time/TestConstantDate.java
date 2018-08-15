@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2000-2018, Board of Trustees of Leland Stanford Jr. University,
+Copyright (c) 2000-2018, Board of Trustees of Leland Stanford Jr. University
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -30,29 +30,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-package org.lockss.util.test.matcher;
+package org.lockss.util.time;
 
 import org.junit.jupiter.api.Test;
 import org.lockss.util.test.LockssTestCase5;
 
-public class TestMatchesPattern extends LockssTestCase5 {
+public class TestConstantDate extends LockssTestCase5 {
 
   @Test
-  public void testMatchesPattern() {
-    assertThat("123", MatchesPattern.matchesPattern("1.3"));
-    assertThat("123", not(MatchesPattern.matchesPattern("1.32")));
-    assertThat("string string", not(MatchesPattern.matchesPattern("g st")));
-    assertThat("string string", MatchesPattern.matchesPattern(".*g st.*"));
-    assertThat("string string", not(MatchesPattern.matchesPattern("xxx")));
+  public void testConstantDate() {
+    ConstantDate cd1 = new ConstantDate();
+    assertThrows(UnsupportedOperationException.class, () -> cd1.setTime(0L));
+    assertThrows(UnsupportedOperationException.class, () -> cd1.setTime(System.currentTimeMillis()));
+    assertThrows(UnsupportedOperationException.class, () -> cd1.setTime(Long.MAX_VALUE));
+    ConstantDate cd2 = new ConstantDate(System.currentTimeMillis());
+    assertThrows(UnsupportedOperationException.class, () -> cd2.setTime(0L));
+    assertThrows(UnsupportedOperationException.class, () -> cd2.setTime(System.currentTimeMillis() - 1000L));
+    assertThrows(UnsupportedOperationException.class, () -> cd2.setTime(System.currentTimeMillis()));
+    assertThrows(UnsupportedOperationException.class, () -> cd2.setTime(System.currentTimeMillis() + 1000L));
+    assertThrows(UnsupportedOperationException.class, () -> cd2.setTime(Long.MAX_VALUE));
   }
   
-  @Test
-  public void testLockssTestCase5() {
-    assertThat("123", matchesPattern("1.3"));
-    assertThat("123", not(matchesPattern("1.32")));
-    assertThat("string string", not(matchesPattern("g st")));
-    assertThat("string string", matchesPattern(".*g st.*"));
-    assertThat("string string", not(matchesPattern("xxx")));
-  }
- 
 }
