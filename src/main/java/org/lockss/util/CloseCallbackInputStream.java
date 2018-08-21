@@ -32,14 +32,14 @@ import java.io.*;
 import java.util.*;
 import org.apache.commons.io.input.ProxyInputStream;
 import org.apache.commons.io.FileUtils;
+import org.lockss.log.Logger;
 
 /**
  * Wrapper InputStream that calls a user-supplied callback when closed.
  * Useful for deleting temporary files
  */
 public class CloseCallbackInputStream extends ProxyInputStream {
-//   private static final Logger log =
-//     Logger.getLogger("CloseCallbackInputStream");
+  private static final Logger log = Logger.getLogger();
 
   private Callback cb;
   private Object cookie;
@@ -57,7 +57,7 @@ public class CloseCallbackInputStream extends ProxyInputStream {
       try {
 	cb.streamClosed(cookie);
       } catch (Exception e ) {
-// 	log.warning("Error in streamClosed callback", e);
+	log.warning("Error in streamClosed callback", e);
       }
     }
   }

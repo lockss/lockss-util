@@ -39,12 +39,12 @@ import org.apache.commons.collections4.*;
 import org.apache.commons.collections4.bag.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.provider.*;
-import org.slf4j.*;
+import org.lockss.log.Logger;
 
 
 public class TestVariantTest extends LockssTestCase5 {
   
-  private final static Logger log = LoggerFactory.getLogger(TestVariantTest.class);
+  private static Logger log = Logger.getLogger(LockssTestCase5.class);
 
   // Name of currently running variant, stored by variant mechanism
   private String tmpVariant = "no variant";

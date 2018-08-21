@@ -1,0 +1,82 @@
+The classes in this package, together with several resource files extend
+log4j2 to provide compatibility with the legacy LOCKSS logger:
+
+- Provide most features of legacy logger:
+  - Obtain Logger instances with Logger.getLogger()
+  - Logger api
+  - Configure log level via LOCKSS configuration
+  Does not support the old LogTargets.  Targets (Appenders) must be
+  configured using log4j directly.
+
+- Define log4j custom log levels corresponding to Debug2, Debug3,
+  SiteError, SiteWarning.
+
+- Extend the use of the custom levels to code that uses log4j directly, via
+  a subclass of org.apache.logging.log4j.core.Logger which implements the
+  full suite of logging methods corresponding to the custom levels.
+
+- Allow configuration of logger levels via the LOCKSS config mechanism.
+
+- Duplicate the feature whereby stack traces can be included in the log
+  only when they're logged at a succifiently high level, or when the logger
+  is set at a sufficiently low level.
+
+- Provide a framework for users, and downstream projects, to customize the
+  logging setup.  A sequence of config files is loaded:
+
+  - log4j2.xml has a standard Logger and Appender setup and should not be
+    overridden.
+
+  - log4j2-logger-test.xml is used by the logger tests in this package.
+    main/resources/log4j2-logger-test.xml is empty; the logger setup needed
+    for the tests is in test/resources/log4j2-logger-test.xml, which gets
+    loaded when the tests are running because appears on the classpath
+    before the main classes/files.
+
+  - log4j2-project.xml is intended for downstream projects.
+    main/resources/log4j2-project.xml is empty; if a downstream project
+    includes one in its resource directory it will normally be first on the
+    classpath so will be loaded.
+
+- log4j2.component.properties is used to specify:
+
+  - The list of config files to be loaded (above).
+
+  - Factories required by org.lockss.log.Logger & friends:
+
+    - The factory class L4JLoggerContextSelector causes the LoggerContext
+      to be a L4JLoggerContext.
+
+    - L4JContextDataInjector makes the configured values for
+      o.l.log.stackTraceLevel and stackTraceSeverity available to the
+      PatternConverter that needs them.
+
+- The plugin L4JThrowablePatternConverter is a PatternConverter bound to
+  %lex, which is simialr to %ex but which suppresses the stack trace if
+  neither the message level nor the logger's configured level satisfies
+  stackTraceSeverity and stackTraceLevel, respectively.  The Logger's level
+  is obtained from the ThreadContextStack, where L4JLogger
+
+- The custom log levels can be used directly with the log4j api in one of
+  two ways:
+
+  - by calling the log() method and passing in one of the L4JLevel
+    constants.
+
+  - All the loggers returned by LogManager.getLogger() are instances of
+    L4JLogger, which implements the full suite of debug2(), siteWarning(),
+    etc.  methods, as well as (inheriting) the standard methods.  In order
+    to call those methods the result of LogManager.getLogger() must be
+    downcast to L4JLogger.  Convenience methods are provided to do that:
+
+      L4JLogger log = L4JLogger.getLogger("name");
+      L4JLogger log = L4JLogger.getLogger(Class);
+      L4JLogger log = L4JLogger.getLogger();
+
+      L4JLogger log = L4JLogger.cast(LogManager.getFormatterLogger());
+
+    If log4j has not been configured as expected (with the required
+    factories), the logger won't actually be a L4JLogger, and a
+    ClassCaseException will result.  The cast() and other convenience
+    methods above issue a more informative message if that happens.
+

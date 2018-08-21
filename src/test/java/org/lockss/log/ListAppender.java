@@ -45,6 +45,7 @@ import org.apache.commons.lang3.*;
 
 public class ListAppender extends AbstractAppender {
   private List<String> messages = new ArrayList<>();
+  private List<String> levelMessages = new ArrayList<>();
 
   public ListAppender(String name, Filter filter,
 		      Layout<? extends Serializable> layout) {
@@ -54,18 +55,25 @@ public class ListAppender extends AbstractAppender {
   @Override
   public void append(LogEvent event) {
     messages.add(event.getMessage().getFormattedMessage());
+    levelMessages.add(event.getLevel() + ": " +
+		 event.getMessage().getFormattedMessage());
   }
 
   public List<String> getMessages() {
     return messages;
   }
 
-  public void setMessages(List<String> messages) {
-    this.messages = messages;
+  public List<String> getLevelMessages() {
+    return levelMessages;
   }
+
+//   public void setMessages(List<String> messages) {
+//     this.messages = messages;
+//   }
 
   public void reset() {
     this.messages = new ArrayList<>();;
+    this.levelMessages = new ArrayList();
   }
 
   @PluginFactory

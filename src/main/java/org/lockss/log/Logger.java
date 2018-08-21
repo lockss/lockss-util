@@ -38,6 +38,7 @@ import org.lockss.util.*;
 import org.apache.logging.log4j.*;
 import org.apache.logging.log4j.core.*;
 import org.apache.logging.log4j.core.config.*;
+import org.apache.logging.log4j.util.StackLocatorUtil;
 
 import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.commons.lang3.StringUtils;
@@ -53,23 +54,7 @@ import org.apache.commons.lang3.time.FastDateFormat;
  */
 public class Logger {
 
-  public static final String PREFIX = "org.lockss." + "log.";
-  static final String PARAM_DEFAULT_LEVEL = PREFIX + "default.level";
-  static final String DEFAULT_DEFAULT_LEVEL = "info";
-
-  /** Sets the log level of the named logger */
-  static final String PARAM_LOG_LEVEL = PREFIX + "<logname>.level";
-
-  /** Not supported, kept so can log error if used */
-  static final String PARAM_LOG_TARGETS = PREFIX + "targets";
-
-  /** System property for name of default log level */
-  public static final String SYSPROP_DEFAULT_LOG_LEVEL =
-    "org.lockss.defaultLogLevel";
-
-  /** Not supported, kept so can log error if used */
-  public static final String SYSPROP_DEFAULT_LOG_TARGET =
-    "org.lockss.defaultLogTarget";
+  private static final String FQCN = Logger.class.getName();
 
   private static final int MIN_LEVEL = 1;
 
@@ -78,12 +63,14 @@ public class Logger {
   /** Errors indicate that the system may not operate correctly, but won't
    * damage anything. */
   public static final int LEVEL_ERROR = 2;
-  /** Errors caused by misbehavior of some server out of our control. */
+  /** Errors caused by misbehavior of some server or component out of our
+   * control. */
   public static final int LEVEL_SITE_ERROR = 3;
   /** Warnings are conditions that should not normally arise but don't
       prevent the system from continuing to run correctly. */
   public static final int LEVEL_WARNING = 4;
-  /** Warnings about misbehavior of some server out of our control. */
+  /** Warnings about misbehavior of some server or component out of our
+   * control. */
   public static final int LEVEL_SITE_WARNING = 5;
   /** Informative messages that should normally be logged. */
   public static final int LEVEL_INFO = 6;
@@ -101,38 +88,54 @@ public class Logger {
 
   private static final int MAX_LEVEL = 9;
 
+  public static final String PREFIX = "org.lockss." + "log.";
+  static final String PARAM_DEFAULT_LEVEL = PREFIX + "default.level";
+
+  /** System property for name of default log level */
+  public static final String SYSPROP_DEFAULT_LOG_LEVEL =
+    "org.lockss.defaultLogLevel";
+
+  /** Sets the log level of the named logger */
+  static final String PARAM_LOG_LEVEL = PREFIX + "<logname>.level";
+
+  /** Log level (numeric) at which stack traces will be included */
+  public static final String PARAM_STACKTRACE_LEVEL = PREFIX + "stackTraceLevel";
+  public static final String DEFAULT_STACKTRACE_LEVEL = "debug";
+
+  /** Log severity (numeric) for which stack traces will be included no
+   * matter what the current log level */
+  public static final String PARAM_STACKTRACE_SEVERITY =
+    PREFIX + "stackTraceSeverity";
+  public static final String DEFAULT_STACKTRACE_SEVERITY = "error";
+
+  /** Not supported, kept so can log error if used */
+  static final String PARAM_LOG_TARGETS = PREFIX + "targets";
+
+  /** Not supported, kept so can log error if used */
+  public static final String SYSPROP_DEFAULT_LOG_TARGET =
+    "org.lockss.defaultLogTarget";
+
+  // Custom level strings
   static final String SITE_ERROR = "SITE_ERROR";
   static final String SITE_WARNING = "SITE_WARNING";
   static final String DEBUG2 = "DEBUG2";
   static final String DEBUG3 = "DEBUG3";
 
-  // TK - These levels are defined in log4j2.xml, but the static init here
-  // may (usually does) happen before log4j loads that file, and it assumes
-  // the levels have been defined.  It would be better to defer the init so
-  // that the values don't need to be repeated here.
-  static {
-    Level.forName(SITE_ERROR, 210);
-    Level.forName(SITE_WARNING, 310);
-    Level.forName(DEBUG2, 550);
-    Level.forName(DEBUG3, 600);
-  }
-
-  // Mapping between numeric level and string
+  // Descriptors for all log levels
   static LevelDescr[] allLevelDescrs = {
     new LevelDescr(LEVEL_CRITICAL, "Critical", Level.FATAL),
     new LevelDescr(LEVEL_ERROR, "Error", Level.ERROR),
-    new LevelDescr(LEVEL_SITE_ERROR, "SiteError", Level.getLevel(SITE_ERROR)),
+    new LevelDescr(LEVEL_SITE_ERROR, "SiteError", L4JLevel.SITE_ERROR),
     new LevelDescr(LEVEL_WARNING, "Warning", Level.WARN),
-    new LevelDescr(LEVEL_SITE_WARNING, "SiteWarning",
-		   Level.getLevel(SITE_WARNING)),
+    new LevelDescr(LEVEL_SITE_WARNING, "SiteWarning", L4JLevel.SITE_WARNING),
     new LevelDescr(LEVEL_INFO, "Info", Level.INFO),
     // There must be entries for both "Debug" and "Debug1" in table.
     // Whichever string is last will be used in messages
     new LevelDescr(LEVEL_DEBUG1, "Debug1", Level.DEBUG),
     new LevelDescr(LEVEL_DEBUG, "Debug", Level.DEBUG),
-    new LevelDescr(LEVEL_DEBUG2, "Debug2", Level.getLevel(DEBUG2)),
+    new LevelDescr(LEVEL_DEBUG2, "Debug2", L4JLevel.DEBUG2),
     new LevelDescr(LEVEL_DEBUG3, "Trace", Level.TRACE),
-    new LevelDescr(LEVEL_DEBUG3, "Debug3", Level.getLevel(DEBUG3)),
+    new LevelDescr(LEVEL_DEBUG3, "Debug3", L4JLevel.DEBUG3),
   };
 
   // Array of LevelDescr indexed by LOCKSS Logger level
@@ -143,7 +146,7 @@ public class Logger {
     }
   }
 
-  // Map LevelDescr indexed by LOCKSS Logger level
+  // Map of LevelDescr keyed by log4j Level
   static Map<Level,LevelDescr> log4jLevelDescrs = new HashMap<>();
   static {
     for (LevelDescr ld : allLevelDescrs) {
@@ -154,23 +157,26 @@ public class Logger {
   // Default default log level if config parameter not set.
   public static final int DEFAULT_LEVEL = LEVEL_INFO;
 
-  private static Map<String, Logger> logs = new HashMap<String, Logger>();
-
-  /** Experimental for use in unit tests */
+  /** TK - used in unit tests */
   public static void resetLogs() {
 //     logs = new HashMap<String, Logger>();
   }
 
   private static boolean deferredInitDone = false;
+
+  // Maintains unique Logger instance per logger name
+  private static Map<String, Logger> logs = new HashMap<String, Logger>();
+
+  // Logger used by this class
   protected static Logger myLog;
 
-  private org.apache.logging.log4j.Logger log;
 
+  private L4JLogger log;		// The wrapped log4j Logger
   private String name;			// this log's name
-  private boolean idThread = true;
+
 
   /** Create a LOCKSS logger wrapping the log4j logger */
-  protected Logger(org.apache.logging.log4j.Logger log) {
+  protected Logger(L4JLogger log) {
     this.log = log;
   }
 
@@ -184,55 +190,22 @@ public class Logger {
   }
 
   /**
-   * <p>Convenience method to name a logger after a class.
+   * Convenience method to name a logger after a class.
    * Simply calls {@link #getLogger(String)} with the result of
-   * {@link Class#getSimpleName()}.</p>
+   * {@link Class#getName()}.
    * @param clazz The class after which to name the returned logger.
    * @return A logger named after the given class.
-   * @since 1.56
    */
   public static Logger getLogger(Class<?> clazz) {
-    return getLogger(clazz.getSimpleName());
+    return getLogger(clazz.getName());
   }
 
-  private static void deferredInit() {
-    if (!deferredInitDone) {
-
-      deferredInitDone = true;
-      myLog = Logger.getWrappedLogger("Logger");
-
-      // Must set this true before calling getWrappedLogger or will
-      // recurse.  Rest of this is careful not to need the deferred init to
-      // be done.
-      getLoggerContext().addPropertyChangeListener(new PropertyChangeListener() {
-	  @Override
-	  public void propertyChange(final PropertyChangeEvent evt) {
-// 	    myLog.debug("event: " + evt);
-	    switch (evt.getPropertyName()) {
-	    case LoggerContext.PROPERTY_CONFIG:
-	      installLockssLevels(false);
-	    }
-	  }
-	});
-
-      // Must process defaultLogLevel sysprop at startup, as otherwise
-      // wouldn't take effect until first config load
-      String spLevel = System.getProperty(SYSPROP_DEFAULT_LOG_LEVEL);
-      if (!StringUtils.isBlank(spLevel)) {
-	try {
-	  dynamicRootLevel = getLog4JLevel(spLevel);
-	  installLockssLevels(false);
-	} catch (IllegalLevelException e) {
-	  // fall through
-	}
-      }
-      if (!StringUtils.isBlank(System.getProperty(SYSPROP_DEFAULT_LOG_TARGET))) {
-	myLog.error(SYSPROP_DEFAULT_LOG_TARGET +
-		    " sysprop not supported; use log4j2 config instead: " +
-		    System.getProperty(SYSPROP_DEFAULT_LOG_TARGET),
-		    new Throwable());
-      }
-    }
+  /**
+   * Logger factory.  Return the unique instance of <code>Logger</code>
+   * with the name of the calling class, creating it if necessary.
+   */
+  public static Logger getLogger() {
+    return getLogger(StackLocatorUtil.getCallerClass(2));
   }
 
   /**
@@ -245,9 +218,12 @@ public class Logger {
    * @param initialLevel the initial log level (<code>Logger.LEVEL_XXX</code>).
    */
   protected static Logger getWrappedLogger(String name) {
-    return getWrappedLogger(name, (s) -> new Logger(LogManager.getLogger(s)));
+    return getWrappedLogger(name, (s) -> new Logger(L4JLogger.getLogger(s)));
   }
 
+  /**
+   * Return an instance of 
+   */
   protected static Logger getWrappedLogger(String name,
 					   java.util.function.Function<String,Logger> factory) {
     deferredInit();
@@ -255,13 +231,73 @@ public class Logger {
     if (name == null) {
       name = genName();
     }
-    Logger res = logs.get(name);
-    if (res == null) {
-      res = factory.apply(name);
-      if (myLog != null) myLog.debug2("Creating logger: " + name);
-      logs.put(name, res);
+    Logger res;
+    synchronized (logs) {
+      res = logs.get(name);
+      if (res == null) {
+	res = factory.apply(name);
+	if (myLog != null) myLog.debug2("Creating logger: " + name);
+	logs.put(name, res);
+      }
     }
     return res;
+  }
+
+
+  private static void deferredInit() {
+    if (!deferredInitDone) {
+
+      // Must set this true before calling getWrappedLogger or will
+      // recurse.  Rest of this is careful not to need the deferred init to
+      // be done.
+      deferredInitDone = true;
+
+      // Create my logger
+      myLog = Logger.getWrappedLogger(Logger.class.getName());
+
+      // Arrange to be notified when the log4j config is reloaded, so we
+      // can reset the levels dynamically configured using LOCKSS config
+      getLoggerContext().addPropertyChangeListener(new PropertyChangeListener() {
+	  @Override
+	  public void propertyChange(final PropertyChangeEvent evt) {
+ 	    myLog.debug2("event: " + evt);
+	    switch (evt.getPropertyName()) {
+	    case LoggerContext.PROPERTY_CONFIG:
+	      installLockssLevels(false);
+	    }
+	  }
+	});
+
+      // Process at startup several config items that are normally
+      // processed when the LOCKSS config is set.
+
+      // Ensure that default values of stacktrace params are stored in the
+      // context
+      setLockssConfig(MapUtil.map(PARAM_STACKTRACE_SEVERITY,
+				  DEFAULT_STACKTRACE_SEVERITY,
+				  PARAM_STACKTRACE_LEVEL,
+				  DEFAULT_STACKTRACE_LEVEL));
+
+      // org.lockss.defaultLogLevel sysprop
+      String spLevel = System.getProperty(SYSPROP_DEFAULT_LOG_LEVEL);
+      if (!StringUtils.isBlank(spLevel)) {
+	try {
+	  dynamicRootLevel = getLog4JLevel(spLevel);
+	  installLockssLevels(false);
+	} catch (IllegalLevelException e) {
+	  // fall through
+	}
+      }
+
+      // Complain if attempt to set log target using
+      // org.lockss.defaultLogTarget sysprop
+      if (!StringUtils.isBlank(System.getProperty(SYSPROP_DEFAULT_LOG_TARGET))) {
+	myLog.error(SYSPROP_DEFAULT_LOG_TARGET +
+		    " sysprop not supported; use log4j2 config instead: " +
+		    System.getProperty(SYSPROP_DEFAULT_LOG_TARGET),
+		    new Throwable());
+      }
+    }
   }
 
   static int uncnt = 0;
@@ -280,7 +316,7 @@ public class Logger {
     throw new IllegalLevelException("Log level not found: " + name);
   }
 
-  /** Return name of given log level (<code>Logger.LEVEL_XXX</code>).
+  /** Return name of given numeric log level (<code>Logger.LEVEL_XXX</code>).
    */
   public static String nameOf(int level) {
     LevelDescr ld = levelDescrs[level];
@@ -290,8 +326,33 @@ public class Logger {
     return ld.name;
   }
 
+  /** Return the log4j Level corresponding to the LOCKSS integer log level.
+   * If out of range, return the closest Level (min or max) */
+  static Level getLog4JLevel(int level) {
+    LevelDescr ld = level < MIN_LEVEL ? levelDescrs[MIN_LEVEL] :
+      (level > MAX_LEVEL ? levelDescrs[MAX_LEVEL] : levelDescrs[level]);
+    return ld.log4jLevel;
+  }
+
+  static int getLockssLevel(Level log4jLevel) {
+    LevelDescr ld = log4jLevelDescrs.get(log4jLevel);
+    return ld != null ? ld.level : LEVEL_CRITICAL;
+  }
+
+  static Level getLog4JLevel(String levelName) throws IllegalLevelException {
+    return getLog4JLevel(levelOf(levelName));
+  }
+
+
+
+  /** Return name of this logger. */
+  public String getName() {
+    return getLog4Logger().getName();
+  }
+
   /**
-   * Set minimum severity level logged by this log
+   * Set minimum severity level logged by this log.  <b>This change will
+   * not survive a config reload</b>
    * @param level <code>Logger.LEVEL_XXX</code>
    */
   public void setLevel(int level) {
@@ -350,24 +411,7 @@ public class Logger {
    * @param e <code>Throwable</code>
    */
   public void log(int level, String msg, Throwable e) {
-    log.log(getLog4JLevel(level), msg, e);
-  }
-
-  /** Return the log4j Level corresponding to the LOCKSS integer log level.
-   * If out of range, return the closest Level (min or max) */
-  static Level getLog4JLevel(int level) {
-    LevelDescr ld = level < MIN_LEVEL ? levelDescrs[MIN_LEVEL] :
-      (level > MAX_LEVEL ? levelDescrs[MAX_LEVEL] : levelDescrs[level]);
-    return ld.log4jLevel;
-  }
-
-  static int getLockssLevel(Level log4jLevel) {
-    LevelDescr ld = log4jLevelDescrs.get(log4jLevel);
-    return ld != null ? ld.level : LEVEL_CRITICAL;
-  }
-
-  static Level getLog4JLevel(String levelName) throws IllegalLevelException {
-    return getLog4JLevel(levelOf(levelName));
+    log.logIfEnabled(FQCN, getLog4JLevel(level), null, msg, e);
   }
 
   /**
@@ -379,7 +423,18 @@ public class Logger {
     log(level, msg, null);
   }
 
+  // Support for LOCKSS-style configuration of log levels.  Config params
+  // of the form org.lockss.log.<logger-name>.level = <level> cause the
+  // level of the logger named <logger-name> and, if <logger-name> is
+  // unqualified, all loggers which have <logger-name> as the last
+  // component of their name.
+
+  // Map of <logger-name> to log4j Level
   static Map<String,Level> dynamicLevels;
+
+  // The level to which the log4j root logger should be set.  Comes from
+  // org.lockss.log.default.level, if set, else org.lockss.defaultLogLevel
+  // sysprop, if set.
   static Level dynamicRootLevel;
 
   protected static final Pattern LOG_LEVEL_PAT =
@@ -387,54 +442,90 @@ public class Logger {
 
   /** Set all log levels specified in the map of LOCKSS-style config values.
    * @param lconfig map of LOCKSS log config params (e.g.,
-   *                <code>org.lockss.log.<i>log-name</i>.level</code>) ->
+   *                <code>org.lockss.log.<i>log-name</i>.level</code>) to
    *                LOCKSS level name.  This is expected to be the subset
    *                of the LOCKSS config relevant to logging.
    */
   public static void setLockssConfig(Map<String,String> lconfig) {
     myLog.debug2("setLockssConfig: " + lconfig);
+    LoggerContext ctx0 = getLoggerContext();
+    L4JLoggerContext ctx = null;
+    if (ctx0 instanceof L4JLoggerContext) {
+      ctx = (L4JLoggerContext)ctx0;
+    }
+    // build map of <log-level> to LOCKSS level name
     Map<String,String> dynLevels = new HashMap<>();
     for (Map.Entry<String,String> ent : lconfig.entrySet()) {
       String key = ent.getKey();
       Matcher mat = LOG_LEVEL_PAT.matcher(key);
       if (mat.matches()) {
 	String logname = mat.group(1);
-	String val = ent.getValue();
+	String level = ent.getValue();
 	if (StringUtils.isBlank(logname)) {
 	  myLog.error("Illegal log name: " + key);
 	  continue;
 	}
-	dynLevels.put(logname, val);
+	dynLevels.put(logname, level);
+	if (ctx != null) {
+	  // Add any fq log names that have this as their last component
+	  for (String fqName : ctx.getFQNames(logname)) {
+	    dynLevels.put(fqName, level);
+	  }
+	}
       }
     }
+
+    // Add the stacktrace params
+    copyIfSet(dynLevels, lconfig, PARAM_STACKTRACE_LEVEL);
+    copyIfSet(dynLevels, lconfig, PARAM_STACKTRACE_SEVERITY);
+
     if (!StringUtils.isBlank(lconfig.get(PARAM_LOG_TARGETS))) {
       myLog.error(PARAM_LOG_TARGETS +
 		  " param not supported; use log4j2 config instead");
     }
-    setDynamicLevels(dynLevels, lconfig.get(PARAM_DEFAULT_LEVEL));
+    setDynamicLevels(ctx, dynLevels, lconfig.get(PARAM_DEFAULT_LEVEL));
+  }
+
+
+  static void copyIfSet(Map<String,String> to, Map<String,String> from,
+			String key) {
+    if (from.containsKey(key)) {
+      to.put(key, from.get(key));
+    }
   }
 
   /** Set all log levels specified in the map.
    * @param levels map of logger name -> LOCKSS level name
+   * @param defLevel default log level name
    */
-  public static void setDynamicLevels(Map<String,String> levels,
+  public static void setDynamicLevels(L4JLoggerContext ctx,
+				      Map<String,String> levels,
 				      String defLevel) {
-    myLog.debug2("setDynamicLevels: " + levels + ", " + defLevel);
+    if (myLog.isDebug2()) {
+      myLog.debug2("setDynamicLevels: " + levels + ", " + defLevel);
+    }
+
+    // Convert to map of logger name to log4j Level
     Map<String,Level> map = new HashMap<>();
     for (String key : levels.keySet()) {
       try {
 	map.put(key, getLog4JLevel(levels.get(key)));
       } catch (IllegalLevelException e) {
-	myLog.error("Ignoring illegal dynamic log level: " + key);
+	myLog.error("Ignoring illegal dynamic log level: " + key, e);
 	continue;
       }
     }
-    // if any previously set levels are no long set, need to reload the
-    // config from scratch to restore levels set in config file.
+
+    // If any previously set levels are no longer set they should revert to
+    // whatever's specified by the log4j config.  The easiest way to do
+    // that is to tell log4j to reload the config from scratch.
     boolean needReload =
       dynamicLevels != null &&
       dynamicLevels.keySet().stream().anyMatch(name -> !map.containsKey(name));
     dynamicLevels = map;
+
+    // Obtain default level from org.lockss.log.default.level param, if
+    // set (and legel), else sysprop (if legel).
     Level newRootLevel = null;
     if (!StringUtils.isBlank(defLevel)) {
       try {
@@ -443,21 +534,33 @@ public class Logger {
 	// fall through
       }
     }
-    String sp = System.getProperty(SYSPROP_DEFAULT_LOG_LEVEL);
-    if (!StringUtils.isBlank(sp)) {
-      try {
-	newRootLevel = getLog4JLevel(sp);
-      } catch (IllegalLevelException e) {
-	// fall through
+
+    if (newRootLevel == null) {
+      String sp = System.getProperty(SYSPROP_DEFAULT_LOG_LEVEL);
+      if (!StringUtils.isBlank(sp)) {
+	try {
+	  newRootLevel = getLog4JLevel(sp);
+	} catch (IllegalLevelException e) {
+	  // fall through
+	}
       }
     }
+
+    // Determine whether reload is needed to reset root level
     if (newRootLevel == null && dynamicRootLevel != null) {
       needReload = true;
     }
     dynamicRootLevel = newRootLevel;
+
+    // Inform context of logName to Level map so it can set level of newly
+    // created loggers
+    if (ctx != null) {
+      ctx.setLevelMap(dynamicLevels);
+    }
     installLockssLevels(needReload);
   }
 
+  // Store the computed dynamic level into log4j
   private static void installLockssLevels(boolean needReload) {
     if (needReload) {
       forceReload();
@@ -475,10 +578,12 @@ public class Logger {
     return (LoggerContext)LogManager.getContext(false);
   }
 
+  /** force log4j to reread its config from scratch */
   public static void forceReload() {
     getLoggerContext().reconfigure();
   }
 
+  /** Return the wrapper log4j Logger.  Used for testing */
   org.apache.logging.log4j.Logger getLog4Logger() {
     return log;
   }
@@ -488,6 +593,7 @@ public class Logger {
   }
 
   // log instance methods
+
   /** Log a critical message */
   public void critical(String msg) {
     log(LEVEL_CRITICAL, msg, null);
@@ -594,7 +700,7 @@ public class Logger {
     }
   }
 
-  // log level descriptor class
+  /** log level descriptor, associates numeric level, name, Log4j Level */
   private static class LevelDescr {
     int level;
     String name;
@@ -605,6 +711,7 @@ public class Logger {
     this.name = name;
     this.log4jLevel = log4jLevel;
     }
+
     public String toString() {
       return "[ld: " + level + ", " + name + ", " + log4jLevel + "]";
     }

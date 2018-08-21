@@ -20,6 +20,7 @@ import org.junit.jupiter.api.extension.*;
 import org.junit.jupiter.params.provider.*;
 import org.junit.jupiter.params.support.AnnotationConsumerInitializer;
 import org.junit.platform.commons.util.*;
+import org.lockss.log.Logger;
 import org.slf4j.*;
 
 /**
@@ -27,7 +28,7 @@ import org.slf4j.*;
  */
 class VariantTestExtension implements TestTemplateInvocationContextProvider {
   
-  private static final Logger log = LoggerFactory.getLogger(VariantTestExtension.class);
+  private static Logger log = Logger.getLogger();
 
   @Override
   public boolean supportsTestTemplate(ExtensionContext context) {

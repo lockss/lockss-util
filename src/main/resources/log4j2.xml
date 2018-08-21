@@ -1,8 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
 
+  <!-- Log4j2 default configuration for LAAWS projects (that depend on this
+       project). Downstream projects can modify this configuration by
+       placing log4j2-project.xml on their classpath.  Default log level
+       and appender layout patterns can be overridden by redefining the
+       properties below.  Or the appenders and/or loggers themselves can be
+       replaced, or others added. -->
+
+  <Properties>
+    <!-- Default log level -->
+    <Property name="root.level">INFO</Property>
+
+    <!-- Default pattern for log output to console -->
+    <Property name="layout.console">
+      xxx console: %d{HH:mm:ss.SSS} [%t] %-5level %logger{36}: %msg%lex%n
+    </Property>
+
+    <!-- Default pattern for log output to console from org.lockss.**
+         loggers.  Uses simple logger name as we're familiar with these
+         names. -->
+    <Property name="layout.console.lockss">
+      xxx console l: %d{HH:mm:ss.SSS} [%t] %-5level %logger{1}: %msg%lex%n
+    </Property>
+
+    <!-- Patterns for file output and lockss file output default to
+         corresponding console patterns. -->
+    <Property name="layout.file">
+      ${layout.console}
+    </Property>
+    <Property name="layout.file.lockss">
+      ${layout.console.lockss}
+    </Property>
+
+  </Properties>
+
   <!-- Define LOCKSS log levels that aren't present in log4j -->
-  <!-- These are currently duplicated in org.lockss.log.Logger  -->
+  <!-- Must agree with those in org.lockss.log.L4JLevel  -->
   <CustomLevels>
     <CustomLevel name="SITE_ERROR" intLevel="210" />
     <CustomLevel name="SITE_WARNING" intLevel="310" />
@@ -11,17 +45,65 @@
   </CustomLevels>
 
   <Appenders>
+
     <Console name="Console" target="SYSTEM_OUT">
-      <PatternLayout
-	  header="%d{HH:mm:ss.SSS}"
-	  pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36}: %msg%n"/>
+      <PatternLayout>
+	<Pattern>${layout.console}</Pattern>
+      </PatternLayout>
     </Console>
+
+    <Console name="Console.Lockss" target="SYSTEM_OUT">
+      <PatternLayout>
+	<Pattern>${layout.console.lockss}</Pattern>
+      </PatternLayout>
+    </Console>
+
+    <RollingFile name="File">
+      <FileName>logs/app.log</FileName>
+      <FilePattern>logs/app-%i.log.gz</FilePattern>
+<!--       <FilePattern>logs/%d{yyyy-MM-dd}-%i.log.gz</FilePattern> -->
+      <PatternLayout>
+	<Pattern>${layout.file}</Pattern>
+      </PatternLayout>
+      <Policies>
+<!--         <TimeBasedTriggeringPolicy /> -->
+	<SizeBasedTriggeringPolicy size="10 MB"/>
+      </Policies>
+      <DefaultRolloverStrategy max="10" />
+    </RollingFile>
+
+    <RollingFile name="File.Lockss">
+      <FileName>logs/app.log</FileName>
+      <FilePattern>logs/app-%i.log.gz</FilePattern>
+<!--       <FilePattern>logs/%d{yyyy-MM-dd}-%i.log.gz</FilePattern> -->
+      <PatternLayout>
+	<Pattern>${layout.file.lockss}</Pattern>
+      </PatternLayout>
+      <Policies>
+<!--         <TimeBasedTriggeringPolicy /> -->
+	<SizeBasedTriggeringPolicy size="10 MB"/>
+      </Policies>
+      <DefaultRolloverStrategy max="10" />
+    </RollingFile>
+
   </Appenders>
 
   <Loggers>
-    <Root level="INFO">
+
+    <Root level="${root.level}">
       <AppenderRef ref="Console"/>
+      <AppenderRef ref="File"/>
     </Root>
-    <Logger name="org.apache.http" level="INFO"/>
+
+    <Logger name="org.lockss" level="INFO" additivity="false">
+      <AppenderRef ref="Console.Lockss"/>
+      <AppenderRef ref="File.Lockss"/>
+    </Logger>
+
+    <!-- Defaults for other components that log too much at info or debug
+         levels -->
+    <Logger name="org.apache.http" level="WARN"/>
+    <Logger name="org.lockss.log.L4JThrowablePatternConverter" level="DEBUG2"/>
+
   </Loggers>
 </Configuration>

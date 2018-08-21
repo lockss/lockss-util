@@ -24,6 +24,10 @@
     <Logger name="test.debug" level="DEBUG"/>
     <Logger name="test.debug2" level="DEBUG2"/>
     <Logger name="test.debug3" level="DEBUG3"/>
+    <Logger name="test.trace" level="TRACE"/>
+
+    <Logger name="test.sw" level="SITE_WARNING"/>
+    <Logger name="test.se" level="SITE_ERROR"/>
 
   </Loggers>
 </Configuration>
