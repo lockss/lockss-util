@@ -72,7 +72,7 @@ public class TestL4JLogger extends LockssTestCase5 {
     // Record the org.lockss.defaultLogLevel sysprop at startup so we know
     // what to expect the default (root) log level to be.  Actually varying
     // the initial default log level is beyond the scope of this code, as
-    // the Logger class may already have been initialized before this code
+    // the LockssLogger class may already have been initialized before this code
     // is executed.
     origSysProp = System.getProperty("org.lockss.defaultLogLevel");
 
@@ -81,7 +81,7 @@ public class TestL4JLogger extends LockssTestCase5 {
       origRootLevel = null;
     } else {
       try {
-	origRootLevel = Logger.getLog4JLevel(Logger.levelOf(origSysProp));
+	origRootLevel = LockssLogger.getLog4JLevel(LockssLogger.levelOf(origSysProp));
       } catch (Exception e) {
 	Assertions.fail("org.lockss.defaultLogLevel set to illegal level string: " +
 			origSysProp);
@@ -149,7 +149,7 @@ public class TestL4JLogger extends LockssTestCase5 {
   }
 
   protected void setConfig(Map<String,String> map) {
-    Logger.setLockssConfig(map);
+    LockssLogger.setLockssConfig(map);
   }
 
   @Test

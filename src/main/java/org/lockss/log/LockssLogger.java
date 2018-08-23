@@ -52,9 +52,9 @@ import org.apache.commons.lang3.time.FastDateFormat;
 
 
  */
-public class Logger {
+public class LockssLogger {
 
-  private static final String FQCN = Logger.class.getName();
+  private static final String FQCN = LockssLogger.class.getName();
 
   private static final int MIN_LEVEL = 1;
 
@@ -138,7 +138,7 @@ public class Logger {
     new LevelDescr(LEVEL_DEBUG3, "Debug3", L4JLevel.DEBUG3),
   };
 
-  // Array of LevelDescr indexed by LOCKSS Logger level
+  // Array of LevelDescr indexed by LockssLogger level
   static LevelDescr levelDescrs[] = new LevelDescr[MAX_LEVEL + 1];
   static {
     for (LevelDescr ld : allLevelDescrs) {
@@ -159,16 +159,16 @@ public class Logger {
 
   /** TK - used in unit tests */
   public static void resetLogs() {
-//     logs = new HashMap<String, Logger>();
+//     logs = new HashMap<String, LockssLogger>();
   }
 
   private static boolean deferredInitDone = false;
 
-  // Maintains unique Logger instance per logger name
-  private static Map<String, Logger> logs = new HashMap<String, Logger>();
+  // Maintains unique LockssLogger instance per logger name
+  private static Map<String, LockssLogger> logs = new HashMap<>();
 
-  // Logger used by this class
-  protected static Logger myLog;
+  // LockssLogger used by this class
+  protected static LockssLogger myLog;
 
 
   private L4JLogger log;		// The wrapped log4j Logger
@@ -176,16 +176,16 @@ public class Logger {
 
 
   /** Create a LOCKSS logger wrapping the log4j logger */
-  protected Logger(L4JLogger log) {
+  protected LockssLogger(L4JLogger log) {
     this.log = log;
   }
 
   /**
-   * Logger factory.  Return the unique instance
-   * of <code>Logger</code> with the given name, creating it if necessary.
+   * LockssLogger factory.  eturn the unique instance
+   * of <code>LockssLogger</code> with the given name, creating it if necessary.
    * @param name identifies the log instance, appears in output
    */
-  public static Logger getLogger(String name) {
+  public static LockssLogger getLogger(String name) {
     return getWrappedLogger(name);
   }
 
@@ -196,42 +196,46 @@ public class Logger {
    * @param clazz The class after which to name the returned logger.
    * @return A logger named after the given class.
    */
-  public static Logger getLogger(Class<?> clazz) {
+  public static LockssLogger getLogger(Class<?> clazz) {
     return getLogger(clazz.getName());
   }
 
   /**
-   * Logger factory.  Return the unique instance of <code>Logger</code>
-   * with the name of the calling class, creating it if necessary.
+   * LockssLogger factory.  Return the unique instance of
+   * <code>LockssLogger</code> with the name of the calling class, creating
+   * it if necessary.
    */
-  public static Logger getLogger() {
+  public static LockssLogger getLogger() {
     return getLogger(StackLocatorUtil.getCallerClass(2));
   }
 
   /**
-   * Special purpose Logger factory.  Return the unique instance
-   * of <code>Logger</code> with the given name, creating it if necessary.
-   * This is here primarily so <code>Configuration</code> can create a
-   * log without being invoked recursively, which causes its class
+   * Special purpose LockssLogger factory.  Return the unique instance of
+   * <code>LockssLogger</code> with the given name, creating it if
+   * necessary.  This is here primarily so <code>Configuration</code> can
+   * create a log without being invoked recursively, which causes its class
    * initialization to not complete correctly.
    * @param name identifies the log instance, appears in output
-   * @param initialLevel the initial log level (<code>Logger.LEVEL_XXX</code>).
+   *
+   * @param initialLevel the initial log level
+   *                     (<code>LockssLogger.LEVEL_XXX</code>).
    */
-  protected static Logger getWrappedLogger(String name) {
-    return getWrappedLogger(name, (s) -> new Logger(L4JLogger.getLogger(s)));
+  protected static LockssLogger getWrappedLogger(String name) {
+    return getWrappedLogger(name,
+			    (s) -> new LockssLogger(L4JLogger.getLogger(s)));
   }
 
   /**
    * Return an instance of 
    */
-  protected static Logger getWrappedLogger(String name,
-					   java.util.function.Function<String,Logger> factory) {
+  protected static LockssLogger getWrappedLogger(String name,
+						 java.util.function.Function<String,LockssLogger> factory) {
     deferredInit();
     // This method MUST NOT make any reference to Configuration !!
     if (name == null) {
       name = genName();
     }
-    Logger res;
+    LockssLogger res;
     synchronized (logs) {
       res = logs.get(name);
       if (res == null) {
@@ -253,14 +257,14 @@ public class Logger {
       deferredInitDone = true;
 
       // Create my logger
-      myLog = Logger.getWrappedLogger(Logger.class.getName());
+      myLog = LockssLogger.getWrappedLogger(LockssLogger.class.getName());
 
       // Arrange to be notified when the log4j config is reloaded, so we
       // can reset the levels dynamically configured using LOCKSS config
       getLoggerContext().addPropertyChangeListener(new PropertyChangeListener() {
 	  @Override
 	  public void propertyChange(final PropertyChangeEvent evt) {
- 	    myLog.debug2("event: " + evt);
+	    if (myLog.isDebug3()) myLog.debug3("event: " + evt);
 	    switch (evt.getPropertyName()) {
 	    case LoggerContext.PROPERTY_CONFIG:
 	      installLockssLevels(false);
@@ -305,7 +309,8 @@ public class Logger {
     return "Unnamed" + ++uncnt;
   }
 
-  /** Return numeric log level (<code>Logger.LEVEL_XXX</code>) for given name.
+  /** Return numeric log level (<code>LockssLogger.LEVEL_XXX</code>) for
+   * given name.
    */
   public static int levelOf(String name) throws IllegalLevelException {
     for (LevelDescr ld : allLevelDescrs) {
@@ -316,7 +321,8 @@ public class Logger {
     throw new IllegalLevelException("Log level not found: " + name);
   }
 
-  /** Return name of given numeric log level (<code>Logger.LEVEL_XXX</code>).
+  /** Return name of given numeric log level
+   * (<code>LockssLogger.LEVEL_XXX</code>).
    */
   public static String nameOf(int level) {
     LevelDescr ld = levelDescrs[level];
@@ -353,7 +359,7 @@ public class Logger {
   /**
    * Set minimum severity level logged by this log.  <b>This change will
    * not survive a config reload</b>
-   * @param level <code>Logger.LEVEL_XXX</code>
+   * @param level <code>LockssLogger.LEVEL_XXX</code>
    */
   public void setLevel(int level) {
     if (getLevel() != level) {
@@ -378,7 +384,7 @@ public class Logger {
    * Return true if this log is logging at or above specified level
    * Use this in cases where generating the log message is expensive,
    * to avoid the overhead when the message will not be output.
-   * @param level (<code>Logger.LEVEL_XXX</code>)
+   * @param level (<code>LockssLogger.LEVEL_XXX</code>)
    */
   public boolean isLevel(int level) {
     return getLevel() >= level;
@@ -406,7 +412,7 @@ public class Logger {
 
   /**
    * Log a message with the specified log level
-   * @param level log level (<code>Logger.LEVEL_XXX</code>)
+   * @param level log level (<code>LockssLogger.LEVEL_XXX</code>)
    * @param msg log message
    * @param e <code>Throwable</code>
    */
@@ -416,7 +422,7 @@ public class Logger {
 
   /**
    * Log a message with the specified log level
-   * @param level log level (<code>Logger.LEVEL_XXX</code>)
+   * @param level log level (<code>LockssLogger.LEVEL_XXX</code>)
    * @param msg log message
    */
   public void log(int level, String msg) {
@@ -447,6 +453,7 @@ public class Logger {
    *                of the LOCKSS config relevant to logging.
    */
   public static void setLockssConfig(Map<String,String> lconfig) {
+    deferredInit();
     myLog.debug2("setLockssConfig: " + lconfig);
     LoggerContext ctx0 = getLoggerContext();
     L4JLoggerContext ctx = null;
@@ -583,13 +590,13 @@ public class Logger {
     getLoggerContext().reconfigure();
   }
 
-  /** Return the wrapper log4j Logger.  Used for testing */
+  /** Return the wrapped log4j Logger.  Used for testing */
   org.apache.logging.log4j.Logger getLog4Logger() {
     return log;
   }
 
   public String toString() {
-    return "[Logger " + log.getName() + "]";
+    return "[LockssLogger " + log.getName() + "]";
   }
 
   // log instance methods

@@ -1,0 +1,373 @@
+/*
+
+Copyright (c) 2000-2018, Board of Trustees of Leland Stanford Jr. University,
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors
+may be used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+*/
+
+package org.lockss.log;
+
+import java.util.*;
+
+import org.apache.commons.collections4.*;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.*;
+import org.lockss.util.test.LockssTestCase5;
+
+import org.apache.logging.log4j.*;
+import org.apache.logging.log4j.core.*;
+import org.apache.logging.log4j.core.config.*;
+
+import org.lockss.util.*;
+
+public class TestLockssLogger extends LockssTestCase5 {
+
+  protected static String origSysProp;
+  protected static int origDefLevel;
+
+  /** Return the ListAppender created by log4j2-logger-test.xml */
+  protected static ListAppender getListAppender() {
+    LoggerContext ctx = (LoggerContext)LogManager.getContext(false);
+    Configuration config = ctx.getConfiguration();
+    return (ListAppender)config.getAppenders().get("ListAppender");
+  }
+
+  /** Get the named LockssLogger */
+  protected LockssLogger getLogger(String name) {
+    LockssLogger res = LockssLogger.getLogger(name);
+    return res;
+  }
+
+  /** Add ListAppender to record output to loggers below
+   * org.lockss.testlogger */
+  @BeforeAll
+  public static void beforeAll() throws Exception {
+    commonBeforeAll();
+    LockssLogger.forceReload();
+  }
+
+  public static void commonBeforeAll() {
+
+    // Record the org.lockss.defaultLogLevel sysprop at startup so we know
+    // what to expect the default (root) log level to be.  Actually varying
+    // the initial default log level is beyond the scope of this code, as
+    // the LockssLogger class may already have been initialized before this code
+    // is executed.
+    origSysProp = System.getProperty("org.lockss.defaultLogLevel");
+
+    // Ensure that any default level is legal
+    if (StringUtils.isBlank(origSysProp)) {
+      origDefLevel = LockssLogger.LEVEL_INFO;
+    } else {
+      try {
+	origDefLevel = LockssLogger.levelOf(origSysProp);
+      } catch (Exception e) {
+	Assertions.fail("org.lockss.defaultLogLevel set to illegal level string: " +
+			origSysProp);
+      }
+    }
+
+//     // Add testing config file to logj4's config.
+//     System.setProperty("log4j.configurationFile",
+// 		       "log4j2.xml,log4j2-logger-test.xml");
+  }
+
+  void assertIsLevel(int level, LockssLogger log) {
+    assertEquals(level, log.getLevel());
+    assertTrue(log.isLevel(level));
+    assertTrue(log.isLevel(level - 1));
+    assertFalse(log.isLevel(level + 1));
+  }
+
+  @Test
+  public void testLevelOf() throws LockssLogger.IllegalLevelException {
+    assertEquals(LockssLogger.LEVEL_CRITICAL, LockssLogger.levelOf("critical"));
+    assertEquals(LockssLogger.LEVEL_ERROR, LockssLogger.levelOf("error"));
+    assertEquals(LockssLogger.LEVEL_SITE_ERROR, LockssLogger.levelOf("siteError"));
+    assertEquals(LockssLogger.LEVEL_WARNING, LockssLogger.levelOf("warning"));
+    assertEquals(LockssLogger.LEVEL_SITE_WARNING, LockssLogger.levelOf("siteWarning"));
+    assertEquals(LockssLogger.LEVEL_DEBUG, LockssLogger.levelOf("debug"));
+    assertEquals(LockssLogger.LEVEL_DEBUG1, LockssLogger.levelOf("debug1"));
+    assertEquals(LockssLogger.LEVEL_DEBUG2, LockssLogger.levelOf("debug2"));
+    assertEquals(LockssLogger.LEVEL_DEBUG3, LockssLogger.levelOf("debug3"));
+    assertThrows(LockssLogger.IllegalLevelException.class,
+		 () -> {LockssLogger.levelOf("nonesuch");});
+  }
+
+  @Test
+  public void testNameOf() {
+    assertEquals("Critical", LockssLogger.nameOf(LockssLogger.LEVEL_CRITICAL));
+    assertEquals("Error", LockssLogger.nameOf(LockssLogger.LEVEL_ERROR));
+    assertEquals("SiteError", LockssLogger.nameOf(LockssLogger.LEVEL_SITE_ERROR));
+    assertEquals("Warning", LockssLogger.nameOf(LockssLogger.LEVEL_WARNING));
+    assertEquals("SiteWarning", LockssLogger.nameOf(LockssLogger.LEVEL_SITE_WARNING));
+    assertEquals("Info", LockssLogger.nameOf(LockssLogger.LEVEL_INFO));
+    assertEquals("Debug", LockssLogger.nameOf(LockssLogger.LEVEL_DEBUG));
+    assertEquals("Debug", LockssLogger.nameOf(LockssLogger.LEVEL_DEBUG1));
+    assertEquals("Debug2", LockssLogger.nameOf(LockssLogger.LEVEL_DEBUG2));
+    assertEquals("Debug3", LockssLogger.nameOf(LockssLogger.LEVEL_DEBUG3));
+  }
+
+
+  void doLogs(int level, LockssLogger log) {
+    switch (level) {
+    case LockssLogger.LEVEL_CRITICAL:
+      log.critical("crit");
+      log.error("err");
+      break;
+    case LockssLogger.LEVEL_ERROR:
+      log.critical("crit");
+      log.error("err");
+      log.warning("warn");
+      break;
+    case LockssLogger.LEVEL_WARNING:
+      log.error("err");
+      log.warning("warn");
+      log.info("info");
+      break;
+    case LockssLogger.LEVEL_INFO:
+      log.warning("warn");
+      log.info("info");
+      log.debug("debug");
+      break;
+    case LockssLogger.LEVEL_DEBUG:
+      log.info("info");
+      log.debug("debug");
+      log.debug2("debug2");
+      log.debug3("debug3");
+      break;
+    case LockssLogger.LEVEL_DEBUG2:
+      log.debug("debug");
+      log.debug2("debug2");
+      log.debug3("debug3");
+      break;
+    case LockssLogger.LEVEL_DEBUG3:
+      log.debug2("debug2");
+      log.debug3("debug3");
+      break;
+    }
+  }
+
+  protected void setConfig(Map<String,String> map) {
+    LockssLogger.setLockssConfig(map);
+  }
+
+  @Test
+  public void testFactories() throws Exception {
+    LockssLogger l1 = LockssLogger.getLogger("name1");
+    assertEquals("name1", l1.getName());
+    assertSame(l1, LockssLogger.getLogger("name1"));
+    assertSame(l1, getLogger("name1"));
+
+    LockssLogger l2 = LockssLogger.getLogger();
+    assertEquals("org.lockss.log.TestLockssLogger", l2.getName());
+    assertSame(l2, getLogger(l2.getName()));
+    assertSame(l2, LockssLogger.getLogger(TestLockssLogger.class));
+
+  }
+
+  @Test
+  public void testFunc() throws Exception {
+    LockssLogger logT = getLogger("test");
+    LockssLogger logC = getLogger("test.critical.c1");
+    LockssLogger logE = getLogger("test.error");
+    LockssLogger logW = getLogger("test.warning.w1");
+    LockssLogger logI = getLogger("test.info.foo");
+    LockssLogger logD = getLogger("test.debug.d.e.f");
+    LockssLogger logD2 = getLogger("test.debug2.lll.long.name.to.excersize layout");
+    LockssLogger logD3 = getLogger("test.debug3.fff");
+    LockssLogger logDef = getLogger("default");
+
+    assertIsLevel(LockssLogger.LEVEL_CRITICAL, logC);
+    assertIsLevel(LockssLogger.LEVEL_ERROR, logE);
+    assertIsLevel(LockssLogger.LEVEL_WARNING, logW);
+    assertIsLevel(LockssLogger.LEVEL_INFO, logI);
+    assertIsLevel(LockssLogger.LEVEL_DEBUG, logD);
+    assertIsLevel(LockssLogger.LEVEL_DEBUG2, logD2);
+    assertIsLevel(LockssLogger.LEVEL_DEBUG3, logD3);
+    assertIsLevel(origDefLevel, logDef);
+
+    doLogs(LockssLogger.LEVEL_CRITICAL, logC);
+    doLogs(LockssLogger.LEVEL_ERROR, logE);
+    doLogs(LockssLogger.LEVEL_WARNING, logW);
+    doLogs(LockssLogger.LEVEL_INFO, logI);
+    doLogs(LockssLogger.LEVEL_DEBUG, logD);
+    doLogs(LockssLogger.LEVEL_DEBUG2, logD2);
+    doLogs(LockssLogger.LEVEL_DEBUG3, logD3);
+
+    List<String> expDefault =
+      ListUtil.list("crit", "crit", "err", "err", "warn", "warn",
+		    "info", "info", "debug", "debug",
+		    "debug2", "debug2", "debug3");
+
+    assertEquals(expDefault, getListAppender().getMessages());
+
+    getListAppender().reset();
+    assertEmpty(getListAppender().getMessages());
+
+    Map<String,String> newConfig = new HashMap<String,String>() {{
+	put("org.lockss.log.test.debug2.level", "warning");
+	put("org.lockss.log.test.warning.level", "debug2");
+      }};
+
+    setConfig(newConfig);
+    assertEmpty(getListAppender().getMessages());
+
+    assertIsLevel(LockssLogger.LEVEL_CRITICAL, logC);
+    assertIsLevel(LockssLogger.LEVEL_ERROR, logE);
+    assertIsLevel(LockssLogger.LEVEL_DEBUG2, logW);
+    assertIsLevel(LockssLogger.LEVEL_INFO, logI);
+    assertIsLevel(LockssLogger.LEVEL_DEBUG, logT);
+    assertIsLevel(LockssLogger.LEVEL_WARNING, logD2);
+    assertIsLevel(LockssLogger.LEVEL_DEBUG3, logD3);
+    assertIsLevel(origDefLevel, logDef);
+
+    doLogs(LockssLogger.LEVEL_CRITICAL, logC);
+    doLogs(LockssLogger.LEVEL_ERROR, logE);
+    doLogs(LockssLogger.LEVEL_DEBUG2, logW);
+    doLogs(LockssLogger.LEVEL_INFO, logI);
+    doLogs(LockssLogger.LEVEL_DEBUG, logT);
+    doLogs(LockssLogger.LEVEL_WARNING, logD2);
+    doLogs(LockssLogger.LEVEL_DEBUG3, logD3);
+    doLogs(origDefLevel, logDef);
+
+    List<String> expNew =
+      ListUtil.list("crit", "crit", "err", "debug", "debug2",
+		    "warn", "info", "info", "debug",
+		    "err", "warn", "debug2", "debug3");
+
+    assertEquals(expNew, getListAppender().getMessages());
+
+    getListAppender().reset();
+    newConfig.put("org.lockss.log.default.level", "warning");
+    newConfig.put(LockssLogger.PARAM_STACKTRACE_SEVERITY, "error");
+    newConfig.put(LockssLogger.PARAM_STACKTRACE_LEVEL, "warning");
+    setConfig(newConfig);
+
+    assertIsLevel(LockssLogger.LEVEL_CRITICAL, logC);
+    assertIsLevel(LockssLogger.LEVEL_ERROR, logE);
+    assertIsLevel(LockssLogger.LEVEL_DEBUG2, logW);
+    assertIsLevel(LockssLogger.LEVEL_INFO, logI);
+    assertIsLevel(LockssLogger.LEVEL_DEBUG, logT);
+    assertIsLevel(LockssLogger.LEVEL_WARNING, logD2);
+    assertIsLevel(LockssLogger.LEVEL_DEBUG3, logD3);
+    assertIsLevel(LockssLogger.LEVEL_WARNING, logDef);
+
+    doLogs(LockssLogger.LEVEL_CRITICAL, logC);
+    doLogs(LockssLogger.LEVEL_ERROR, logE);
+    doLogs(LockssLogger.LEVEL_DEBUG2, logW);
+    doLogs(LockssLogger.LEVEL_INFO, logI);
+    doLogs(LockssLogger.LEVEL_DEBUG, logT);
+    doLogs(LockssLogger.LEVEL_WARNING, logD2);
+    doLogs(LockssLogger.LEVEL_DEBUG3, logD3);
+
+    expNew =
+      ListUtil.list("crit", "crit", "err", "debug", "debug2",
+		    "warn", "info", "info", "debug",
+		    "err", "warn", "debug2", "debug3");
+
+    assertEquals(expNew, getListAppender().getMessages());
+
+    getListAppender().reset();
+    setConfig(new HashMap());
+
+    assertIsLevel(LockssLogger.LEVEL_CRITICAL, logC);
+    assertIsLevel(LockssLogger.LEVEL_ERROR, logE);
+    assertIsLevel(LockssLogger.LEVEL_WARNING, logW);
+    assertIsLevel(LockssLogger.LEVEL_INFO, logI);
+    assertIsLevel(LockssLogger.LEVEL_DEBUG, logT);
+    assertIsLevel(LockssLogger.LEVEL_DEBUG2, logD2);
+    assertIsLevel(LockssLogger.LEVEL_DEBUG3, logD3);
+    assertIsLevel(origDefLevel, logDef);
+
+    doLogs(LockssLogger.LEVEL_CRITICAL, logC);
+    doLogs(LockssLogger.LEVEL_ERROR, logE);
+    doLogs(LockssLogger.LEVEL_WARNING, logW);
+    doLogs(LockssLogger.LEVEL_INFO, logI);
+    doLogs(LockssLogger.LEVEL_DEBUG, logT);
+    doLogs(LockssLogger.LEVEL_DEBUG2, logD2);
+    doLogs(LockssLogger.LEVEL_DEBUG3, logD3);
+    doLogs(origDefLevel, logDef);
+
+    assertEquals(expDefault, getListAppender().getMessages());
+  }
+
+  @Test
+  public void testLevel() throws Exception {
+    LockssLogger logT = getLogger("test");
+    LockssLogger logD1 = getLogger("test.debug");
+    LockssLogger logD2 = getLogger("test.debug.aaa");
+    LockssLogger logD3 = getLogger("test.debug.w.xxx");
+
+    assertIsLevel(LockssLogger.LEVEL_DEBUG, logT);
+    assertIsLevel(LockssLogger.LEVEL_DEBUG, logD1);
+    assertIsLevel(LockssLogger.LEVEL_DEBUG, logD2);
+    assertIsLevel(LockssLogger.LEVEL_WARNING, logD3);
+
+    Configurator.setRootLevel(Level.WARN);
+
+    assertIsLevel(LockssLogger.LEVEL_DEBUG, logT);
+    assertIsLevel(LockssLogger.LEVEL_DEBUG, logD1);
+    assertIsLevel(LockssLogger.LEVEL_DEBUG, logD2);
+    assertIsLevel(LockssLogger.LEVEL_WARNING, logD3);
+
+  }
+
+  @Test
+  public void testShortNameLevel() throws Exception {
+    Map<String,String> newConfig = new HashMap<String,String>() {{
+	put("org.lockss.log.default.level", "info");
+      }};
+    setConfig(newConfig);
+
+    LockssLogger logPollManager = getLogger("org.lockss.poll.PollManager");
+    LockssLogger logPoller = getLogger("org.lockss.poll.v3.V3Poller");
+    LockssLogger logVoter = getLogger("org.lockss.poll.v3.V3Voter");
+    LockssLogger logVoter2 = getLogger("org.lockss.other.V3Voter");
+
+    assertIsLevel(LockssLogger.LEVEL_INFO, logPollManager);
+    assertIsLevel(LockssLogger.LEVEL_INFO, logPoller);
+    assertIsLevel(LockssLogger.LEVEL_INFO, logVoter);
+    assertIsLevel(LockssLogger.LEVEL_INFO, logVoter2);
+
+    newConfig.put("org.lockss.log.PollManager.level", "warning");
+    setConfig(newConfig);
+    assertIsLevel(LockssLogger.LEVEL_WARNING, logPollManager);
+
+    newConfig.put("org.lockss.log.org.lockss.poll.v3.level", "debug2");
+    newConfig.put("org.lockss.log.V3Voter.level", "debug3");
+    setConfig(newConfig);
+    assertIsLevel(LockssLogger.LEVEL_WARNING, logPollManager);
+    assertIsLevel(LockssLogger.LEVEL_DEBUG2, logPoller);
+    assertIsLevel(LockssLogger.LEVEL_DEBUG3, logVoter);
+    assertIsLevel(LockssLogger.LEVEL_DEBUG3, logVoter2);
+    assertIsLevel(LockssLogger.LEVEL_DEBUG2, getLogger("org.lockss.poll.v3.Tally"));
+
+  }
+
+}

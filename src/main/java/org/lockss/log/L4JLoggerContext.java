@@ -106,7 +106,7 @@ public class L4JLoggerContext extends LoggerContext {
   }
 
   /** Return the configured logger levels (and {@value
- * PARAM_STACKTRACE_LEVEL} and {@value PARAM_STACKTRACE_SEVERITY}). */
+   * PARAM_STACKTRACE_LEVEL} and {@value PARAM_STACKTRACE_SEVERITY}). */
   public Map<String,Level> getLevelMap() {
     return levelMap;
   }

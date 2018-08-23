@@ -75,20 +75,19 @@ public class L4JLogger extends org.apache.logging.log4j.core.Logger {
     super(context, name, messageFactory);
   }
 
-    @Override
-    public void logIfEnabled(final String fqcn, final Level level,
-			     final Marker marker, final String message,
-			     final Throwable t) {
-        if (isEnabled(level, marker, message, t)) {
-// 	  System.err.println("lie: " + getName() + ", " + getLevel());
-	  ThreadContext.push(getLevel().name());
-	  try {
-            logMessage(fqcn, level, marker, message, t);
-	  } finally {
-	    ThreadContext.pop();
-	  }
-        }
+  @Override
+  public void logIfEnabled(final String fqcn, final Level level,
+			   final Marker marker, final String message,
+			   final Throwable t) {
+    if (isEnabled(level, marker, message, t)) {
+      ThreadContext.push(getLevel().name());
+      try {
+	logMessage(fqcn, level, marker, message, t);
+      } finally {
+	ThreadContext.pop();
+      }
     }
+  }
 
 
 

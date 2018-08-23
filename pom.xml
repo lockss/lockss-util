@@ -52,7 +52,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
   <properties>
     <skipTestJar>false</skipTestJar>
-    <generated.src.dir>${project.build.directory}/generated-sources/lockss</generated.src.dir>
+    <lockss.log4j.version>2.11.1</lockss.log4j.version>
   </properties>
 
   <!-- Must be in every lockss-parent-pom descendant -->
@@ -100,104 +100,42 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-api</artifactId>
-      <version>2.11.0</version>
+      <version>${lockss.log4j.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
-      <version>2.11.0</version>
+      <version>${lockss.log4j.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-web</artifactId>
-      <version>2.11.0</version>
+      <version>${lockss.log4j.version}</version>
     </dependency>
 
     <!-- route slf4j to l4j2 -->
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j-impl</artifactId>
-      <version>2.11.0</version>
+      <version>${lockss.log4j.version}</version>
     </dependency>
 
     <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-1.2-api -->
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-1.2-api</artifactId>
-      <version>2.11.0</version>
+      <version>${lockss.log4j.version}</version>
     </dependency>
 
     <!-- route Commons Logging 1.x to l4j2 -->
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-jcl</artifactId>
-      <version>2.11.0</version>
+      <version>${lockss.log4j.version}</version>
     </dependency>
 
 
-
   </dependencies>
-
-  <build>
-<!--     <resources> -->
-<!--       <resource> -->
-<!-- 	<directory>main</directory> -->
-<!--       </resource> -->
-<!--       <resource> -->
-<!-- 	<directory>resource2</directory> -->
-<!--       </resource> -->
-<!--       <resource> -->
-<!-- 	<directory>resource3</directory> -->
-<!--       </resource> -->
-<!--     </resources> -->
-    <plugins>
-<!--       <plugin> -->
-<!--         <groupId>org.codehaus.mojo</groupId> -->
-<!--         <artifactId>exec-maven-plugin</artifactId> -->
-<!--         <version>1.6.0</version> -->
-<!--         <executions> -->
-<!--           <execution> -->
-<!--             <id>gen-logger</id> -->
-<!--             <phase>generate-sources</phase> -->
-<!--             <goals> -->
-<!--               <goal>exec</goal> -->
-<!--             </goals> -->
-<!--             <configuration> -->
-<!--               <executable>java</executable> -->
-<!-- 	      <outputFile>${generated.src.dir}/org/lockss/log/XXXL4JLogger.java</outputFile> -->
-<!--               <arguments> -->
-<!-- 		<argument>-classpath</argument> <classpath/> -->
-<!-- 		<argument>org.apache.logging.log4j.core.tools.ExtendedLoggerGenerator</argument> -->
-<!-- 		<argument>org.lockss.log.L4JLogger</argument> -->
-<!--                 <argument>SITE_ERROR=210</argument> -->
-<!--                 <argument>SITE_WARNING=310</argument> -->
-<!--                 <argument>DEBUG2=550</argument> -->
-<!--                 <argument>DEBUG3=600</argument> -->
-<!--               </arguments> -->
-<!--             </configuration> -->
-<!--           </execution> -->
-<!--         </executions> -->
-<!--       </plugin> -->
-<!--       <plugin> -->
-<!-- 	<groupId>org.codehaus.mojo</groupId> -->
-<!-- 	<artifactId>build-helper-maven-plugin</artifactId> -->
-<!-- 	<executions> -->
-<!--           <execution> -->
-<!--             <phase>generate-sources</phase> -->
-<!--             <goals> -->
-<!--               <goal>add-source</goal> -->
-<!--             </goals> -->
-<!--             <configuration> -->
-<!--               <sources> -->
-<!-- 		<source>${generated.src.dir}</source> -->
-<!--               </sources> -->
-<!--             </configuration> -->
-<!--           </execution> -->
-<!-- 	</executions> -->
-<!--       </plugin> -->
-    </plugins>
-  </build>
-
 
 </project>
 

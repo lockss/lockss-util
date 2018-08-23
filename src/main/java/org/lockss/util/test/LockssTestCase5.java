@@ -51,7 +51,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.function.*;
 import org.lockss.util.test.matcher.*;
 import org.opentest4j.MultipleFailuresError;
-import org.lockss.log.Logger;
+import org.lockss.log.L4JLogger;
 import org.w3c.dom.Node;
 
 /**
@@ -68,7 +68,7 @@ import org.w3c.dom.Node;
  */
 public class LockssTestCase5 {
 
-  private static Logger log = Logger.getLogger(LockssTestCase5.class);
+  private static L4JLogger log = L4JLogger.getLogger();
   
   public <V> V fail(String message) {
 

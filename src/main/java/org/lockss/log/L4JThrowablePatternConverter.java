@@ -37,8 +37,8 @@ import org.apache.logging.log4j.core.pattern.*;
 /**
  * Extension of standard Throwable PatternConverter, which outputs the
  * stack trace only if the log message was issued at a succifiently high
- * level (@value{Logger#PARAM_STACKTRACE_SEVERITY}), or the issuing Logger's
- * level is set sufficiently low (@value{Logger#PARAM_STACKTRACE_LEVEL}).
+ * level (@value{LockssLogger#PARAM_STACKTRACE_SEVERITY}), or the issuing Logger's
+ * level is set sufficiently low (@value{LockssLogger#PARAM_STACKTRACE_LEVEL}).
  *
  * Invoked with <tt>%lex</tt> in a layout pattern.
  */
@@ -90,20 +90,23 @@ public class L4JThrowablePatternConverter extends ThrowablePatternConverter {
       myLog.debug("cstack peek: {}", event.getContextStack().peek());
       boolean includeStackTrace = false;
       if (cdata == null ||
-	  (!cdata.containsKey(Logger.PARAM_STACKTRACE_SEVERITY) &&
-	   !cdata.containsKey(Logger.PARAM_STACKTRACE_SEVERITY))) {
+	  (!cdata.containsKey(LockssLogger.PARAM_STACKTRACE_SEVERITY) &&
+	   !cdata.containsKey(LockssLogger.PARAM_STACKTRACE_LEVEL))) {
 	includeStackTrace = true;
       } else {
-	if (cdata.containsKey(Logger.PARAM_STACKTRACE_SEVERITY)) {
+	if (cdata.containsKey(LockssLogger.PARAM_STACKTRACE_SEVERITY)) {
 	  includeStackTrace =
-	    ((Level)cdata.getValue(Logger.PARAM_STACKTRACE_SEVERITY)).isLessSpecificThan(event.getLevel());
+	    ((Level)cdata.getValue(LockssLogger.PARAM_STACKTRACE_SEVERITY)).isLessSpecificThan(event.getLevel());
 	}
 	if (!includeStackTrace &&
-	    cdata.containsKey(Logger.PARAM_STACKTRACE_LEVEL)) {
-	  Level lev = Level.getLevel(event.getContextStack().peek());
+	    cdata.containsKey(LockssLogger.PARAM_STACKTRACE_LEVEL)) {
+	  String peek = event.getContextStack().peek();
+	  Level lev = peek != null ? Level.getLevel(peek) : null;
 	  myLog.debug("lev: {}", lev);
-	  includeStackTrace =
-	    lev.isLessSpecificThan((Level)cdata.getValue(Logger.PARAM_STACKTRACE_LEVEL));
+	  if (lev != null) {
+	    includeStackTrace =
+	      lev.isLessSpecificThan((Level)cdata.getValue(LockssLogger.PARAM_STACKTRACE_LEVEL));
+	  }
 	}
       }
       myLog.debug("format: {}", event.getContextData());
@@ -111,7 +114,7 @@ public class L4JThrowablePatternConverter extends ThrowablePatternConverter {
       myLog.debug("name: {}", event.getLoggerName());
 
       if (includeStackTrace) {
-	super.format(event, buffer);
+	formatFull(throwable, getSuffix(event), buffer);
       } else {
 	formatSuppress(throwable, getSuffix(event), buffer);
       }
@@ -119,30 +122,44 @@ public class L4JThrowablePatternConverter extends ThrowablePatternConverter {
 
   private void formatSuppress(final Throwable throwable, final String suffix,
 			      final StringBuilder buffer) {
+    final int len = buffer.length();
+    if (len > 0 && !Character.isWhitespace(buffer.charAt(len - 1))) {
+      buffer.append(": ");
+    }
+    buffer.append(throwable.toString());
+  }
+
+  private void formatFull(final Throwable throwable, final String suffix,
+			  final StringBuilder buffer) {
     final StringWriter w = new StringWriter();
 
     throwable.printStackTrace(new PrintWriter(w));
     final int len = buffer.length();
     if (len > 0 && !Character.isWhitespace(buffer.charAt(len - 1))) {
-      buffer.append(' ');
+      buffer.append(": ");
     }
-    final StringBuilder sb = new StringBuilder();
-    final String[] array = w.toString().split(Strings.LINE_SEPARATOR);
-    final int limit = 0/*Math.min(1, array.length)*/;
-    //     final int limit = options.minLines(array.length) - 1;
-    final boolean suffixNotBlank = Strings.isNotBlank(suffix);
-    for (int i = 0; i <= limit; ++i) {
-      sb.append(array[i]);
-      if (suffixNotBlank) {
-	sb.append(' ');
-	sb.append(suffix);
+    if (!options.allLines() ||
+	!Strings.LINE_SEPARATOR.equals(options.getSeparator()) ||
+	Strings.isNotBlank(suffix)) {
+      final StringBuilder sb = new StringBuilder();
+      final String[] array = w.toString().split(Strings.LINE_SEPARATOR);
+      final int limit = options.minLines(array.length) - 1;
+      final boolean suffixNotBlank = Strings.isNotBlank(suffix);
+      for (int i = 0; i <= limit; ++i) {
+	sb.append(array[i]);
+	if (suffixNotBlank) {
+	  sb.append(' ');
+	  sb.append(suffix);
+	}
+	if (i < limit) {
+	  sb.append(options.getSeparator());
+	}
       }
-      if (i < limit) {
-	sb.append(options.getSeparator());
-      }
-    }
-    buffer.append(sb.toString());
+      buffer.append(sb.toString());
 
+    } else {
+      buffer.append(w.toString());
+    }
   }
 
 }

@@ -40,8 +40,8 @@ import org.apache.logging.log4j.util.*;
 /** This class is part of the mechanism to make the LOCKSS config params
  * that determine when statcktraces should be included in the log available
  * to layout patterns.  It grabs the params {@value
- * Logger#PARAM_STACKTRACE_LEVEL} and {@value
- * Logger#PARAM_STACKTRACE_SEVERITY} from the LoggerContext
+ * LockssLogger#PARAM_STACKTRACE_LEVEL} and {@value
+ * LockssLogger#PARAM_STACKTRACE_SEVERITY} from the LoggerContext
  * (L4JLoggerContext) and injects then into the context data which is
  * accessible from the LogEvent.
  */
@@ -80,7 +80,7 @@ public class L4JContextDataInjector implements ContextDataInjector {
     reusable.putAll(rawContextData());
     return reusable;
   }
- 
+
   @Override
   public ReadOnlyStringMap rawContextData() {
     SortedArrayStringMap res =  new SortedArrayStringMap(2);
@@ -90,8 +90,8 @@ public class L4JContextDataInjector implements ContextDataInjector {
       // stores those levels in the result.
       Map<String,Level> params = ctx.getLevelMap();
       if (params != null) {
-	putIfSet(res, params, Logger.PARAM_STACKTRACE_LEVEL);
-	putIfSet(res, params, Logger.PARAM_STACKTRACE_SEVERITY);
+	putIfSet(res, params, LockssLogger.PARAM_STACKTRACE_LEVEL);
+	putIfSet(res, params, LockssLogger.PARAM_STACKTRACE_SEVERITY);
       }
     }
     return res;

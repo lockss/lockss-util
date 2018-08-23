@@ -18,25 +18,28 @@ log4j2 to provide compatibility with the legacy LOCKSS logger:
 - Allow configuration of logger levels via the LOCKSS config mechanism.
 
 - Duplicate the feature whereby stack traces can be included in the log
-  only when they're logged at a succifiently high level, or when the logger
+  only when they're logged at a sufficiently high level, or when the logger
   is set at a sufficiently low level.
 
 - Provide a framework for users, and downstream projects, to customize the
   logging setup.  A sequence of config files is loaded:
 
-  - log4j2.xml has a standard Logger and Appender setup and should not be
-    overridden.
+  - log4j2-lockss-util.xml has a standard Logger and Appender setup and
+    should not be overridden.
 
-  - log4j2-logger-test.xml is used by the logger tests in this package.
+  - log4j2-lockss-logger-test.xml is used by the logger tests in this package.
     main/resources/log4j2-logger-test.xml is empty; the logger setup needed
     for the tests is in test/resources/log4j2-logger-test.xml, which gets
     loaded when the tests are running because appears on the classpath
     before the main classes/files.
 
-  - log4j2-project.xml is intended for downstream projects.
+  - log4j2-lockss-project.xml is intended for downstream projects.
     main/resources/log4j2-project.xml is empty; if a downstream project
     includes one in its resource directory it will normally be first on the
     classpath so will be loaded.
+
+  - the file pointed to by the environemt variable LOG4J_LOCKSS_CONFIG, if
+    it is set.
 
 - log4j2.component.properties is used to specify:
 
@@ -52,7 +55,7 @@ log4j2 to provide compatibility with the legacy LOCKSS logger:
       PatternConverter that needs them.
 
 - The plugin L4JThrowablePatternConverter is a PatternConverter bound to
-  %lex, which is simialr to %ex but which suppresses the stack trace if
+  %lex, which is similar to %ex but which suppresses the stack trace if
   neither the message level nor the logger's configured level satisfies
   stackTraceSeverity and stackTraceLevel, respectively.  The Logger's level
   is obtained from the ThreadContextStack, where L4JLogger
@@ -80,3 +83,30 @@ log4j2 to provide compatibility with the legacy LOCKSS logger:
     ClassCaseException will result.  The cast() and other convenience
     methods above issue a more informative message if that happens.
 
+- Classpath issues:
+
+  - Most config files are loaded as standard resources, using the first one
+    found on the classpath.  lockss-util should be as early as possible in
+    the dependency list of dependent projects to decrease the chance that
+    files from other packages will be found instead of ours.
+
+ (- log4j2.component.properties works differently.  Log4j finds all
+    occurrences on the classpath and loads them all, in order.  The result
+    is that the *last* value set for each property takes effect.)
+
+  - None of our config files (specified in log4j2.component.properties) is
+    named log4j2.xml.  It's likely other packages contain a file with that
+    name; avoiding it means we're not solely dependent on classpath
+    ordering to ensure our files are used.
+
+  - However, *not* having a file named log4j2.xml is also a problem. Spring
+    Boot runs its own log initialization which, by default, forces
+    log4j2.xml to be loaded.  We disable that initialization where possible
+    (by setting the System property
+    org.springframework.boot.logging.LoggingSystem = none), but that can't
+    be counted on because it depends on the execution environment.  In
+    order to make things work when their log init does run, log4j2.xml is
+    symlinked to our main config file, log4j2-lockss.xml (in
+    main/resources).  That way, if the standard file name does get loaded
+    by some mechanism we can't control, it will at least be ours.  This
+    seems to work well enough with Spring Boot.
