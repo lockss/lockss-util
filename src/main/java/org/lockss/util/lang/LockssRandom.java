@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2000-2018, Board of Trustees of Leland Stanford Jr. University,
+Copyright (c) 2000-2018, Board of Trustees of Leland Stanford Jr. University
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -30,29 +30,44 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-package org.lockss.util.test.matcher;
+package org.lockss.util.lang;
 
-import org.junit.jupiter.api.Test;
-import org.lockss.util.test.LockssTestCase5;
+import java.util.Random;
 
-public class TestMatchesPattern extends LockssTestCase5 {
+/** Extension of {@link Random} that adds some missing methods. */
+public class LockssRandom extends Random {
 
-  @Test
-  public void testMatchesPattern() {
-    assertThat("123", MatchesPattern.matchesPattern("1.3"));
-    assertThat("123", not(MatchesPattern.matchesPattern("1.32")));
-    assertThat("string string", not(MatchesPattern.matchesPattern("g st")));
-    assertThat("string string", MatchesPattern.matchesPattern(".*g st.*"));
-    assertThat("string string", not(MatchesPattern.matchesPattern("xxx")));
+  public LockssRandom() {
+    super();
   }
-  
-  @Test
-  public void testLockssTestCase5() {
-    assertThat("123", matchesPattern("1.3"));
-    assertThat("123", not(matchesPattern("1.32")));
-    assertThat("string string", not(matchesPattern("g st")));
-    assertThat("string string", matchesPattern(".*g st.*"));
-    assertThat("string string", not(matchesPattern("xxx")));
+
+  public LockssRandom(long seed) {
+    super(seed);
   }
- 
+
+  /** Return the next pseudorandom number with <code>bits</code> random
+   * bits. */
+  public long nextBits(int bits) {
+    if (bits <= 32) {
+      return next(bits) & (long)0xffffffffL;
+    }
+    return (((long)next(bits - 32)) << 32) | next(32) & (long)0xffffffffL;
+  }
+
+  /** Returns a pseudorandom, uniformly distributed int value between 0
+   * (inclusive) and the specified value (exclusive), drawn from this
+   * random number generator's sequence.  The algorithm is similar to that
+   * given in the javadoc for {@link java.util.Random#nextInt(int)}.
+   */
+  public long nextLong(long n) {
+    if (n<=0) {
+      throw new IllegalArgumentException("n must be > 0");
+    }
+    long bits, val;
+    do {
+      bits = (nextLong() >>> 1);
+      val = bits % n;
+    } while(bits - val + (n-1) < 0);
+    return val;
+  }
 }

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2000-2018, Board of Trustees of Leland Stanford Jr. University,
+Copyright (c) 2000-2018, Board of Trustees of Leland Stanford Jr. University
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -30,29 +30,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-package org.lockss.util.test.matcher;
+package org.lockss.util.io;
 
-import org.junit.jupiter.api.Test;
-import org.lockss.util.test.LockssTestCase5;
+/**
+ * <p>
+ *   Marker interface denoting classes that are fit for serialization.
+ * </p>
+ * 
+ * @author Thib Guicherd-Callin
+ * @see java.io.Serializable
+ * @see ObjectSerializer
+ */
+public interface LockssSerializable {
 
-public class TestMatchesPattern extends LockssTestCase5 {
-
-  @Test
-  public void testMatchesPattern() {
-    assertThat("123", MatchesPattern.matchesPattern("1.3"));
-    assertThat("123", not(MatchesPattern.matchesPattern("1.32")));
-    assertThat("string string", not(MatchesPattern.matchesPattern("g st")));
-    assertThat("string string", MatchesPattern.matchesPattern(".*g st.*"));
-    assertThat("string string", not(MatchesPattern.matchesPattern("xxx")));
-  }
-  
-  @Test
-  public void testLockssTestCase5() {
-    assertThat("123", matchesPattern("1.3"));
-    assertThat("123", not(matchesPattern("1.32")));
-    assertThat("string string", not(matchesPattern("g st")));
-    assertThat("string string", matchesPattern(".*g st.*"));
-    assertThat("string string", not(matchesPattern("xxx")));
-  }
- 
 }
