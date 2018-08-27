@@ -15,6 +15,9 @@
     <!-- Default log dir -->
     <Property name="log.dir">logs</Property>
 
+    <!-- Default log file name -->
+    <Property name="log.file">app</Property>
+
     <!-- Default pattern for log output to console -->
     <Property name="layout.console">
       %ld{HH:mm:ss.SSS} [%t] %-5level %logger{36}: %msg%lex%n
@@ -62,8 +65,8 @@
     </Console>
 
     <RollingFile name="File">
-      <FileName>${log.dir}/app.log</FileName>
-      <FilePattern>${log.dir}/app-%i.log.gz</FilePattern>
+      <FileName>${log.dir}/${log.file}.log</FileName>
+      <FilePattern>${log.dir}/${log.file}-%i.log.gz</FilePattern>
 <!--       <FilePattern>${log.dir}/%d{yyyy-MM-dd}-%i.log.gz</FilePattern> -->
       <PatternLayout>
 	<Pattern>${layout.file}</Pattern>
@@ -76,8 +79,8 @@
     </RollingFile>
 
     <RollingFile name="File.Lockss">
-      <FileName>${log.dir}/app.log</FileName>
-      <FilePattern>${log.dir}/app-%i.log.gz</FilePattern>
+      <FileName>${log.dir}/${log.file}.log</FileName>
+      <FilePattern>${log.dir}/${log.file}-%i.log.gz</FilePattern>
 <!--       <FilePattern>${log.dir}/%d{yyyy-MM-dd}-%i.log.gz</FilePattern> -->
       <PatternLayout>
 	<Pattern>${layout.file.lockss}</Pattern>
