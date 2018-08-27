@@ -13,7 +13,7 @@
     <Property name="root.level">INFO</Property>
 
     <!-- Default log dir -->
-    <Property name="log.dir">target/logs</Property>
+    <Property name="log.dir">logs</Property>
 
     <!-- Default pattern for log output to console -->
     <Property name="layout.console">
