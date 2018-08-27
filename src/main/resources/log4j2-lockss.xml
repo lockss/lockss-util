@@ -17,14 +17,14 @@
 
     <!-- Default pattern for log output to console -->
     <Property name="layout.console">
-      %d{HH:mm:ss.SSS} [%t] %-5level %logger{36}: %msg%lex%n
+      %ld{HH:mm:ss.SSS} [%t] %-5level %logger{36}: %msg%lex%n
     </Property>
 
     <!-- Default pattern for log output to console from org.lockss.**
          loggers.  Uses simple logger name as we're familiar with these
          names. -->
     <Property name="layout.console.lockss">
-      %d{HH:mm:ss.SSS} [%t] %-5level %logger{1}: %msg%lex%n
+      %ld{HH:mm:ss.SSS} [%t] %-5level %logger{1}: %msg%lex%n
     </Property>
 
     <!-- Patterns for file output and lockss file output default to

@@ -57,6 +57,7 @@ import org.lockss.util.time.TimerUtil;
 import org.opentest4j.MultipleFailuresError;
 import org.lockss.log.L4JLogger;
 import org.w3c.dom.Node;
+import org.lockss.log.LockssLogger;
 
 /**
  * <p>
@@ -1930,6 +1931,7 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
   @BeforeEach
   public void logTest(TestInfo info) {
 //     Optional meth = info.getTestMethod();
+    LockssLogger.resetLogs();
     log.info("Testcase: " + info.getDisplayName());
   }
 

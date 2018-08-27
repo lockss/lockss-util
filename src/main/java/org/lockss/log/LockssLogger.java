@@ -157,9 +157,13 @@ public class LockssLogger {
   // Default default log level if config parameter not set.
   public static final int DEFAULT_LEVEL = LEVEL_INFO;
 
-  /** TK - used in unit tests */
+  /** Ensure that initial params get set even without LOCKSS config.
+      Used in unit tests */
   public static void resetLogs() {
-//     logs = new HashMap<String, LockssLogger>();
+    setLockssConfig(MapUtil.map(PARAM_STACKTRACE_SEVERITY,
+				DEFAULT_STACKTRACE_SEVERITY,
+				PARAM_STACKTRACE_LEVEL,
+				DEFAULT_STACKTRACE_LEVEL));
   }
 
   private static boolean deferredInitDone = false;
@@ -256,7 +260,7 @@ public class LockssLogger {
       // be done.
       deferredInitDone = true;
 
-      // Create my logger
+      // Create my logger first as code below might use it
       myLog = LockssLogger.getWrappedLogger(LockssLogger.class.getName());
 
       // Arrange to be notified when the log4j config is reloaded, so we
@@ -277,10 +281,7 @@ public class LockssLogger {
 
       // Ensure that default values of stacktrace params are stored in the
       // context
-      setLockssConfig(MapUtil.map(PARAM_STACKTRACE_SEVERITY,
-				  DEFAULT_STACKTRACE_SEVERITY,
-				  PARAM_STACKTRACE_LEVEL,
-				  DEFAULT_STACKTRACE_LEVEL));
+      resetLogs();
 
       // org.lockss.defaultLogLevel sysprop
       String spLevel = System.getProperty(SYSPROP_DEFAULT_LOG_LEVEL);

@@ -192,6 +192,14 @@ public class TestLockssLogger extends LockssTestCase5 {
   }
 
   @Test
+  public void testStackTrace() throws Exception {
+    LockssLogger logD = getLogger("test.debug.DDD");
+    LockssLogger logI = getLogger("test.info.III");
+    logI.info("should not have stack trace", new Throwable("Umm"));
+    logD.debug("should have stack trace", new Throwable("Err"));
+  }
+
+  @Test
   public void testFunc() throws Exception {
     LockssLogger logT = getLogger("test");
     LockssLogger logC = getLogger("test.critical.c1");

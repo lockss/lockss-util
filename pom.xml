@@ -65,6 +65,45 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <dependencies>
 
     <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>${lockss.log4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>${lockss.log4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-web</artifactId>
+      <version>${lockss.log4j.version}</version>
+    </dependency>
+
+    <!-- route slf4j to log4j2 -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <!-- The name of this artifact depends on the slf4j version.  See
+           parent pom -->
+      <artifactId>${lockss.log4j.slf4j.binding}</artifactId>
+      <version>${lockss.log4j.version}</version>
+    </dependency>
+
+    <!-- route Log4J 1.x to log4j -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-1.2-api</artifactId>
+      <version>${lockss.log4j.version}</version>
+    </dependency>
+
+    <!-- route Commons Logging 1.x to log4j -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-jcl</artifactId>
+      <version>${lockss.log4j.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>${lockss.slf4j.version}</version>
@@ -77,8 +116,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <type>pom</type>
       <!-- not in scope 'test' here: LockssTestCase5 is defined in the main tree -->
     </dependency>
-    
-    <!-- Apache Commons Collections needed by ListUtil -->    
+
+    <!-- Apache Commons Collections needed by ListUtil -->
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
@@ -96,44 +135,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <artifactId>commons-lang3</artifactId>
       <version>3.7</version>
     </dependency>
-
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-api</artifactId>
-      <version>${lockss.log4j.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-core</artifactId>
-      <version>${lockss.log4j.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-web</artifactId>
-      <version>${lockss.log4j.version}</version>
-    </dependency>
-
-    <!-- route slf4j to l4j2 -->
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-slf4j-impl</artifactId>
-      <version>${lockss.log4j.version}</version>
-    </dependency>
-
-    <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-1.2-api -->
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-1.2-api</artifactId>
-      <version>${lockss.log4j.version}</version>
-    </dependency>
-
-    <!-- route Commons Logging 1.x to l4j2 -->
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-jcl</artifactId>
-      <version>${lockss.log4j.version}</version>
-    </dependency>
-
 
   </dependencies>
 
