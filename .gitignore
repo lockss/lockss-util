@@ -1,5 +1,6 @@
-# Maven
+# Generated
 target/
+logs/
 
 # Eclipse artifacts
 .classpath
@@ -9,3 +10,4 @@ target/
 
 # Old file versions
 *~
+
