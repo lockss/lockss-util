@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Project config file that sets default log levels. -->
+
+<Configuration>
+  <Properties>
+    <!-- Root level is changed with a property -->
+    <Property name="root.level">WARN</Property>
+  </Properties>
+
+  <!-- Other loggers with a <Logger> element -->
+  <Loggers>
+    <Logger name="org.apache.http" level="WARN"/>
+    <Logger name="AbstractInactivityMonitor" level="ERROR"/>
+  </Loggers>
+
+</Configuration>

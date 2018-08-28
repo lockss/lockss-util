@@ -24,10 +24,11 @@ https://logging.apache.org/log4j/2.x/manual/configuration.html#CompositeConfigur
 
   - log4j2-lockss-project.xml is intended for downstream project-wide
     config.  It should be checked into the project's main/resources/ dir.
+    See sample in samples dir.
 
   - If the environemt variable LOG4J_LOCKSS_CONFIG is set, the file it
     points to be will be loaded last.  This is intended for user-specific
-    config.
+    config.  See sample in samples dir.
 
 log4j2-lockss.xml defines several properties to make it easier for
 downstream configs to make certain changes without repeating entire Logger

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Sample user logging config.  Set LOG4J_LOCKSS_CONFIG env var to the
+     name of this file. -->
+
+<Configuration>
+  <Properties>
+    <!-- Change message layout to include calling class.method() -->
+    <Property name="layout.console">
+      %d [%t] %-5level %C{1}.%M() %m%lex%n
+    </Property>
+    <Property name="layout.console.lockss">
+      ${layout.console}
+    </Property>
+  </Properties>
+</Configuration>
