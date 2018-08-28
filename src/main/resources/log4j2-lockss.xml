@@ -109,6 +109,7 @@
     <!-- Defaults for other components that log too much at info or debug
          levels -->
     <Logger name="org.apache.http" level="WARN"/>
+    <Logger name="AbstractInactivityMonitor" level="WARN"/>
 
   </Loggers>
 </Configuration>
