@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Empty config, intended for users to override in projects (or anywhere
+     on classpath).  Not intended to be checked in. -->
+<Configuration>
+</Configuration>
