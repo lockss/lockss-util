@@ -37,6 +37,7 @@ import org.apache.logging.log4j.*;
 import org.apache.logging.log4j.core.*;
 import org.apache.logging.log4j.core.config.*;
 import org.apache.logging.log4j.message.MessageFactory;
+import org.apache.logging.log4j.status.StatusLogger;
 
 
 /**
@@ -47,19 +48,17 @@ import org.apache.logging.log4j.message.MessageFactory;
  *
  * <li>maintains a map (nameMap) of logger short name to fully-qualified
  * name, added to as loggers are created.  This facilitates setting log
- * levels via the LOCKSS config, using only the short name.</li>
+ * levels using only the short name.</li>
  *
- * <li>maintains a map (levelMap) of logger name to LOCKSS-configured log
- * level, newly-created loggers can get their level set if their short name
- * matches an existing configured level. Keys are whatever name appeared in
- * the LOCKSS config, generally but not necessarily a short name.</li>
- *
- * <li>levelMap also contains {@value PARAM_STACKTRACE_LEVEL} and {@value
+ * <li>stackLevelMap contains {@value PARAM_STACKTRACE_LEVEL} and {@value
  * PARAM_STACKTRACE_SEVERITY}, because this is an easy place for {@link
  * L4JContextDataInjector} to find them.</li>
  * </ul>
  */
 public class L4JLoggerContext extends LoggerContext {
+
+  private static org.apache.logging.log4j.Logger log =
+    StatusLogger.getLogger();
 
   // Each short name may map to more than one fq name.  <i>Eg</i>, creating
   // loggers <tt>org.lockss.log.Logger</tt> and
@@ -67,7 +66,7 @@ public class L4JLoggerContext extends LoggerContext {
   // mapped to both fq names
   private SetValuedMap<String,String> nameMap = new HashSetValuedHashMap<>();
 
-  private Map<String,Level> levelMap = null;
+  private Map<String,Level> stackLevelMap = null;
 
   public L4JLoggerContext(final String name,
 			  final Object externalContext,
@@ -101,27 +100,62 @@ public class L4JLoggerContext extends LoggerContext {
   }
 
   /** Set the configured logger levels. */
-  public void setLevelMap(Map<String,Level> levelMap) {
-    this.levelMap = levelMap;
+  public void setStackLevelMap(Map<String,Level> stackLevelMap) {
+    this.stackLevelMap = stackLevelMap;
+    log.debug("L4JLoggerContext: Set stackLevelMap: {}", stackLevelMap);
   }
 
   /** Return the configured logger levels (and {@value
    * PARAM_STACKTRACE_LEVEL} and {@value PARAM_STACKTRACE_SEVERITY}). */
-  public Map<String,Level> getLevelMap() {
-    return levelMap;
+  public Map<String,Level> getStackLevelMap() {
+    return stackLevelMap;
   }
+
+  /** For any LoggerConfig with an unqualified name, set the level
+   * of the LoggerConfig corresponding to each fq name ending with
+   * the unqualified name */
+  public void setFqLevels() {
+    Map<String,LoggerConfig> map = getConfiguration().getLoggers();
+    for (String logname : map.keySet()) {
+      if (logname.indexOf(".") < 0) {
+	// no dot. Get its LoggerConfig.
+	LoggerConfig lcfg = map.get(logname);
+	Level shortLevel = lcfg.getLevel();
+	// Want to do this only if the short name's LoggerConfig has a
+	// level explicitly set, but don't know how to do that, as
+	// getLevel() inherits from parent.
+	if (shortLevel != null) {
+	  for (String fqName : getFQNames(logname)) {
+	    // If the fq logname has its own LoggerConfig, let it
+	    // take precedence.
+	    if (!fqName.equals(getConfiguration().getLoggerConfig(fqName).getName())) {
+	      log.debug("L4JLoggerContext: Set level {} to {}",
+			fqName, shortLevel);
+	      Configurator.setLevel(fqName, shortLevel);
+	    }	    
+	  }
+	}
+      }
+    }
+  }
+
 
   /** Add a shortName -> fqName mapping for a newly created logger.  If
    * this is the first time we've see this fqName (why wouldn't it be?),
-   * and the shortname have a configured level, set the level for the new
+   * and the shortname has a configured level, set the level for the new
    * fq name. */
   private synchronized void updateNameMap(String fqName) {
     if (fqName.indexOf(".") > 0) {
       String shortName = fqName.substring(fqName.lastIndexOf('.')+1);
-      if (nameMap.put(shortName, fqName) && levelMap != null) {
+      if (nameMap.put(shortName, fqName)) {
+	log.trace("L4JLoggerContext: Added {} -> {}", shortName, fqName);
 
-	Level shortLevel = levelMap.get(shortName);
-	if (shortLevel != null) {
+	LoggerConfig lcfg = getConfiguration().getLoggerConfig(shortName);
+	if (shortName.equals(lcfg.getName())
+	    && !fqName.equals(getConfiguration().getLoggerConfig(fqName).getName())) {
+	  Level shortLevel = lcfg.getLevel();
+	  log.debug("L4JLoggerContext: Set level {} to {}",
+		    fqName, shortLevel);
 	  Configurator.setLevel(fqName, shortLevel);
 	}
       }

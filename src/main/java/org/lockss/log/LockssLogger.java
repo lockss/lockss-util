@@ -474,12 +474,6 @@ public class LockssLogger {
 	  continue;
 	}
 	dynLevels.put(logname, level);
-	if (ctx != null) {
-	  // Add any fq log names that have this as their last component
-	  for (String fqName : ctx.getFQNames(logname)) {
-	    dynLevels.put(fqName, level);
-	  }
-	}
       }
     }
 
@@ -560,12 +554,16 @@ public class LockssLogger {
     }
     dynamicRootLevel = newRootLevel;
 
-    // Inform context of logName to Level map so it can set level of newly
-    // created loggers
+    // Pass map to context so L4JContextDataInjector can find them.  (Rest
+    // of map is no longer used so superfluous, but harmless)
     if (ctx != null) {
-      ctx.setLevelMap(dynamicLevels);
+      ctx.setStackLevelMap(dynamicLevels);
     }
     installLockssLevels(needReload);
+    if (ctx != null) {
+      ctx.setFqLevels();
+    }
+
   }
 
   // Store the computed dynamic level into log4j
@@ -578,6 +576,9 @@ public class LockssLogger {
       Configurator.setRootLevel(dynamicRootLevel);
     }
     if (dynamicLevels != null) {
+      if (myLog.isDebug2()) {
+	myLog.debug2("setLevels: " + dynamicLevels);
+      }
       Configurator.setLevel(dynamicLevels);
     }
   }

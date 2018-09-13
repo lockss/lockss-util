@@ -110,6 +110,7 @@
          levels -->
     <Logger name="org.apache.http" level="WARN"/>
     <Logger name="AbstractInactivityMonitor" level="WARN"/>
+    <Logger name="DefaultListableBeanFactory" level="WARN"/>
 
   </Loggers>
 </Configuration>

@@ -88,7 +88,7 @@ public class L4JContextDataInjector implements ContextDataInjector {
     if (ctx != null) {
       // If the LoggerContext is a L4JLoggerContext and it has a level map,
       // stores those levels in the result.
-      Map<String,Level> params = ctx.getLevelMap();
+      Map<String,Level> params = ctx.getStackLevelMap();
       if (params != null) {
 	putIfSet(res, params, LockssLogger.PARAM_STACKTRACE_LEVEL);
 	putIfSet(res, params, LockssLogger.PARAM_STACKTRACE_SEVERITY);

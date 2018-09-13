@@ -29,5 +29,7 @@
     <Logger name="test.sw" level="SITE_WARNING"/>
     <Logger name="test.se" level="SITE_ERROR"/>
 
+    <Logger name="shortname1" level="WARN"/>
+    <Logger name="shortname2" level="DEBUG2"/>
   </Loggers>
 </Configuration>

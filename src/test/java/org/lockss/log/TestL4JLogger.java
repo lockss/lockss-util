@@ -316,4 +316,15 @@ public class TestL4JLogger extends LockssTestCase5 {
 
     assertEquals(exp, getListAppender().getLevelMessages());
   }
+
+  @Test
+  public void testShortNames() throws Exception {
+    L4JLogger log1 = getLogger("noroot.foo.shortname1");
+    L4JLogger log2 = getLogger("noroot.foo.shortname2");
+    L4JLogger log3 = getLogger("noroot.foo.shortname3");
+
+    assertIsLevel(Level.WARN, log1);
+    assertIsLevel(L4JLevel.DEBUG2, log2);
+    assertIsLevel(Level.INFO, log3);
+  }
 }
