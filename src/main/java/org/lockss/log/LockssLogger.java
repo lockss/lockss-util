@@ -312,7 +312,7 @@ public class LockssLogger {
   public static void resetLogs() {
     dynamicLevels = null;
     if (anyLevelsChanged) {
-      myLog.critical("reloading because levels changed");
+      myLog.debug2("Reloading because levels changed");
       forceReload();
     }
     setLockssConfig(MapUtil.map(PARAM_STACKTRACE_SEVERITY,
@@ -552,7 +552,6 @@ public class LockssLogger {
 	    break;
 	  default:
 	    anyLevelsChanged = true;
-	    myLog.critical("anyLevelsChanged = true");
 	    res.put(logname, getLog4JLevel(level));
 	  }
 	} catch (IllegalLevelException e) {
