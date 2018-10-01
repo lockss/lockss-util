@@ -1929,8 +1929,7 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
 
   /** Log each test method */
   @BeforeEach
-  public void logTest(TestInfo info) {
-//     Optional meth = info.getTestMethod();
+  public void beforeEachLog(TestInfo info) {
     LockssLogger.resetLogs();
     log.info("Testcase: " + info.getDisplayName());
   }

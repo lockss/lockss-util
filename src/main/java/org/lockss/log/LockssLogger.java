@@ -89,12 +89,24 @@ public class LockssLogger {
   private static final int MAX_LEVEL = 9;
 
   public static final String PREFIX = "org.lockss." + "log.";
-  static final String PARAM_DEFAULT_LEVEL = PREFIX + "default.level";
 
-  /** System property for name of default log level */
-  public static final String SYSPROP_DEFAULT_LOG_LEVEL =
+  /** System property to set root log level */
+  public static final String SYSPROP_DEFAULT_ROOT_LOG_LEVEL =
+    "org.lockss.defaultRootLogLevel";
+
+  /** System property to set default log level for org.lockss loggers */
+  public static final String SYSPROP_DEFAULT_LOCKSS_LOG_LEVEL =
     "org.lockss.defaultLogLevel";
 
+  /** LOCKSS config alias for the log4j root logger level */
+  static final String ROOT_LOGGER_ALIAS = "root";
+  /** LOCKSS config alias for the lockss root (org.lockss) level */
+  static final String LOCKSS_LOGGER_ALIAS = "default";
+
+  /** LOCKSS config name for the lockss root (org.lockss) level */
+  private static final String LOCKSS_ROOT_LOG_NAME = "org.lockss";
+
+  // Documentation only
   /** Sets the log level of the named logger */
   static final String PARAM_LOG_LEVEL = PREFIX + "<logname>.level";
 
@@ -157,19 +169,12 @@ public class LockssLogger {
   // Default default log level if config parameter not set.
   public static final int DEFAULT_LEVEL = LEVEL_INFO;
 
-  /** Ensure that initial params get set even without LOCKSS config.
-      Used in unit tests */
-  public static void resetLogs() {
-    setLockssConfig(MapUtil.map(PARAM_STACKTRACE_SEVERITY,
-				DEFAULT_STACKTRACE_SEVERITY,
-				PARAM_STACKTRACE_LEVEL,
-				DEFAULT_STACKTRACE_LEVEL));
-  }
-
   private static boolean deferredInitDone = false;
 
   // Maintains unique LockssLogger instance per logger name
   private static Map<String, LockssLogger> logs = new HashMap<>();
+
+  private static boolean anyLevelsChanged = false;
 
   // LockssLogger used by this class
   protected static LockssLogger myLog;
@@ -251,6 +256,10 @@ public class LockssLogger {
     return res;
   }
 
+  static int uncnt = 0;
+  static String genName() {
+    return "Unnamed" + ++uncnt;
+  }
 
   private static void deferredInit() {
     if (!deferredInitDone) {
@@ -276,23 +285,15 @@ public class LockssLogger {
 	  }
 	});
 
-      // Process at startup several config items that are normally
-      // processed when the LOCKSS config is set.
+      // Process at startup all config items that normally get processed
+      // along with setting the LOCKSS config
 
-      // Ensure that default values of stacktrace params are stored in the
-      // context
-      resetLogs();
+      // Ensure default values of stacktrace params are installed in the
+      // LoggerContext
+      installStackTraceParams(null);
 
-      // org.lockss.defaultLogLevel sysprop
-      String spLevel = System.getProperty(SYSPROP_DEFAULT_LOG_LEVEL);
-      if (!StringUtils.isBlank(spLevel)) {
-	try {
-	  dynamicRootLevel = getLog4JLevel(spLevel);
-	  installLockssLevels(false);
-	} catch (IllegalLevelException e) {
-	  // fall through
-	}
-      }
+      processInitialSysprops();
+      installLockssLevels(false);
 
       // Complain if attempt to set log target using
       // org.lockss.defaultLogTarget sysprop
@@ -305,9 +306,54 @@ public class LockssLogger {
     }
   }
 
-  static int uncnt = 0;
-  static String genName() {
-    return "Unnamed" + ++uncnt;
+  /** Reset any dynamically configured levels, ensure that stacktrace
+   * params get set even without LOCKSS config being set.  Used in unit
+   * tests */
+  public static void resetLogs() {
+    dynamicLevels = null;
+    if (anyLevelsChanged) {
+      myLog.critical("reloading because levels changed");
+      forceReload();
+    }
+    setLockssConfig(MapUtil.map(PARAM_STACKTRACE_SEVERITY,
+				DEFAULT_STACKTRACE_SEVERITY,
+				PARAM_STACKTRACE_LEVEL,
+				DEFAULT_STACKTRACE_LEVEL));
+  }
+
+  private static void processInitialSysprops() {
+    dynamicLevels = getSyspropLevelMap();
+    if (!dynamicLevels.isEmpty()) {
+      installLockssLevels(false);
+    }
+  }
+
+  /** Return a level map initialized with any log levels set with System
+   * properties */
+  private static Map<String,Level> getSyspropLevelMap() {
+    Map<String,Level> res = new HashMap<>();
+    Level sysRootLevel = getSyspropLevel(SYSPROP_DEFAULT_ROOT_LOG_LEVEL);
+    Level sysLockssLevel = getSyspropLevel(SYSPROP_DEFAULT_LOCKSS_LOG_LEVEL);
+    if (sysRootLevel != null) {
+      res.put(ROOT_LOGGER_ALIAS, sysRootLevel);
+    }
+    if (sysLockssLevel != null) {
+      res.put(LOCKSS_ROOT_LOG_NAME, sysLockssLevel);
+    }
+    return res;
+  }
+
+  private static Level getSyspropLevel(String prop) {
+    String s = System.getProperty(prop);
+    if (StringUtils.isBlank(s)) {
+      return null;
+    }
+    try {
+      return getLog4JLevel(s);
+    } catch (IllegalLevelException e) {
+      myLog.error("Illegal value for " + prop + " sysprop: " + s);
+      return null;
+    }
   }
 
   /** Return numeric log level (<code>LockssLogger.LEVEL_XXX</code>) for
@@ -456,13 +502,39 @@ public class LockssLogger {
   public static void setLockssConfig(Map<String,String> lconfig) {
     deferredInit();
     myLog.debug2("setLockssConfig: " + lconfig);
-    LoggerContext ctx0 = getLoggerContext();
-    L4JLoggerContext ctx = null;
-    if (ctx0 instanceof L4JLoggerContext) {
-      ctx = (L4JLoggerContext)ctx0;
+    if (!StringUtils.isBlank(lconfig.get(PARAM_LOG_TARGETS))) {
+      myLog.error(PARAM_LOG_TARGETS +
+		  " param not supported; use log4j2 config instead");
     }
+
     // build map of <log-level> to LOCKSS level name
-    Map<String,String> dynLevels = new HashMap<>();
+    Map<String,Level> dynLevels = buildLevelMap(lconfig);
+
+    // If any previously set levels are no longer set they should revert to
+    // whatever's specified by the log4j config.  The easiest way to do
+    // that is to tell log4j to reload the config from scratch.
+    boolean needReload =
+      dynamicLevels != null &&
+      dynamicLevels.keySet().stream().anyMatch(name -> !dynLevels.containsKey(name));
+    dynamicLevels = dynLevels;
+
+    // root logger level is set separately
+    dynamicRootLevel = dynLevels.remove(ROOT_LOGGER_ALIAS);
+
+    L4JLoggerContext ctx = getL4JLoggerContext();
+    // Add the stacktrace params to the ctx
+    installStackTraceParams(lconfig);
+
+    installLockssLevels(needReload);
+    if (ctx != null) {
+      ctx.setFqLevels();
+    }
+  }
+
+  private static Map<String,Level> buildLevelMap(Map<String,String> lconfig) {
+    // build map of <log-level> to LOCKSS level name
+    Map<String,Level> res = getSyspropLevelMap();
+
     for (Map.Entry<String,String> ent : lconfig.entrySet()) {
       String key = ent.getKey();
       Matcher mat = LOG_LEVEL_PAT.matcher(key);
@@ -473,101 +545,59 @@ public class LockssLogger {
 	  myLog.error("Illegal log name: " + key);
 	  continue;
 	}
-	dynLevels.put(logname, level);
-      }
-    }
-
-    // Add the stacktrace params
-    copyIfSet(dynLevels, lconfig, PARAM_STACKTRACE_LEVEL);
-    copyIfSet(dynLevels, lconfig, PARAM_STACKTRACE_SEVERITY);
-
-    if (!StringUtils.isBlank(lconfig.get(PARAM_LOG_TARGETS))) {
-      myLog.error(PARAM_LOG_TARGETS +
-		  " param not supported; use log4j2 config instead");
-    }
-    setDynamicLevels(ctx, dynLevels, lconfig.get(PARAM_DEFAULT_LEVEL));
-  }
-
-
-  static void copyIfSet(Map<String,String> to, Map<String,String> from,
-			String key) {
-    if (from.containsKey(key)) {
-      to.put(key, from.get(key));
-    }
-  }
-
-  /** Set all log levels specified in the map.
-   * @param levels map of logger name -> LOCKSS level name
-   * @param defLevel default log level name
-   */
-  public static void setDynamicLevels(L4JLoggerContext ctx,
-				      Map<String,String> levels,
-				      String defLevel) {
-    if (myLog.isDebug2()) {
-      myLog.debug2("setDynamicLevels: " + levels + ", " + defLevel);
-    }
-
-    // Convert to map of logger name to log4j Level
-    Map<String,Level> map = new HashMap<>();
-    for (String key : levels.keySet()) {
-      try {
-	map.put(key, getLog4JLevel(levels.get(key)));
-      } catch (IllegalLevelException e) {
-	myLog.error("Ignoring illegal dynamic log level: " + key, e);
-	continue;
-      }
-    }
-
-    // If any previously set levels are no longer set they should revert to
-    // whatever's specified by the log4j config.  The easiest way to do
-    // that is to tell log4j to reload the config from scratch.
-    boolean needReload =
-      dynamicLevels != null &&
-      dynamicLevels.keySet().stream().anyMatch(name -> !map.containsKey(name));
-    dynamicLevels = map;
-
-    // Obtain default level from org.lockss.log.default.level param, if
-    // set (and legel), else sysprop (if legel).
-    Level newRootLevel = null;
-    if (!StringUtils.isBlank(defLevel)) {
-      try {
-	newRootLevel = getLog4JLevel(defLevel);
-      } catch (IllegalLevelException e) {
-	// fall through
-      }
-    }
-
-    if (newRootLevel == null) {
-      String sp = System.getProperty(SYSPROP_DEFAULT_LOG_LEVEL);
-      if (!StringUtils.isBlank(sp)) {
 	try {
-	  newRootLevel = getLog4JLevel(sp);
+	  switch (logname) {
+	  case LOCKSS_LOGGER_ALIAS:
+	    res.put(LOCKSS_ROOT_LOG_NAME, getLog4JLevel(level));
+	    break;
+	  default:
+	    anyLevelsChanged = true;
+	    myLog.critical("anyLevelsChanged = true");
+	    res.put(logname, getLog4JLevel(level));
+	  }
 	} catch (IllegalLevelException e) {
-	  // fall through
+	  myLog.error("Ignoring illegal log level: " + key + " = " + level, e);
+	  continue;
 	}
       }
     }
+    return res;
+  }
 
-    // Determine whether reload is needed to reset root level
-    if (newRootLevel == null && dynamicRootLevel != null) {
-      needReload = true;
-    }
-    dynamicRootLevel = newRootLevel;
-
-    // Pass map to context so L4JContextDataInjector can find them.  (Rest
-    // of map is no longer used so superfluous, but harmless)
+  private static void installStackTraceParams(Map<String,String> lconfig) {
+    L4JLoggerContext ctx = getL4JLoggerContext();
     if (ctx != null) {
-      ctx.setStackLevelMap(dynamicLevels);
+      Map<String,Level> stackTraceConfig = new HashMap<>();
+      copyIfSet(stackTraceConfig, lconfig,
+		PARAM_STACKTRACE_LEVEL, DEFAULT_STACKTRACE_LEVEL);
+      copyIfSet(stackTraceConfig, lconfig,
+		PARAM_STACKTRACE_SEVERITY, DEFAULT_STACKTRACE_SEVERITY);
+      ctx.setStackLevelMap(stackTraceConfig);
     }
-    installLockssLevels(needReload);
-    if (ctx != null) {
-      ctx.setFqLevels();
-    }
+  }
 
+  static void copyIfSet(Map<String,Level> to, Map<String,String> from,
+			String key, String dfault) {
+    if (from != null && from.containsKey(key)) {
+      String val = from.get(key);
+      try {
+	to.put(key, getLog4JLevel(val));
+	return;
+      } catch (IllegalLevelException e) {
+	myLog.error("Illegal value for " + key + ": " + val);
+      }
+    }
+    try {
+      to.put(key, getLog4JLevel(dfault));
+      return;
+    } catch (IllegalLevelException e) {
+      myLog.error("Illegal default value for " + key + ": " + dfault);
+    }
   }
 
   // Store the computed dynamic level into log4j
   private static void installLockssLevels(boolean needReload) {
+    myLog.debug2("installLockssLevels: " + needReload);
     if (needReload) {
       forceReload();
     }
@@ -583,12 +613,37 @@ public class LockssLogger {
     }
   }
 
+  public static Level getL4JRootLevel() {
+    return getLoggerContext().getRootLogger().getLevel();
+  }
+
+  public static int getRootLevel() {
+    return getLockssLevel(getL4JRootLevel());
+  }
+
+  public static void setRootLevel(int level) {
+    Level l = getLog4JLevel(level);
+    if (l != getL4JRootLevel()) {
+      anyLevelsChanged = true;
+      Configurator.setRootLevel(dynamicRootLevel);
+    }
+  }
+
   private static LoggerContext getLoggerContext() {
     return (LoggerContext)LogManager.getContext(false);
   }
 
+  private static L4JLoggerContext getL4JLoggerContext() {
+    LoggerContext ctx = getLoggerContext();
+    if (ctx instanceof L4JLoggerContext) {
+      return (L4JLoggerContext)ctx;
+    }
+    return null;
+  }
+
   /** force log4j to reread its config from scratch */
   public static void forceReload() {
+    anyLevelsChanged = false;
     getLoggerContext().reconfigure();
   }
 

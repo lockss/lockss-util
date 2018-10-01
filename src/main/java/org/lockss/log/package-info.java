@@ -65,14 +65,21 @@ or Appender elements:
   &lt;/Properties&gt;
 
 
-The sysprop org.lockss.defaultLogLevel (-Dloglevel= in maven) overrides the
-default log level set in the log4j config file(s).
+The sysprop org.lockss.defaultRootLogLevel (-Drootloglevel= in maven)
+overrides the default root log level set in the log4j config file(s).
+
+The sysprop org.lockss.defaultLogLevel (-Dloglevel= in maven)
+sets/overrides the log level for all loggers below org.lockss.
 
 LOCKSS config params (in lockss.txt, lockss.opt, expert config, etc.) of
 the form org.lockss.log.&lt;name&gt;.level can be used to override the log levels
 set in the log4j config files.  &lt;name&gt; can be simple or fq.
-org.lockss.log.default.level sets the default (root) level (overrides
+
+org.lockss.log.root.level sets the default (root) level (overrides
 sysprop).
+
+org.lockss.log.default.level (an alias for org.lockss.log.org.lockss.level)
+sets the log level for all loggers below org.lockss.
 
 LOCKSS loggers created with Logger.getLogger() or Logger.getLogger(Class)
 now get fully qualified names.  Those created with Logger.getLogger(String)

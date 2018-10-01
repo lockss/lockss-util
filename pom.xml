@@ -103,6 +103,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <version>${lockss.log4j.version}</version>
     </dependency>
 
+    <!-- route java.util.logging to log4j -->
+    <!-- requires java.util.logging.manager sysprop to be set to
+         org.apache.logging.log4j.jul.LogManager -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-jul</artifactId>
+      <version>${lockss.log4j.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>

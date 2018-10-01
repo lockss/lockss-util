@@ -47,8 +47,10 @@ import org.lockss.util.*;
 
 public class TestLockssLogger extends LockssTestCase5 {
 
-  protected static String origSysProp;
-  protected static int origDefLevel;
+  protected static String lockssSysProp;
+  protected static String rootSysProp;
+  protected static int origLockssLevel;
+  protected static int origRootLevel;
 
   /** Return the ListAppender created by log4j2-logger-test.xml */
   protected static ListAppender getListAppender() {
@@ -63,8 +65,6 @@ public class TestLockssLogger extends LockssTestCase5 {
     return res;
   }
 
-  /** Add ListAppender to record output to loggers below
-   * org.lockss.testlogger */
   @BeforeAll
   public static void beforeAll() throws Exception {
     commonBeforeAll();
@@ -73,28 +73,38 @@ public class TestLockssLogger extends LockssTestCase5 {
 
   public static void commonBeforeAll() {
 
-    // Record the org.lockss.defaultLogLevel sysprop at startup so we know
-    // what to expect the default (root) log level to be.  Actually varying
-    // the initial default log level is beyond the scope of this code, as
-    // the LockssLogger class may already have been initialized before this code
-    // is executed.
-    origSysProp = System.getProperty("org.lockss.defaultLogLevel");
+    // Record the org.lockss.defaultLogLevel and
+    // org.lockss.defaultRootLogLevel sysprops at startup so we know what
+    // to expect the default org.lockss and default root levels to be.
+    // It's not possible to exercise setting these propoerties in this test
+    // code, as the LockssLogger class may already have been initialized
+    // before this code is executed.
 
+    lockssSysProp = System.getProperty("org.lockss.defaultLogLevel");
     // Ensure that any default level is legal
-    if (StringUtils.isBlank(origSysProp)) {
-      origDefLevel = LockssLogger.LEVEL_INFO;
+    if (StringUtils.isBlank(lockssSysProp)) {
+      origLockssLevel = LockssLogger.LEVEL_INFO;
     } else {
       try {
-	origDefLevel = LockssLogger.levelOf(origSysProp);
+	origLockssLevel = LockssLogger.levelOf(lockssSysProp);
       } catch (Exception e) {
 	Assertions.fail("org.lockss.defaultLogLevel set to illegal level string: " +
-			origSysProp);
+			lockssSysProp);
       }
     }
 
-//     // Add testing config file to logj4's config.
-//     System.setProperty("log4j.configurationFile",
-// 		       "log4j2.xml,log4j2-logger-test.xml");
+    rootSysProp = System.getProperty("org.lockss.defaultRootLogLevel");
+
+    if (StringUtils.isBlank(rootSysProp)) {
+      origRootLevel = LockssLogger.LEVEL_INFO;
+    } else {
+      try {
+	origRootLevel = LockssLogger.levelOf(rootSysProp);
+      } catch (Exception e) {
+	Assertions.fail("org.lockss.defaultRootLogLevel set to illegal level string: " +
+			rootSysProp);
+      }
+    }
   }
 
   void assertIsLevel(int level, LockssLogger log) {
@@ -207,9 +217,10 @@ public class TestLockssLogger extends LockssTestCase5 {
     LockssLogger logW = getLogger("test.warning.w1");
     LockssLogger logI = getLogger("test.info.foo");
     LockssLogger logD = getLogger("test.debug.d.e.f");
-    LockssLogger logD2 = getLogger("test.debug2.lll.long.name.to.excersize layout");
+    LockssLogger logD2 = getLogger("test.debug2.lll.long.name.to.exercise layout");
     LockssLogger logD3 = getLogger("test.debug3.fff");
-    LockssLogger logDef = getLogger("default");
+    LockssLogger logLockssDef = getLogger("org.lockss.Random");
+    LockssLogger logRootDef = getLogger("other.package.FooLog");
 
     assertIsLevel(LockssLogger.LEVEL_CRITICAL, logC);
     assertIsLevel(LockssLogger.LEVEL_ERROR, logE);
@@ -218,7 +229,8 @@ public class TestLockssLogger extends LockssTestCase5 {
     assertIsLevel(LockssLogger.LEVEL_DEBUG, logD);
     assertIsLevel(LockssLogger.LEVEL_DEBUG2, logD2);
     assertIsLevel(LockssLogger.LEVEL_DEBUG3, logD3);
-    assertIsLevel(origDefLevel, logDef);
+    assertIsLevel(origLockssLevel, logLockssDef);
+    assertIsLevel(origRootLevel, logRootDef);
 
     doLogs(LockssLogger.LEVEL_CRITICAL, logC);
     doLogs(LockssLogger.LEVEL_ERROR, logE);
@@ -253,7 +265,8 @@ public class TestLockssLogger extends LockssTestCase5 {
     assertIsLevel(LockssLogger.LEVEL_DEBUG, logT);
     assertIsLevel(LockssLogger.LEVEL_WARNING, logD2);
     assertIsLevel(LockssLogger.LEVEL_DEBUG3, logD3);
-    assertIsLevel(origDefLevel, logDef);
+    assertIsLevel(origLockssLevel, logLockssDef);
+    assertIsLevel(origRootLevel, logRootDef);
 
     doLogs(LockssLogger.LEVEL_CRITICAL, logC);
     doLogs(LockssLogger.LEVEL_ERROR, logE);
@@ -262,7 +275,8 @@ public class TestLockssLogger extends LockssTestCase5 {
     doLogs(LockssLogger.LEVEL_DEBUG, logT);
     doLogs(LockssLogger.LEVEL_WARNING, logD2);
     doLogs(LockssLogger.LEVEL_DEBUG3, logD3);
-    doLogs(origDefLevel, logDef);
+    doLogs(origLockssLevel, logLockssDef);
+    doLogs(origRootLevel, logRootDef);
 
     List<String> expNew =
       ListUtil.list("crit", "crit", "err", "debug", "debug2",
@@ -273,6 +287,7 @@ public class TestLockssLogger extends LockssTestCase5 {
 
     getListAppender().reset();
     newConfig.put("org.lockss.log.default.level", "warning");
+    newConfig.put("org.lockss.log.root.level", "warning");
     newConfig.put(LockssLogger.PARAM_STACKTRACE_SEVERITY, "error");
     newConfig.put(LockssLogger.PARAM_STACKTRACE_LEVEL, "warning");
     setConfig(newConfig);
@@ -284,7 +299,8 @@ public class TestLockssLogger extends LockssTestCase5 {
     assertIsLevel(LockssLogger.LEVEL_DEBUG, logT);
     assertIsLevel(LockssLogger.LEVEL_WARNING, logD2);
     assertIsLevel(LockssLogger.LEVEL_DEBUG3, logD3);
-    assertIsLevel(LockssLogger.LEVEL_WARNING, logDef);
+    assertIsLevel(LockssLogger.LEVEL_WARNING, logLockssDef);
+    assertIsLevel(LockssLogger.LEVEL_WARNING, logRootDef);
 
     doLogs(LockssLogger.LEVEL_CRITICAL, logC);
     doLogs(LockssLogger.LEVEL_ERROR, logE);
@@ -311,7 +327,8 @@ public class TestLockssLogger extends LockssTestCase5 {
     assertIsLevel(LockssLogger.LEVEL_DEBUG, logT);
     assertIsLevel(LockssLogger.LEVEL_DEBUG2, logD2);
     assertIsLevel(LockssLogger.LEVEL_DEBUG3, logD3);
-    assertIsLevel(origDefLevel, logDef);
+    assertIsLevel(origLockssLevel, logLockssDef);
+    assertIsLevel(origRootLevel, logRootDef);
 
     doLogs(LockssLogger.LEVEL_CRITICAL, logC);
     doLogs(LockssLogger.LEVEL_ERROR, logE);
@@ -320,7 +337,8 @@ public class TestLockssLogger extends LockssTestCase5 {
     doLogs(LockssLogger.LEVEL_DEBUG, logT);
     doLogs(LockssLogger.LEVEL_DEBUG2, logD2);
     doLogs(LockssLogger.LEVEL_DEBUG3, logD3);
-    doLogs(origDefLevel, logDef);
+    doLogs(origLockssLevel, logLockssDef);
+    doLogs(origRootLevel, logRootDef);
 
     assertEquals(expDefault, getListAppender().getMessages());
   }
@@ -337,7 +355,7 @@ public class TestLockssLogger extends LockssTestCase5 {
     assertIsLevel(LockssLogger.LEVEL_DEBUG, logD2);
     assertIsLevel(LockssLogger.LEVEL_WARNING, logD3);
 
-    Configurator.setRootLevel(Level.WARN);
+    LockssLogger.setRootLevel(LockssLogger.LEVEL_WARNING);
 
     assertIsLevel(LockssLogger.LEVEL_DEBUG, logT);
     assertIsLevel(LockssLogger.LEVEL_DEBUG, logD1);
