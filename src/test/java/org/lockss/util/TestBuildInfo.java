@@ -29,23 +29,59 @@ in this Software without prior written authorization from Stanford University.
 package org.lockss.util;
 
 import org.junit.jupiter.api.*;
+
 import java.io.*;
 import java.util.*;
+import org.lockss.log.*;
 import org.lockss.util.*;
 import org.lockss.util.test.*;
+import org.lockss.util.test.matcher.*;
 
 /**
  * test class for org.lockss.util.BuildInfo
  */
 public class TestBuildInfo extends LockssTestCase5 {
+  private static L4JLogger log = L4JLogger.getLogger();
+
+  void assertMatches(String pat, String val) {
+    assertThat(val, MatchesPattern.matchesPattern(pat));
+  }
 
   @Test
-  public void testInfoPresent() {
-    assertNotNull(BuildInfo.getBuildProperty(BuildInfo.BUILD_TIME));
-    assertNotNull(BuildInfo.getBuildProperty(BuildInfo.BUILD_TIMESTAMP));
-    // Don't test BuildInfo.BUILD_HOST as it won't be set on OpenBSD build
-    // machine
-
-    assertNull(BuildInfo.getBuildProperty("not a real property"));
+  public void testBuildInfo() {
+    BuildInfo bi =
+      new BuildInfo(getClass().getResource("sample-build.properties"));
+    assertEquals("lockss-util", bi.getBuildPropertyInst("build.name"));
+    assertEquals("1.7.0-SNAPSHOT", bi.getBuildPropertyInst("build.version"));
+    assertEquals("1.75.0", bi.getBuildPropertyInst("build.releasename"));
+    assertMatches("1.75.0 built 07-Apr-19 20:05:25 PDT on .*",
+		  bi.getBuildInfoStringInst());
+    assertMatches("lockss-util 1.75.0 built 07-Apr-19 20:05:25 PDT " +
+		  "build.description: Development.* utilities.*," +
+		  " on .*",
+		  bi.getBuildInfoStringInst("name",
+					    BuildInfo.BUILD_RELEASENAME,
+					    BuildInfo.BUILD_TIMESTAMP,
+					    BuildInfo.BUILD_DESCRIPTION,
+					    BuildInfo.BUILD_HOST));
   }
+
+  @Test
+  public void testFirst() {
+    log.debug("First BuildInfo: {}", BuildInfo.getFirstBuildInfo());
+    assertNotNull(BuildInfo.getBuildProperty(BuildInfo.BUILD_TIMESTAMP));
+    assertNotNull(BuildInfo.getBuildProperty(BuildInfo.BUILD_HOST));
+    assertNull(BuildInfo.getBuildProperty("not a real property"));
+
+    assertEquals("org.lockss", BuildInfo.getBuildProperty("build.groupId"));
+    assertEquals("lockss-util", BuildInfo.getBuildProperty("build.artifactId"));
+  }
+
+  @Test
+  public void testAll() {
+    List<BuildInfo> all = BuildInfo.getAllBuildInfo();
+    log.debug("All BuildInfo: {}", all);
+    assertTrue(all.size() >= 1);
+  }
+
 }
