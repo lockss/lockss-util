@@ -51,7 +51,8 @@ public class TestBuildInfo extends LockssTestCase5 {
   public void testBuildInfo() {
     BuildInfo bi =
       new BuildInfo(getClass().getResource("sample-build.properties"));
-    assertEquals("lockss-util", bi.getBuildPropertyInst("build.name"));
+    assertEquals("Lockss Util", bi.getBuildPropertyInst("build.name"));
+    assertEquals("lockss-util", bi.getBuildPropertyInst("build.artifactId"));
     assertEquals("1.7.0-SNAPSHOT", bi.getBuildPropertyInst("build.version"));
     assertEquals("1.75.0", bi.getBuildPropertyInst("build.releasename"));
     assertMatches("1.75.0 built 07-Apr-19 20:05:25 PDT on .*",
@@ -59,7 +60,7 @@ public class TestBuildInfo extends LockssTestCase5 {
     assertMatches("lockss-util 1.75.0 built 07-Apr-19 20:05:25 PDT " +
 		  "build.description: Development.* utilities.*," +
 		  " on .*",
-		  bi.getBuildInfoStringInst("name",
+		  bi.getBuildInfoStringInst(BuildInfo.BUILD_ARTIFACT,
 					    BuildInfo.BUILD_RELEASENAME,
 					    BuildInfo.BUILD_TIMESTAMP,
 					    BuildInfo.BUILD_DESCRIPTION,

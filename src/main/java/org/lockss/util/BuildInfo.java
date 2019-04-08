@@ -154,17 +154,13 @@ public class BuildInfo {
 	sb.append(" ");
       }
       switch (field) {
-      case "name":
-	String name = getBuildPropertyInst("build.artifactId");
-	if (name != null) {
-	  sb.append(name);
-	}
-	break;
+      case BUILD_NAME:
+      case BUILD_ARTIFACT:
       case BUILD_VERSION:
       case BUILD_RELEASENAME:
-	String ver = getBuildPropertyInst(field);
-	if (ver != null) {
-	  sb.append(ver);
+	String val1 = getBuildPropertyInst(field);
+	if (val1 != null) {
+	  sb.append(val1);
 	}
 	break;
       case BUILD_TIMESTAMP:
@@ -179,11 +175,11 @@ public class BuildInfo {
 	}
 	break;
       default:
-	String val = getBuildPropertyInst(field);
-	if (val != null) {
+	String val2 = getBuildPropertyInst(field);
+	if (val2 != null) {
 	  sb.append(field);
 	  sb.append(": ");
-	  sb.append(val);
+	  sb.append(val2);
 	  needComma = true;
 	}
       }
