@@ -1,33 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 
+<!--
 
-Copyright (c) 2000-2018, Board of Trustees of Leland Stanford Jr. University
+Copyright (c) 2000-2019, Board of Trustees of Leland Stanford Jr. University
 All rights reserved.
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-1. Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer.
+1. Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
 
 2. Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation and/or
-other materials provided with the distribution.
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
 
 3. Neither the name of the copyright holder nor the names of its contributors
 may be used to endorse or promote products derived from this software without
 specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
 
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -38,109 +39,106 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <parent>
     <groupId>org.lockss</groupId>
     <artifactId>lockss-parent-pom</artifactId>
-    <version>1.4.0</version>
+    <version>1.10.0</version>
+    <relativePath />
   </parent>
   
+  <groupId>org.lockss</groupId>
   <artifactId>lockss-util</artifactId>
-  <version>1.6.0</version>
+  <version>1.7.0</version>
   <packaging>jar</packaging>
 
   <name>lockss-util</name>
   <description>Development and testing utilities common to most LOCKSS projects</description>
 
-  <!-- Must be in every lockss-parent-pom/lockss-spring-parent-pom descendant -->
-  <scm>
-    <connection>${scmConnection}</connection>
-    <developerConnection>${scmDeveloperConnection}</developerConnection>
-    <url>${scmUrl}</url>
-  </scm>
-
   <properties>
-    <junit.jupiter.version>5.1.0</junit.jupiter.version>
-    <junit.platform.version>1.1.0</junit.platform.version>
+    <build.java.jarTests.skip>false</build.java.jarTests.skip>
   </properties>
-
-  <build>
-  
-    <plugins>
-    
-      <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.19.1</version><!-- because of https://github.com/junit-team/junit5/issues/809 -->
-        <dependencies>
-          <dependency>
-            <groupId>org.junit.platform</groupId>
-            <artifactId>junit-platform-surefire-provider</artifactId>
-            <version>${junit.platform.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>${junit.jupiter.version}</version>
-          </dependency>
-        </dependencies>
-      </plugin>
-      
-    </plugins>
-
-  </build>
 
   <dependencies>
 
-    <!-- 
-        See JUnit 5 diagram at:
-        http://junit.org/junit5/docs/current/user-guide/#dependency-diagram .
-    -->
-  
     <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-params</artifactId>
-      <version>${junit.jupiter.version}</version>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>${version.group.log4j}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>${version.group.log4j}</version>
     </dependency>
     
     <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-engine</artifactId>
-      <version>${junit.jupiter.version}</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.junit.platform</groupId>
-      <artifactId>junit-platform-runner</artifactId>
-      <version>${junit.platform.version}</version>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-web</artifactId>
+      <version>${version.group.log4j}</version>
     </dependency>
 
-    <!-- 
-        end JUnit 5
-    -->
-    
-    <!--  Hamcrest needed by numerous tests -->    
+    <!-- route slf4j to log4j2 -->
     <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest-library</artifactId>
-      <version>1.3</version>
+      <groupId>org.apache.logging.log4j</groupId>
+      <!-- The name of this artifact depends on the slf4j version.  See
+           parent pom -->
+      <artifactId>${lockss.log4j.slf4j.binding}</artifactId>
+      <version>${version.group.log4j}</version>
     </dependency>
 
-    <!-- Apache Commons Collections needed by ListUtil -->    
+    <!-- route Log4J 1.x to log4j -->
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-collections4</artifactId>
-      <version>4.1</version>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-1.2-api</artifactId>
+      <version>${version.group.log4j}</version>
     </dependency>
 
-    <!-- Apache Commons Lang needed by StringUtil
+    <!-- route Commons Logging 1.x to log4j -->
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-      <version>3.6</version>
-    </dependency> -->
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-jcl</artifactId>
+      <version>${version.group.log4j}</version>
+    </dependency>
 
-    <!--  SLF4J needed by many classes
+    <!-- route java.util.logging to log4j -->
+    <!-- requires java.util.logging.manager sysprop to be set to
+         org.apache.logging.log4j.jul.LogManager -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-jul</artifactId>
+      <version>${version.group.log4j}</version>
+    </dependency>
+
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>1.7.25</version>
-    </dependency> -->
+      <version>${version.group.slf4j}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.lockss</groupId>
+      <artifactId>lockss-junit5-bundle</artifactId>
+      <version>${version.lockss.lockss-junit5-bundle}</version>
+      <type>pom</type>
+      <!-- not in scope 'test' here: LockssTestCase5 is defined in the main tree -->
+    </dependency>
+
+    <!-- Apache Commons Collections needed by ListUtil -->
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-collections4</artifactId>
+      <version>${version.dependency.commons-collections4}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>${version.dependency.commons-io}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>${version.dependency.commons-lang3}</version>
+    </dependency>
 
   </dependencies>
 

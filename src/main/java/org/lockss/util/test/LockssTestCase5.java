@@ -32,22 +32,32 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.lockss.util.test;
 
+import java.io.*;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.*;
 import java.util.function.*;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import javax.xml.namespace.NamespaceContext;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.*;
 import org.hamcrest.collection.IsArray;
 import org.hamcrest.core.AnyOf;
 import org.hamcrest.core.CombinableMatcher.*;
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.function.*;
+import org.lockss.util.io.FileUtil;
+import org.lockss.util.os.PlatformUtil;
+import org.lockss.util.test.matcher.*;
+import org.lockss.util.time.TimerUtil;
 import org.opentest4j.MultipleFailuresError;
+import org.lockss.log.L4JLogger;
 import org.w3c.dom.Node;
+import org.lockss.log.LockssLogger;
 
 /**
  * <p>
@@ -62,6 +72,270 @@ import org.w3c.dom.Node;
  * @see Matchers
  */
 public class LockssTestCase5 {
+
+  public static final String SYSPROP_KEEP_TEMP_FILES = "org.lockss.keepTempFiles";
+
+  public static final String TEST_ID_FILE_NAME = ".locksstestcase";
+
+  private static final L4JLogger log = L4JLogger.getLogger();
+  
+  /** Timeout duration for timeouts that are expected to time out.  Setting
+   * this higher makes normal tests take longer, setting it too low might
+   * cause failing tests to erroneously succeed on slow or busy
+   * machines. */
+  public static int TIMEOUT_SHOULD = 300;
+
+  /** Timeout duration for timeouts that are expected not to time out.
+   * This should be set high to ensure catching failures. */
+  public static final int DEFAULT_TIMEOUT_SHOULDNT = 2000;
+
+  public static int TIMEOUT_SHOULDNT = DEFAULT_TIMEOUT_SHOULDNT;
+
+  List<File> tmpDirs;
+  
+  List<DoLater> doLaters;
+
+  String javaIoTmpdir;
+  
+  /**
+   *
+   */
+  private static int failures;
+  
+  /**
+   * <p>
+   * Sets up {@link PlatformUtil#SYSPROP_JAVA_IO_TMPDIR} before each test.
+   * </p>
+   * 
+   * @see #afterEachJavaIoTmpdir()
+   */
+  @BeforeEach
+  public final void beforeEachJavaIoTmpdir() {
+    javaIoTmpdir = System.getProperty(PlatformUtil.SYSPROP_JAVA_IO_TMPDIR);
+  }
+  
+  /**
+   * <p>
+   * Resets {@link PlatformUtil#SYSPROP_JAVA_IO_TMPDIR} before each test.
+   * </p>
+   * 
+   * @see #afterEachJavaIoTmpdir()
+   */
+  @AfterEach
+  public final void afterEachJavaIoTmpdir() {
+    if (!StringUtils.isEmpty(javaIoTmpdir)) {
+      System.setProperty(PlatformUtil.SYSPROP_JAVA_IO_TMPDIR, javaIoTmpdir);
+    }
+  }
+
+  /**
+   * <p>
+   * Cancels the {@link DoLater} tasks after each test.
+   * </p>
+   *
+   * @see DoLater
+   */
+  @AfterEach
+  public final void afterEachDoLaters() {
+    if (doLaters != null) {
+      List<DoLater> copy;
+      synchronized (this) {
+        copy = new ArrayList<DoLater>(doLaters);
+      }
+      for (DoLater doer : copy) {
+        doer.cancel();
+      }
+      // do NOT set doLaters to null here.  It may be referenced by
+      // exiting DoLaters.  It won't hurt anything because the next test
+      // will create a new instance of the test case, and get a different
+      // doLaters list
+    }
+  }
+
+  /**
+   * <p>
+   * Cleans up temporary directories after each test.
+   * </p>
+   * 
+   * @throws Exception
+   *           if I/O exceptions occur in the process.
+   */
+  @AfterEach
+  public final void afterEachTmpDirs() throws Exception {
+    if (tmpDirs != null && !isKeepTempFiles()) {
+      for (Iterator<File> iter = tmpDirs.iterator() ; iter.hasNext() ; ) {
+        File dir = iter.next();
+        File idFile = new File(dir, TEST_ID_FILE_NAME);
+        String idContent = null;
+        if (idFile.exists()) {
+          idContent = IOUtils.toString(new FileReader(idFile));
+        }
+        if (FileUtil.delTree(dir)) {
+          log.trace("deltree(" + dir + ") = true");
+          iter.remove();
+        } else {
+          log.trace("deltree(" + dir + ") = false");
+          if (idContent != null) {
+            FileTestUtil.writeFile(idFile, idContent);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * <p>
+   * Sets up a repeated test for {@link #assertSuccessRate(RepetitionInfo, float)}.
+   * </p>
+   * 
+   * @param repetitionInfo
+   *          The {@link RepetitionInfo} instance associated with
+   *          {@link RepeatedTest}
+   * @see #assertSuccessRate(RepetitionInfo, float)
+   */
+  public void setUpSuccessRate(RepetitionInfo repetitionInfo) {
+    if (repetitionInfo.getCurrentRepetition() == 1) {
+      failures = 0;
+    }
+  }
+  
+  /**
+   * <p>
+   * In a repeated test that has been set up for counting failures, signals that
+   * one of the test tries has failed.
+   * </p>
+   * 
+   * @param repetitionInfo
+   *          The {@link RepetitionInfo} instance associated with
+   *          {@link RepeatedTest}
+   * @see #assertSuccessRate(RepetitionInfo, float)
+   */
+  public void signalFailure(RepetitionInfo repetitionInfo) {
+    ++failures;
+    log.warn(String.format("Test failed try %d of %d (%d %s)",
+                           repetitionInfo.getCurrentRepetition(),
+                           repetitionInfo.getTotalRepetitions(),
+                           failures,
+                           failures == 1 ? "failure" : "failures"));
+  }
+
+  /**
+   * <p>
+   * In a repeated test that has been set up for counting failures, asserts that
+   * the test has succeeded at the given rate or greater (e.g. {@code .8f} means
+   * 80% of the time or greater).
+   * </p>
+   * <p>
+   * This is used in conjunction with {@link RepeatedTest},
+   * {@link #setUpSuccessRate(RepetitionInfo)} and
+   * {@link #signalFailure(RepetitionInfo)} in a
+   * {@code try}/{@code catch}/{@code finally} block, in this manner:
+   * </p>
+<pre>
+&#64;RepeatedTest($totalrepetitions)
+public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
+  try {
+    setUpSuccessRate(repetitionInfo);
+    // code block to be repeated $totalrepetitions times
+  }
+  catch (Exception exc) {
+    signalFailure(repetitionInfo);
+  }
+  finally {
+    assertSuccessRate(repetitionInfo, $successrate);
+  }
+}
+</pre>
+   * 
+   * @param repetitionInfo
+   *          The {@link RepetitionInfo} instance associated with
+   *          {@link RepeatedTest}
+   * @param rate
+   *          A desired success rate
+   * @see #setUpSuccessRate(RepetitionInfo)
+   * @see #signalFailure(RepetitionInfo)
+   * @see RepeatedTest
+   * @see RepetitionInfo
+   */
+  public void assertSuccessRate(RepetitionInfo repetitionInfo, float rate) {
+    if (rate < 0.0f || 1.0f < rate) {
+      throw new IllegalArgumentException("Success rate outside the range 0.0-1.0");
+    }
+    int total = repetitionInfo.getTotalRepetitions();
+    if (repetitionInfo.getCurrentRepetition() == total) {
+      float achieved = ((float)total - failures) / total;
+      if (achieved < rate) {
+        fail(String.format("Test failed %d of %d tries, not achieving a %f success rate.", failures, total, rate));
+      }
+    }
+  }
+
+  /**
+   * Create and return the name of a temp dir.  The dir is created within
+   * the default temp file dir.
+   * It will be deleted following the test, by tearDown().  (So if you
+   * override tearDown(), be sure to call <code>super.tearDown()</code>.)
+   * @return The newly created directory
+   * @throws IOException
+   */
+  public File getTempDir() throws IOException {
+    File res =  getTempDir("locksstest");
+    // To aid in finding the cause of temp dirs that don't get deleted,
+    // setting -Dorg.lockss.test.idTempDirs=true will record the name of
+    // the test creating the dir in <dir>/.locksstestcase .  This may cause
+    // tests to fail (expecting empty dir).
+    if (!isKeepTempFiles()
+        && Boolean.getBoolean("org.lockss.test.idTempDirs")) {
+      FileTestUtil.writeFile(new File(res, TEST_ID_FILE_NAME),
+                             StringUtils.substringAfterLast(getClass().getName(), "."));
+    }
+    return res;
+  }
+
+  /**
+   * Create and return the name of a temp dir.  The dir is created within
+   * the default temp file dir.
+   * It will be deleted following the test, by tearDown().  (So if you
+   * override tearDown(), be sure to call <code>super.tearDown()</code>.)
+   * @param prefix the prefix of the name of the directory
+   * @return The newly created directory
+   * @throws IOException
+   */
+  public File getTempDir(String prefix) throws IOException {
+    File tmpdir = FileUtil.createTempDir(prefix, null);
+    if (tmpdir != null) {
+      if (tmpDirs == null) {
+        tmpDirs = new LinkedList<File>();
+      }
+      tmpDirs.add(tmpdir);
+    }
+    return tmpdir;
+  }
+
+  /**
+   * Create and return the name of a temp file.  The file is created within
+   * the default temp dir.
+   * It will be deleted following the test, by tearDown().  (So if you
+   * override tearDown(), be sure to call <code>super.tearDown()</code>.)
+   * @param prefix the prefix of the name of the file
+   * @param suffix the suffix of the name of the file
+   * @return The newly created file
+   * @throws IOException
+   */
+  public File getTempFile(String prefix, String suffix) throws IOException {
+    File tmpfile = FileUtil.createTempFile(prefix, suffix);
+    if (tmpfile != null) {
+      if (tmpDirs == null) {
+        tmpDirs = new LinkedList<File>();
+      }
+      tmpDirs.add(tmpfile);
+    }
+    return tmpfile;
+  }
+
+  public static boolean isKeepTempFiles() {
+    return Boolean.getBoolean(SYSPROP_KEEP_TEMP_FILES);
+  }
 
   public <V> V fail(String message) {
 
@@ -1381,4 +1655,478 @@ public class LockssTestCase5 {
     return Matchers.hasXPath(xPath, valueMatcher);
   }
 
+  /** Assert that Iterable has no elements */
+  public void assertEmpty(Iterable iter) {
+    assertNotNull(iter);
+    assertFalse(iter.iterator().hasNext(), "Expected empty, wasn't");
+  }
+
+  /** Assert that Iterator has no elements */
+  public void assertEmpty(Iterator iter) {
+    assertNotNull(iter);
+    assertFalse(iter.hasNext());
+  }
+
+  /** Assert that the Executable throws an instance of the expected class,
+   * and that the expected pattern is found in the Throwable's message . */
+  public <T extends Throwable> T assertThrowsMatch(Class<T> expectedType,
+                                                   String pattern,
+                                                   Executable executable) {
+    return assertThrowsMatch(expectedType, pattern, executable, null);
+  }
+
+  /** Assert that the Executable throws an instnace of the expected class,
+   * and that the expected pattern is found in the Throwable's message . */
+  public <T extends Throwable> T assertThrowsMatch(Class<T> expectedType,
+                                                   String pattern,
+                                                   Executable executable,
+                                                   String message) {
+    T th = assertThrows(expectedType, executable, message);
+    assertThat(message,
+               th.getMessage(), findPattern(pattern));
+    return th;
+  }
+
+  /** Read a byte, fail with a detailed message if an IOException is
+   * thrown. */
+  int paranoidRead(InputStream in, String streamName, long cnt, long expLen,
+                   String message) {
+    try {
+      return in.read();
+    } catch (IOException e) {
+      fail( ( buildPrefix(message) + "after " + cnt + " bytes" +
+              (expLen >= 0 ? " of " + expLen : "") +
+              ", " + streamName + " stream threw " + e.toString()),
+            e);
+      // compiler doesn't know fail() doesn't return
+      throw new IllegalStateException("can't happen");
+    }
+  }
+
+  /** Assert that the two InputStreams return the same sequence of bytes,
+   * of the expected length.  Displays a detailed message if a mistmatch is
+   * found, one stream runs out before the other, the length doesn't match
+   * or an IOException is thrown while reading. */
+  public void assertSameBytes(InputStream expected,
+                              InputStream actual,
+                              long expLen) {
+    assertSameBytes(expected, actual, expLen, null);
+  }
+  
+  /** Assert that the two InputStreams return the same sequence of bytes.
+   * Displays a detailed message if a mistmatch is found, one stream runs
+   * out before the other, the length doesn't match or an IOException is
+   * thrown while reading. */
+  public void assertSameBytes(InputStream expected,
+                              InputStream actual) {
+    assertSameBytes(expected, actual, null);
+  }
+  
+  /** Assert that the two InputStreams return the same sequence of bytes.
+   * Displays a detailed message if a mistmatch is found, one stream runs
+   * out before the other, the length doesn't match or an IOException is
+   * thrown while reading. */
+  public void assertSameBytes(InputStream expected,
+                              InputStream actual,
+                              String message) {
+    assertSameBytes(expected, actual, -1, message);
+  }
+
+  /** Assert that the two InputStreams return the same sequence of bytes,
+   * of the expected length.  Displays a detailed message if a mistmatch is
+   * found, one stream runs out before the other, the length doesn't match
+   * or an IOException is thrown while reading. */
+  public void assertSameBytes(InputStream expected,
+                              InputStream actual,
+                              long expLen,
+                              String message) {
+    if (expected == actual) {
+      throw new IllegalArgumentException("assertSameBytes() called with same stream for both expected and actual.");
+    }
+    // XXX This could obscure the byte count at which an error occurs
+    if (!(expected instanceof BufferedInputStream)) {
+      expected = new BufferedInputStream(expected);
+    }
+    if (!(actual instanceof BufferedInputStream)) {
+      actual = new BufferedInputStream(actual);
+    }
+    long cnt = 0;
+    int ch = paranoidRead(expected, "expected", cnt, expLen, message);
+    while (-1 != ch) {
+      int ch2 = paranoidRead(actual, "actual", cnt, expLen, message);
+      if (-1 == ch2) {
+        fail(buildPrefix(message) +
+             "actual stream ran out early, at byte position " + cnt);
+      }
+      cnt++;
+      assertEquals(ch, ch2,
+                   buildPrefix(message) + "at byte position " + cnt);
+      ch = paranoidRead(expected, "expected", cnt, expLen, message);
+    }
+
+    int ch2 = paranoidRead(actual, "actual", cnt, expLen, message);
+    if (-1 != ch2) {
+      fail(buildPrefix(message) +
+           "expected stream ran out early, at byte position " + cnt);
+    }
+    if (expLen >= 0) {
+      assertEquals(expLen, cnt, "Both streams were wrong length");
+    }
+  }
+  
+  static String buildPrefix(String message) {
+    return (StringUtils.isNotBlank(message) ? message + " ==> " : "");
+  }
+
+  public void assertSameCharacters(Reader expected,
+                                   Reader actual,
+                                   String message) {
+    assertSameCharacters(expected, actual, -1, message);
+  }
+  
+  /** Assert that the two Readers return the same sequence of
+   * characters */
+  public void assertSameCharacters(Reader expected,
+                                   Reader actual) {
+    assertSameCharacters(expected, actual, null);
+  }
+  
+  /** Read a byte, fail with a detailed message if an IOException is
+   * thrown. */
+  int paranoidReadChar(Reader in, String streamName, long cnt, long expLen,
+                       String message) {
+    try {
+      return in.read();
+    } catch (IOException e) {
+      fail( ( buildPrefix(message) + "after " + cnt + " chars" +
+              (expLen >= 0 ? " of " + expLen : "") +
+              ", " + streamName + " stream threw " + e.toString()),
+            e);
+      // compiler doesn't know fail() doesn't return
+      throw new IllegalStateException("can't happen");
+    }
+  }
+
+  /** Assert that the two Readers return the same sequence of characters,
+   * of the expected length.  Displays a detailed message if a mistmatch is
+   * found, one stream runs out before the other, the length doesn't match
+   * or an IOException is thrown while reading. */
+  public void assertSameCharacters(Reader expected,
+                                   Reader actual,
+                                   long expLen,
+                                   String message) {
+    if (expected == actual) {
+      throw new IllegalArgumentException("assertSameBytes() called with same reader for both expected and actual.");
+    }
+    // XXX This could obscure the char count at which an error occurs
+    if (!(expected instanceof BufferedReader)) {
+      expected = new BufferedReader(expected);
+    }
+    if (!(actual instanceof BufferedReader)) {
+      actual = new BufferedReader(actual);
+    }
+    long cnt = 0;
+    int ch = paranoidReadChar(expected, "expected", cnt, expLen, message);
+    while (-1 != ch) {
+      int ch2 = paranoidReadChar(actual, "actual", cnt, expLen, message);
+      if (-1 == ch2) {
+        fail(buildPrefix(message) +
+             "actual stream ran out early, at char position " + cnt);
+      }
+      cnt++;
+      assertEquals((char)ch, (char)ch2,
+                   buildPrefix(message) + "at char position " + cnt);
+      ch = paranoidReadChar(expected, "expected", cnt, expLen, message);
+    }
+
+    int ch2 = paranoidReadChar(actual, "actual", cnt, expLen, message);
+    if (-1 != ch2) {
+      fail(buildPrefix(message) +
+           "expected stream ran out early, at char position " + cnt);
+    }
+    if (expLen >= 0) {
+      assertEquals(expLen, cnt, "Both streams were wrong length");
+    }
+  }
+
+  /**
+   * Asserts that a string matches the content of an InputStream
+   */
+  public void assertInputStreamMatchesString(String expected,
+                                             InputStream in)
+      throws IOException {
+    assertInputStreamMatchesString(expected, in, "UTF-8");
+  }
+
+  /**
+   * Asserts that a string matches the content of an InputStream
+   */
+  public void assertInputStreamMatchesString(String expected,
+                                             InputStream in,
+                                             String encoding)
+      throws IOException {
+    Reader rdr = new InputStreamReader(in, encoding);
+    assertReaderMatchesString(expected, rdr);
+  }
+
+  /**
+   * Asserts that a string matches the content of a reader read using the
+   * specified buffer size.
+   */
+  public void assertInputStreamMatchesString(String expected,
+                                             InputStream in,
+                                             int bufsize)
+      throws IOException {
+    Reader rdr = new InputStreamReader(in, "UTF-8");
+    assertReaderMatchesString(expected, rdr, bufsize);
+  }
+
+  /**
+   * Asserts that a string matches the content of a reader
+   */
+  public void assertReaderMatchesString(String expected, Reader reader)
+      throws IOException {
+    int len = Math.max(1, expected.length() * 2);
+    char[] ca = new char[len];
+    StringBuilder actual = new StringBuilder(expected.length());
+
+    int n;
+    while ((n = reader.read(ca)) != -1) {
+      actual.append(ca, 0, n);
+    }
+    assertEquals(expected, actual.toString());
+  }
+
+  /**
+   * Asserts that a string matches the content of a reader read using the
+   * specified buffer size.
+   */
+  public void assertReaderMatchesString(String expected, Reader reader,
+                                               int bufsize)
+      throws IOException {
+    char[] ca = new char[bufsize];
+    StringBuilder actual = new StringBuilder(expected.length());
+
+    int n;
+    while ((n = reader.read(ca)) != -1) {
+      actual.append(ca, 0, n);
+    }
+    assertEquals("With buffer size " + bufsize + ",",
+                 expected, actual.toString());
+  }
+
+  /** Log the start of each test class */
+  @BeforeAll
+  public static void logTestClass(TestInfo info) {
+    log.info("Start test class: " + info.getDisplayName());
+  }
+
+  /** Log the end of each test class */
+  @AfterAll
+  public static void logTestClassEnd(TestInfo info) {
+    log.info("End test class: " + info.getDisplayName());
+  }
+
+  /** Log each test method */
+  @BeforeEach
+  public void beforeEachLog(TestInfo info) {
+    LockssLogger.resetLogs();
+    log.info("Testcase: " + info.getDisplayName());
+  }
+
+  /** Called by the &#64;VariantTest mechanism to set up the named
+   * variant */
+  protected void setUpVariant(String vName) {
+  }
+  
+  public Matcher<String> findPattern(Pattern pattern) {
+    return FindPattern.findPattern(pattern);
+  }
+
+  public Matcher<String> findPattern(String regex) {
+    return FindPattern.findPattern(regex);
+  }
+
+  public Matcher<String> matchesPattern(Pattern pattern) {
+    return MatchesPattern.matchesPattern(pattern);
+  }
+
+  public Matcher<String> matchesPattern(String regex) {
+    return MatchesPattern.matchesPattern(regex);
+  }
+  
+  /** Abstraction to do something in another thread, after a delay,
+   * unless cancelled.  If the scheduled activity is still pending when the
+   * test completes, it is cancelled by tearDown().
+   * <br>For one-off use:<pre>
+   *  final Object obj = ...;
+   *  DoLater doer = new DoLater(1000) {
+   *      protected void doit() {
+   *        obj.method(...);
+   *      }
+   *    };
+   *  doer.start();</pre>
+   *
+   * Or, for convenient repeated use of a particular delayed operation,
+   * define a class that extends <code>DoLater</code>,
+   * with a constructor that calls
+   * <code>super(wait)</code> and stores any other necessary args into
+   * instance vars, and a <code>doit()</code> method that does whatever needs
+   * to be done.  And a convenience method to create and start it.
+   * For example, <code>Interrupter</code> is defined as:<pre>
+   *  public class Interrupter extends DoLater {
+   *    private Thread thread;
+   *    Interrupter(long waitMs, Thread thread) {
+   *      super(waitMs);
+   *      this.thread = thread;
+   *    }
+   *
+   *    protected void doit() {
+   *      thread.interrupt();
+   *    }
+   *  }
+   *
+   *  public Interrupter interruptMeIn(long ms) {
+   *    Interrupter i = new Interrupter(ms, Thread.currentThread());
+   *    i.start();
+   *    return i;
+   *  }</pre>
+   *
+   * Then, to protect a test with a timeout:<pre>
+   *  Interrupter intr = null;
+   *  try {
+   *    intr = interruptMeIn(1000);
+   *    // perform a test that should complete in less than one second
+   *    intr.cancel();
+   *  } finally {
+   *    if (intr.did()) {
+   *      fail("operation failed to complete in one second");
+   *    }
+   *  }</pre>
+   * The <code>cancel()</code> ensures that the interrupt will not
+   * happen after the try block completes.  (This is not necessary at the
+   * end of a test case, as any pending interrupters will be cancelled
+   * by tearDown.)
+   */
+  public abstract class DoLater extends Thread {
+    
+    private long wait;
+    
+    private boolean want = true;
+    
+    private boolean did = false;
+    
+    private boolean threadDump = false;
+
+    protected DoLater(long waitMs) {
+      wait = waitMs;
+    }
+
+    /** Must override this to perform desired action */
+    protected abstract void doit();
+
+    /**
+     * Return true iff action was taken
+     * @return true iff taken
+     */
+    public boolean did() {
+      return did;
+    }
+
+    /** Cancel the action iff it hasn't already started.  If it has started,
+     * wait until it completes.  (Thus when <code>cancel()</code> returns, it
+     * is safe to destroy any environment on which the action relies.)
+     */
+    public synchronized void cancel() {
+      if (want) {
+        want = false;
+        this.interrupt();
+      }
+    }
+
+    public final void run() {
+      try {
+        synchronized (LockssTestCase5.this) {
+          if (doLaters == null) {
+            doLaters = new LinkedList<DoLater>();
+          }
+          doLaters.add(this);
+        }
+        if (wait != 0) {
+          TimerUtil.sleep(wait);
+        }
+        synchronized (this) {
+          if (want) {
+            want = false;
+            did = true;
+            if (threadDump) {
+              try {
+                PlatformUtil.getInstance().threadDump(true);
+              } catch (Exception e) {
+              }
+            }
+            doit();
+          }
+        }
+      } catch (InterruptedException e) {
+        // exit thread
+      } finally {
+        synchronized (LockssTestCase5.this) {
+          doLaters.remove(this);
+        }
+      }
+    }
+
+    /** Get a thread dump before triggering the event */
+    public void setThreadDump() {
+      threadDump = true;
+    }
+
+  }
+  
+  /** Interrupter interrupts a thread in a while */
+  public class Interrupter extends DoLater {
+  
+    private Thread thread;
+
+    Interrupter(long waitMs, Thread thread) {
+      super(waitMs);
+      setPriority(thread.getPriority() + 1);
+      this.thread = thread;
+    }
+
+    /** Interrupt the thread */
+    protected void doit() {
+      log.debug("Interrupting");
+      thread.interrupt();
+    }
+
+  }
+
+  /**
+   * Interrupt current thread in a while
+   * @param ms interval to wait before interrupting
+   * @return an Interrupter
+   */
+  public Interrupter interruptMeIn(long ms) {
+    Interrupter i = new Interrupter(ms, Thread.currentThread());
+    i.start();
+    return i;
+  }
+
+  /**
+   * Interrupt current thread in a while, first printing a thread dump
+   * @param ms interval to wait before interrupting
+   * @param threadDump true if thread dump wanted
+   * @return an Interrupter
+   */
+  public Interrupter interruptMeIn(long ms, boolean threadDump) {
+    Interrupter i = new Interrupter(ms, Thread.currentThread());
+    if (threadDump) {
+      i.setThreadDump();
+    }
+    i.start();
+    return i;
+  }
+  
 }

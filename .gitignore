@@ -1,8 +1,13 @@
-# Maven
+# Generated
 target/
+logs/
 
 # Eclipse artifacts
 .classpath
 .project
 .settings/
 /pom.xml.versionsBackup
+
+# Old file versions
+*~
+
