@@ -65,6 +65,15 @@ public class TestBuildInfo extends LockssTestCase5 {
 					    BuildInfo.BUILD_TIMESTAMP,
 					    BuildInfo.BUILD_DESCRIPTION,
 					    BuildInfo.BUILD_HOST));
+
+    assertMatches("LOCKSS 1.75.0 label only built 07-Apr-19 20:05:25 PDT " +
+		  "build.description: Development.* utilities.*," +
+		  " on .*",
+		  bi.getBuildInfoStringInst("LOCKSS :" + BuildInfo.BUILD_RELEASENAME,
+					    "label only:",
+					    BuildInfo.BUILD_TIMESTAMP,
+					    BuildInfo.BUILD_DESCRIPTION,
+					    BuildInfo.BUILD_HOST));
   }
 
   @Test
