@@ -127,10 +127,10 @@ public class BuildInfo {
     return buildProps;
   }
 
-  /** Return the default build info summary string from the primary
-   * BuildInfo */
-  public static String getBuildInfoString() {
-    return getFirstBuildInfo().getBuildInfoStringInst();
+  /** Return a build info summary string containing the listed fields from
+   * the primary BuildInfo */
+  public static String getBuildInfoString(String ... fields) {
+    return getFirstBuildInfo().getBuildInfoStringInst(fields);
   }
 
   /** Return the default build info summary string */
@@ -140,7 +140,8 @@ public class BuildInfo {
 				  BUILD_HOST);
   }
 
-  /** Return a build info summary string containing the listed fields. */
+  /** Return a build info summary string containing the listed fields.
+   * Fields can be a field name, or <tt><i>label</i>:<i>field</i></tt> */
   public String getBuildInfoStringInst(String ... fields) {
     boolean needComma = false;
 
@@ -153,34 +154,46 @@ public class BuildInfo {
 	}
 	sb.append(" ");
       }
-      switch (field) {
-      case BUILD_NAME:
-      case BUILD_ARTIFACT:
-      case BUILD_VERSION:
-      case BUILD_RELEASENAME:
-	String val1 = getBuildPropertyInst(field);
-	if (val1 != null) {
-	  sb.append(val1);
+      // If foo:bar, foo is label, bar is field name
+      if (field.indexOf(":") > 0) {
+	String[] pair = field.split(":");
+	sb.append(pair[0]);
+	if (pair.length >= 2) {
+	  field = pair[1];
+	} else {
+	  field = null;
 	}
-	break;
-      case BUILD_TIMESTAMP:
-	sb.append("built ");
-	sb.append(getBuildPropertyInst(BUILD_TIMESTAMP));
-	break;
-      case BUILD_HOST:
-	String buildHost = getBuildPropertyInst(BUILD_HOST);
-	if (buildHost != null) {
-	  sb.append("on ");
-	  sb.append(buildHost);
-	}
-	break;
-      default:
-	String val2 = getBuildPropertyInst(field);
-	if (val2 != null) {
-	  sb.append(field);
-	  sb.append(": ");
-	  sb.append(val2);
-	  needComma = true;
+      }
+      if (field != null) {
+	switch (field) {
+	case BUILD_NAME:
+	case BUILD_ARTIFACT:
+	case BUILD_VERSION:
+	case BUILD_RELEASENAME:
+	  String val1 = getBuildPropertyInst(field);
+	  if (val1 != null) {
+	    sb.append(val1);
+	  }
+	  break;
+	case BUILD_TIMESTAMP:
+	  sb.append("built ");
+	  sb.append(getBuildPropertyInst(BUILD_TIMESTAMP));
+	  break;
+	case BUILD_HOST:
+	  String buildHost = getBuildPropertyInst(BUILD_HOST);
+	  if (buildHost != null) {
+	    sb.append("on ");
+	    sb.append(buildHost);
+	  }
+	  break;
+	default:
+	  String val2 = getBuildPropertyInst(field);
+	  if (val2 != null) {
+	    sb.append(field);
+	    sb.append(": ");
+	    sb.append(val2);
+	    needComma = true;
+	  }
 	}
       }
     }
