@@ -33,12 +33,14 @@ import java.util.*;
 
 import org.apache.commons.collections4.SetValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
+import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.logging.log4j.*;
 import org.apache.logging.log4j.core.*;
 import org.apache.logging.log4j.core.config.*;
 import org.apache.logging.log4j.message.MessageFactory;
 import org.apache.logging.log4j.status.StatusLogger;
 
+import org.lockss.util.time.*;
 
 /**
  * This LoggerContext:<ul>
@@ -53,6 +55,10 @@ import org.apache.logging.log4j.status.StatusLogger;
  * <li>stackLevelMap contains {@value PARAM_STACKTRACE_LEVEL} and {@value
  * PARAM_STACKTRACE_SEVERITY}, because this is an easy place for {@link
  * L4JContextDataInjector} to find them.</li>
+ *
+ * <li>Logs a Timestamp message when first started.  (This turns out to be
+ * a good place to log a startup message no matter what sort of logger is
+ * created first.)
  * </ul>
  */
 public class L4JLoggerContext extends LoggerContext {
@@ -78,11 +84,26 @@ public class L4JLoggerContext extends LoggerContext {
     super(name);
   }
 
+  private boolean once = true;
+
+  private synchronized boolean once() {
+    boolean ret = once;
+    once = false;
+    return ret;
+  }
+
   @Override
   protected org.apache.logging.log4j.core.Logger
     newInstance(final LoggerContext ctx,
 		final String name,
 		final MessageFactory messageFactory) {
+    if (once()) {
+      // Log a Timestamp: message at startup
+      L4JLogger tslog = new L4JLogger(ctx, "Timestamp", messageFactory);
+      FastDateFormat df =
+	FastDateFormat.getInstance("EEE dd MMM yyyy HH:mm:ss zzz");
+      tslog.info(df.format(TimeBase.nowDate()) + "\n");
+    }
     updateNameMap(name);
     org.apache.logging.log4j.core.Logger res =
       new L4JLogger(ctx, name, messageFactory);
