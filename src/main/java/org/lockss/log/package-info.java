@@ -38,6 +38,9 @@ or Appender elements:
     &lt;!-- Default log level --&gt;
     &lt;Property name="root.level"&gt;INFO&lt;/Property&gt;
 
+    &lt;!-- Minimum level to log to console --&gt;
+    &lt;Property name="level.min.console"&gt;DEBUG3&lt;/Property&gt;
+
     &lt;!-- Default log dir --&gt;
     &lt;Property name="log.dir"&gt;logs&lt;/Property&gt;
 
