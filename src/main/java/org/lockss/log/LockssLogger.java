@@ -42,7 +42,6 @@ import org.apache.logging.log4j.util.StackLocatorUtil;
 
 import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.FastDateFormat;
 
 /**
  * log4j2 wrapper that provides compatibility with old LOCKSS logger.

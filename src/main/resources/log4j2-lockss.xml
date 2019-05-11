@@ -108,6 +108,8 @@ POSSIBILITY OF SUCH DAMAGE.
 <!--       <FilePattern>${log.dir}/%d{yyyy-MM-dd}-%i.log.gz</FilePattern> -->
       <PatternLayout>
 	<Pattern>${layout.file}</Pattern>
+	<header>File started Timestamp: ${date:EEE dd MMM yyyy HH:mm:ss.SSS zzz}\n</header>
+	<footer>File ended Timestamp: ${date:EEE dd MMM yyyy HH:mm:ss.SSS zzz}\n</footer>
       </PatternLayout>
       <Policies>
 <!--         <TimeBasedTriggeringPolicy /> -->
@@ -122,6 +124,8 @@ POSSIBILITY OF SUCH DAMAGE.
 <!--       <FilePattern>${log.dir}/%d{yyyy-MM-dd}-%i.log.gz</FilePattern> -->
       <PatternLayout>
 	<Pattern>${layout.file.lockss}</Pattern>
+	<header>File started Timestamp: ${date:EEE dd MMM yyyy HH:mm:ss.SSS zzz}\n</header>
+	<footer>File ended Timestamp: ${date:EEE dd MMM yyyy HH:mm:ss.SSS zzz}\n</footer>
       </PatternLayout>
       <Policies>
 <!--         <TimeBasedTriggeringPolicy /> -->
