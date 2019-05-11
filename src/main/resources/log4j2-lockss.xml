@@ -44,6 +44,9 @@ POSSIBILITY OF SUCH DAMAGE.
     <!-- Default log level -->
     <Property name="root.level">INFO</Property>
 
+    <!-- Minimum level to log to console -->
+    <Property name="level.min.console">DEBUG3</Property>
+
     <!-- Default log dir -->
     <Property name="log.dir">logs</Property>
 
@@ -94,12 +97,14 @@ POSSIBILITY OF SUCH DAMAGE.
       <PatternLayout>
 	<Pattern>${layout.console}</Pattern>
       </PatternLayout>
+      <ThresholdFilter level="${level.min.console}" onMatch="ACCEPT" onMismatch="DENY"/>
     </Console>
 
     <Console name="Console.Lockss" target="SYSTEM_OUT">
       <PatternLayout>
 	<Pattern>${layout.console.lockss}</Pattern>
       </PatternLayout>
+      <ThresholdFilter level="${level.min.console}" onMatch="ACCEPT" onMismatch="DENY"/>
     </Console>
 
     <RollingFile name="File">
