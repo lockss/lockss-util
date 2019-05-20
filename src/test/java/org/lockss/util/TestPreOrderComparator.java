@@ -76,7 +76,7 @@ public class TestPreOrderComparator extends LockssTestCase5 {
     assertPreOrderCompareTo("abc", "abc/");
     assertPreOrderCompareTo("abc", "abc.");
 
-    // This is where compteToSlashFirst differs from natural String order
+    // This is where preorder differs from natural String order
     assertFalse("a/".compareTo("a.") < 0);
     assertPreOrderCompareTo("a/", "a.");
     assertFalse("a/b".compareTo("a.b") < 0);
@@ -119,4 +119,34 @@ public class TestPreOrderComparator extends LockssTestCase5 {
                               "http://foo:80/"));
   }
   
+  // Prove that PreOrderComparator is equivalent to natural order with
+  // slash replaced by 0 byte
+
+  public void assertSameOrder(int o1, int o2) {
+    assertEquals(Integer.signum(o1), Integer.signum(o2));
+  }
+
+  public void assertPreOrderSameAsZeroSlash(String s1, String s2) {
+    String s1n = s1.replace('/', (char)0);
+    String s2n = s2.replace('/', (char)0);
+    if (s1.indexOf("/") > 0) assertNotEquals(s1, s1n);
+    if (s2.indexOf("/") > 0) assertNotEquals(s2, s2n);
+    assertSameOrder(PreOrderComparator.preOrderCompareTo(s1, s2),
+		    s1n.compareTo(s2n));
+    assertSameOrder(PreOrderComparator.preOrderCompareTo(s2, s1),
+		    s2n.compareTo(s1n));
+  }
+
+  @Test
+  public void testPreOrderSameAsZeroSlash() {
+    assertPreOrderSameAsZeroSlash("", "");
+    assertPreOrderSameAsZeroSlash("abc", "abc");
+    assertPreOrderSameAsZeroSlash("abc", "abd");
+    assertPreOrderSameAsZeroSlash("abc/", "abc");
+    assertPreOrderSameAsZeroSlash("abc/", "abcd");
+    assertPreOrderSameAsZeroSlash("a/bc", "abc");
+    assertPreOrderSameAsZeroSlash("a/bc", "a.bc");
+    assertPreOrderSameAsZeroSlash("a/bc/", "a/bc/");
+    assertPreOrderSameAsZeroSlash("http://foo.bar/a", "http://foo/a");
+  }
 }
