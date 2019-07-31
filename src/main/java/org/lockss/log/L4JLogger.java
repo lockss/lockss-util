@@ -58,14 +58,17 @@ public class L4JLogger extends org.apache.logging.log4j.core.Logger {
   }
 
   public static L4JLogger getLogger(String name) {
+    LockssLogger.deferredInit();
     return cast(LogManager.getLogger(name));
   }
 
   public static L4JLogger getLogger(Class clazz) {
+    LockssLogger.deferredInit();
     return cast(LogManager.getLogger(clazz));
   }
 
   public static L4JLogger getLogger() {
+    LockssLogger.deferredInit();
     return cast(LogManager.getLogger(StackLocatorUtil.getCallerClass(2)));
   }
 
