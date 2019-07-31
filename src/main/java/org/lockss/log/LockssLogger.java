@@ -169,6 +169,7 @@ public class LockssLogger {
   public static final int DEFAULT_LEVEL = LEVEL_INFO;
 
   private static boolean deferredInitDone = false;
+  private static Object initLock = new Object();
 
   // Maintains unique LockssLogger instance per logger name
   private static Map<String, LockssLogger> logs = new HashMap<>();
@@ -261,46 +262,48 @@ public class LockssLogger {
   }
 
   static void deferredInit() {
-    if (!deferredInitDone) {
+    synchronized (initLock) {
+      if (!deferredInitDone) {
 
-      // Must set this true before calling getWrappedLogger or will
-      // recurse.  Rest of this is careful not to need the deferred init to
-      // be done.
-      deferredInitDone = true;
+	// Must set this true before calling getWrappedLogger or will
+	// recurse.  Rest of this is careful not to need the deferred init to
+	// be done.
+	deferredInitDone = true;
 
-      // Create my logger first as code below might use it
-      myLog = LockssLogger.getWrappedLogger(LockssLogger.class.getName());
+	// Create my logger first as code below might use it
+	myLog = LockssLogger.getWrappedLogger(LockssLogger.class.getName());
 
-      // Arrange to be notified when the log4j config is reloaded, so we
-      // can reset the levels dynamically configured using LOCKSS config
-      getLoggerContext().addPropertyChangeListener(new PropertyChangeListener() {
-	  @Override
-	  public void propertyChange(final PropertyChangeEvent evt) {
-	    if (myLog.isDebug3()) myLog.debug3("event: " + evt);
-	    switch (evt.getPropertyName()) {
-	    case LoggerContext.PROPERTY_CONFIG:
-	      installLockssLevels(false);
+	// Arrange to be notified when the log4j config is reloaded, so we
+	// can reset the levels dynamically configured using LOCKSS config
+	getLoggerContext().addPropertyChangeListener(new PropertyChangeListener() {
+	    @Override
+	    public void propertyChange(final PropertyChangeEvent evt) {
+	      if (myLog.isDebug3()) myLog.debug3("event: " + evt);
+	      switch (evt.getPropertyName()) {
+	      case LoggerContext.PROPERTY_CONFIG:
+		installLockssLevels(false);
+	      }
 	    }
-	  }
-	});
+	  });
 
-      // Process at startup all config items that normally get processed
-      // along with setting the LOCKSS config
+	// Process at startup all config items that normally get processed
+	// along with setting the LOCKSS config
 
-      // Ensure default values of stacktrace params are installed in the
-      // LoggerContext
-      installStackTraceParams(null);
+	// Ensure default values of stacktrace params are installed in the
+	// LoggerContext
+	installStackTraceParams(null);
 
-      processInitialSysprops();
-      installLockssLevels(false);
+	processInitialSysprops();
+	installLockssLevels(false);
 
-      // Complain if attempt to set log target using
-      // org.lockss.defaultLogTarget sysprop
-      if (!StringUtils.isBlank(System.getProperty(SYSPROP_DEFAULT_LOG_TARGET))) {
-	myLog.error(SYSPROP_DEFAULT_LOG_TARGET +
-		    " sysprop not supported; use log4j2 config instead: " +
-		    System.getProperty(SYSPROP_DEFAULT_LOG_TARGET),
-		    new Throwable());
+	// Complain if attempt to set log target using
+	// org.lockss.defaultLogTarget sysprop
+	if (!StringUtils.isBlank(System.getProperty(SYSPROP_DEFAULT_LOG_TARGET))) {
+	  myLog.error(SYSPROP_DEFAULT_LOG_TARGET +
+		      " sysprop not supported; use log4j2 config instead: " +
+		      System.getProperty(SYSPROP_DEFAULT_LOG_TARGET),
+		      new Throwable());
+	}
       }
     }
   }
