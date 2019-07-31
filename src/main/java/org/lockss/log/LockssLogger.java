@@ -260,7 +260,7 @@ public class LockssLogger {
     return "Unnamed" + ++uncnt;
   }
 
-  private static void deferredInit() {
+  static void deferredInit() {
     if (!deferredInitDone) {
 
       // Must set this true before calling getWrappedLogger or will
