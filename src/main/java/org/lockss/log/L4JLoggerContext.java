@@ -37,6 +37,7 @@ import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.logging.log4j.*;
 import org.apache.logging.log4j.core.*;
 import org.apache.logging.log4j.core.config.*;
+import org.apache.logging.log4j.core.util.CronExpression;
 import org.apache.logging.log4j.message.MessageFactory;
 import org.apache.logging.log4j.status.StatusLogger;
 
@@ -58,7 +59,9 @@ import org.lockss.util.time.*;
  *
  * <li>Logs a Timestamp message when first started.  (This turns out to be
  * a good place to log a startup message no matter what sort of logger is
- * created first.)
+ * created first.)</li>
+ *
+ * <li>Arranges for a Timestamp message to be logged at midnight</li>
  * </ul>
  */
 public class L4JLoggerContext extends LoggerContext {
@@ -103,6 +106,26 @@ public class L4JLoggerContext extends LoggerContext {
       FastDateFormat df =
 	FastDateFormat.getInstance("EEE dd MMM yyyy HH:mm:ss zzz");
       tslog.info(df.format(TimeBase.nowDate()) + "\n");
+
+      // Schedule a Timestamp message every midnight.
+      try {
+	ConfigurationScheduler scheduler = getConfiguration().getScheduler();
+        if (!scheduler.isExecutorServiceSet()) {
+	  // make sure we have a thread pool
+	  scheduler.incrementScheduledItems();
+        }
+        if (!scheduler.isStarted()) {
+	  scheduler.start();
+        }
+	scheduler.scheduleWithCron(new CronExpression("0 0 0 * * ?"),
+				   new Runnable() {
+	    public void run() {
+	      tslog.info(df.format(TimeBase.nowDate()) + "\n");
+	    }});
+      } catch (java.text.ParseException e) {
+	log.warn("Can't schedule midnight timestamp", e);
+      }
+
     }
     updateNameMap(name);
     org.apache.logging.log4j.core.Logger res =
