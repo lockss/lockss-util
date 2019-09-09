@@ -61,10 +61,13 @@ public class ThrowingInputStream extends FilterInputStream {
     if (throwOnRead != null) {
       log.debug2("Injected read error: {}", throwOnRead.getMessage(),
 		 new Throwable());
+      // Make stack trace reflect here, not where exception was created
+      throwOnRead.fillInStackTrace();
       throw throwOnRead;
     } else if (errorOnRead != null) {
       log.debug2("Injected read error: {}", errorOnRead.getMessage(),
 		 new Throwable());
+      errorOnRead.fillInStackTrace();
       throw errorOnRead;
     }
   }
@@ -88,6 +91,7 @@ public class ThrowingInputStream extends FilterInputStream {
     if (throwOnClose != null) {
       log.debug2("Injected close error: {}", throwOnClose.getMessage(),
 		 new Throwable());
+      throwOnClose.fillInStackTrace();
       throw throwOnClose;
     } else {
       in.close();
