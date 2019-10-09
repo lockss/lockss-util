@@ -1759,8 +1759,11 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
              "actual stream ran out early, at byte position " + cnt);
       }
       cnt++;
-      assertEquals(ch, ch2,
-                   buildPrefix(message) + "at byte position " + cnt);
+
+      if (ch != ch2) {      // Avoid building fail message unless necessary
+	assertEquals(ch, ch2,
+		     buildPrefix(message) + "at byte position " + cnt);
+      }
       ch = paranoidRead(expected, "expected", cnt, expLen, message);
     }
 
