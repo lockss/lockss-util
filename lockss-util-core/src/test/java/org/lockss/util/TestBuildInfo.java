@@ -84,7 +84,7 @@ public class TestBuildInfo extends LockssTestCase5 {
     assertNull(BuildInfo.getBuildProperty("not a real property"));
 
     assertEquals("org.lockss", BuildInfo.getBuildProperty("build.groupId"));
-    assertEquals("lockss-util", BuildInfo.getBuildProperty("build.artifactId"));
+    assertEquals("lockss-util-core", BuildInfo.getBuildProperty("build.artifactId"));
   }
 
   @Test
