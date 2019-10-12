@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2000-2018, Board of Trustees of Leland Stanford Jr. University,
+Copyright (c) 2000-2019, Board of Trustees of Leland Stanford Jr. University,
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -49,6 +49,7 @@ import org.hamcrest.collection.IsArray;
 import org.hamcrest.core.AnyOf;
 import org.hamcrest.core.CombinableMatcher.*;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.*;
 import org.lockss.util.io.FileUtil;
 import org.lockss.util.os.PlatformUtil;
@@ -1958,6 +1959,42 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     return MatchesPattern.matchesPattern(regex);
   }
   
+  /** For historical reasons, this is not anchored - uses FindPatter, not
+   * Matchespattern */
+  public void assertMatchesRE(String regexp, String string) {
+    assertThat(string, FindPattern.findPattern(regexp));
+  }
+
+  /** For historical reasons, this is not anchored - uses FindPatter, not
+   * Matchespattern */
+  public void assertMatchesRE(String msg,
+			      String regexp, String string) {
+    assertThat(msg, string, FindPattern.findPattern(regexp));
+  }
+
+  public void assertClass(Class expClass, Object obj) {
+    assertClass(null, expClass, obj);
+  }
+
+  public void assertClass(String msg, Class expClass, Object obj) {
+    if (! expClass.isInstance(obj)) {
+      StringBuffer sb = new StringBuffer();
+      if (msg != null) {
+        sb.append(msg);
+        sb.append(" ");
+      }
+      sb.append(obj);
+      if (obj != null) {
+        sb.append(" (a ");
+        sb.append(obj.getClass().getName());
+        sb.append(")");
+      }
+      sb.append(" is not a ");
+      sb.append(expClass.getName());
+      fail(sb.toString());
+    }
+  }
+
   /** Abstraction to do something in another thread, after a delay,
    * unless cancelled.  If the scheduled activity is still pending when the
    * test completes, it is cancelled by tearDown().
