@@ -91,12 +91,9 @@ public class RestUtil {
 	// Yes: Report it back to the caller.
 	LockssRestHttpException lrhe =
 	    new LockssRestHttpException(exceptionMessage);
-	lrhe.setHttpStatusCode(statusCode.value());
-	// XXX this is the stock reason phrase, not what was received in
-	// the response.  How to get the actual reason?
-	lrhe.setHttpStatusMessage(statusCode.getReasonPhrase());
+	lrhe.setHttpStatus(statusCode);
 	lrhe.setHttpResponseHeaders(response.getHeaders());
-	log.trace("lrhe = {}", lrhe);
+	log.trace("lrhe = {}", lrhe, (Exception)null);
 
 	throw lrhe;
       }
@@ -104,6 +101,7 @@ public class RestUtil {
       // No: Return the received response.
       return response;
     } catch (RestClientException rce) {
+      log.trace("rce", rce);
       // Get the cause, or this exception if there is no cause.
       Throwable cause = rce.getCause();
 

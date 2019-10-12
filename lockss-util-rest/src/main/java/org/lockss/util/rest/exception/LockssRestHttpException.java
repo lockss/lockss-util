@@ -28,11 +28,12 @@
 package org.lockss.util.rest.exception;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 
 public class LockssRestHttpException extends LockssRestException {
   private static final long serialVersionUID = -4151454747192096531L;
 
-  private int httpStatusCode;
+  private HttpStatus httpStatus;
   private String httpStatusMessage;
   private HttpHeaders responseHeaders;
 
@@ -54,23 +55,31 @@ public class LockssRestHttpException extends LockssRestException {
   }
 
   /**
+   * Provides the HttpStatus object.
+   *
+   * @return the HttpStatus
+   */
+  public HttpStatus getHttpStatus() {
+    return httpStatus;
+  }
+
+  /**
    * Provides the HTTP status code.
    * 
    * @return an int with the HTTP status code.
    */
   public int getHttpStatusCode() {
-    return httpStatusCode;
+    return httpStatus.value();
   }
 
   /**
-   * Saves the HTTP status code.
+   * Saves the HttpStatus.
    * 
-   * @param httpStatusCode
-   *          An int with the HTTP status code.
+   * @param stat the HttpStatus object
    * @return a LockssRestHttpException with this object.
    */
-  public LockssRestHttpException setHttpStatusCode(int httpStatusCode) {
-    this.httpStatusCode = httpStatusCode;
+  public LockssRestHttpException setHttpStatus(HttpStatus stat) {
+    this.httpStatus = stat;
     return this;
   }
 
@@ -80,20 +89,7 @@ public class LockssRestHttpException extends LockssRestException {
    * @return a String with the HTTP status message.
    */
   public String getHttpStatusMessage() {
-    return httpStatusMessage;
-  }
-
-  /**
-   * Saves the HTTP status message.
-   * 
-   * @param httpStatusMessage
-   *          A String with the HTTP status message.
-   * @return a LockssRestHttpException with this object.
-   */
-  public LockssRestHttpException setHttpStatusMessage(String httpStatusMessage)
-  {
-    this.httpStatusMessage = httpStatusMessage;
-    return this;
+    return httpStatus.getReasonPhrase();
   }
 
   /**
@@ -117,4 +113,20 @@ public class LockssRestHttpException extends LockssRestException {
     this.responseHeaders = responseHeaders;
     return this;
   }
+
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append(getClass().getName());
+    sb.append(": ");
+    sb.append(getHttpStatusCode());
+    sb.append(" ");
+    sb.append(getHttpStatusMessage());
+    String message = getLocalizedMessage();
+    if (message != null) {
+      sb.append(": ");
+      sb.append(message);
+    }
+    return sb.toString();
+  }
 }
+
