@@ -42,6 +42,7 @@ import org.lockss.util.rest.status.ApiStatus;
 import org.lockss.log.*;
 import org.lockss.util.test.*;
 import org.lockss.util.rest.exception.*;
+import org.lockss.util.rest.status.RestStatusClient;
 import static org.lockss.util.Constants.SECOND;
 import static org.lockss.util.Constants.MINUTE;
 

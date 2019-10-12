@@ -25,7 +25,7 @@
  in this Software without prior written authorization from Stanford University.
 
  */
-package org.lockss.util.rest;
+package org.lockss.util.rest.status;
 
 import java.net.URI;
 import org.springframework.http.*;
@@ -35,6 +35,7 @@ import org.springframework.web.util.*;
 import org.lockss.log.*;
 import org.lockss.util.Constants;
 import org.lockss.util.rest.exception.*;
+import org.lockss.util.rest.RestUtil;
 import org.lockss.util.rest.status.ApiStatus;
 
 public class RestStatusClient /*extends BaseClient*/ {
