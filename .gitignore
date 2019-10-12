@@ -12,3 +12,5 @@ logs/
 *~
 
 /TAGS
+/lockss-util-core/TAGS
+/lockss-util-rest/TAGS
