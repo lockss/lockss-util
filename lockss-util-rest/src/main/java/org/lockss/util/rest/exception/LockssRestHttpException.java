@@ -114,14 +114,12 @@ public class LockssRestHttpException extends LockssRestException {
     return this;
   }
 
-  public String toString() {
+  public String getMessage() {
     StringBuilder sb = new StringBuilder();
-    sb.append(getClass().getName());
-    sb.append(": ");
     sb.append(getHttpStatusCode());
     sb.append(" ");
     sb.append(getHttpStatusMessage());
-    String message = getLocalizedMessage();
+    String message = super.getMessage();
     if (message != null) {
       sb.append(": ");
       sb.append(message);
