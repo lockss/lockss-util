@@ -87,6 +87,12 @@ public class ApiStatus {
   private String reason = null;
 
   /**
+   * An indication of whether this service has made the loadable plugin
+   * registries ready to load
+   */
+  private Boolean pluginsReady = Boolean.FALSE;
+
+  /**
    * No-argument constructor.
    */
   public ApiStatus() {
@@ -310,6 +316,30 @@ public class ApiStatus {
    */
   public ApiStatus setReason(String reason) {
     this.reason = reason;
+    return this;
+  }
+
+  /**
+   * Provides an indication of whether this service has made the loadable
+   * plugin registries ready to load
+   *
+   * @return a Boolean with the indication of whether this service has made
+   * the loadable plugin registries ready to load
+   */
+  public boolean getPluginsReady() {
+    return pluginsReady;
+  }
+
+  /**
+   * Saves the indication of whether the loadable plugin registries are
+   * ready to load
+   *
+   * @param ready A Boolean with the indication of whether the loadable
+   *          plugin registries are ready to load
+   * @return an ApiStatus with this object.
+   */
+  public ApiStatus setPluginsReady(Boolean ready) {
+    this.pluginsReady = ready;
     return this;
   }
 
