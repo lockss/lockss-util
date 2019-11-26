@@ -29,7 +29,7 @@ package org.lockss.util.rest.exception;
 
 import java.io.IOException;
 
-public abstract class LockssRestException extends IOException {
+public class LockssRestException extends IOException {
   private static final long serialVersionUID = -7396951390932243207L;
 
   /**

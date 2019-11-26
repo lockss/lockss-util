@@ -57,6 +57,7 @@ public class MultipartResponse {
   private String statusMessage;
   private HttpHeaders responseHeaders;
   private LinkedHashMap<String, Part> parts = new LinkedHashMap<String, Part>();
+  private LockssRestException lre;
 
   /**
    * Default constructor.
@@ -159,6 +160,7 @@ public class MultipartResponse {
   public MultipartResponse(LockssRestException lre) {
     final String DEBUG_HEADER = "MultipartResponse(lre): ";
 
+    this.lre = lre;
     HttpResponseStatusAndHeaders status =
 	  HttpResponseStatusAndHeaders.fromLockssRestException(lre);
 
@@ -218,6 +220,15 @@ public class MultipartResponse {
    */
   public void setResponseHeaders(HttpHeaders responseHeaders) {
     this.responseHeaders = responseHeaders;
+  }
+
+  /**
+   * Return the causal LockssRestException, if known, else null
+   *
+   * @return a LockssRestException
+   */
+  public LockssRestException getLockssRestException() {
+    return lre;
   }
 
   /**
