@@ -35,25 +35,35 @@ POSSIBILITY OF SUCH DAMAGE.
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.lockss</groupId>
+    <artifactId>lockss-parent-pom</artifactId>
+    <version>1.11.0-SNAPSHOT</version>
+    <relativePath />
+  </parent>
   
   <groupId>org.lockss</groupId>
-  <artifactId>lockss-util</artifactId>
-  <version>1.9.0-SNAPSHOT</version>
-  <packaging>pom</packaging>
+  <artifactId>lockss-util-entities</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
 
-  <name>lockss-util</name>
-  <description>Aggregator to build LOCKSS utility libraries</description>
+  <name>lockss-util-entities</name>
+  <description>LOCKSS utility entities</description>
 
-  <modules>
-    <module>lockss-util-core</module>
-    <module>lockss-util-rest</module>
-    <module>lockss-util-entities</module>
-  </modules>
-
-  <!-- Only perform tasks on the child projects -->
   <properties>
-    <maven.install.skip>true</maven.install.skip>
-    <maven.deploy.skip>true</maven.deploy.skip>
+    <build.java.jarTests.skip>false</build.java.jarTests.skip>
   </properties>
-  
+
+  <dependencies>
+
+    <dependency>
+      <groupId>org.lockss</groupId>
+      <artifactId>lockss-util-core</artifactId>
+      <version>${version.lockss.lockss-util-core}</version>
+    </dependency>
+
+  </dependencies>
+
 </project>
+
