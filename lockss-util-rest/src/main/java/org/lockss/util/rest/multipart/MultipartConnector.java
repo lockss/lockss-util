@@ -32,6 +32,7 @@ import java.net.URI;
 import java.util.List;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
+import org.lockss.util.Constants;
 import org.lockss.util.rest.HttpResponseStatusAndHeaders;
 import org.lockss.util.rest.RestUtil;
 import org.lockss.util.rest.exception.LockssRestException;
@@ -53,6 +54,8 @@ import org.springframework.web.client.RestTemplate;
  */
 public class MultipartConnector {
   private static L4JLogger log = L4JLogger.getLogger();
+
+  private final int DEFAULT_TIMEOUT = (int)(60 * Constants.SECOND);
 
   private URI uri;
   private HttpHeaders requestHeaders;
@@ -99,7 +102,7 @@ public class MultipartConnector {
    *           if there are other problems.
    */
   public MultipartResponse requestGet() throws IOException, MessagingException {
-    return requestGet(60, 60);
+    return requestGet(DEFAULT_TIMEOUT, DEFAULT_TIMEOUT);
   }
 
   /**
@@ -204,7 +207,7 @@ public class MultipartConnector {
    * @return an HttpStatus with the response status.
    */
   public HttpResponseStatusAndHeaders requestPut() {
-    return requestPut(60, 60);
+    return requestPut(DEFAULT_TIMEOUT, DEFAULT_TIMEOUT);
   }
 
   /**
