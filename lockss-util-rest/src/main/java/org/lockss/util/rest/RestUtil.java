@@ -1,6 +1,6 @@
 /*
 
- Copyright (c) 2019 Board of Trustees of Leland Stanford Jr. University,
+ Copyright (c) 2019-2020 Board of Trustees of Leland Stanford Jr. University,
  all rights reserved.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -28,18 +28,30 @@
 package org.lockss.util.rest;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.Map;
 import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.rest.exception.LockssRestHttpException;
 import org.lockss.util.rest.exception.LockssRestNetworkException;
 import org.lockss.log.L4JLogger;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
+/**
+ * Utility methods used for invoking REST services.
+ */
 public class RestUtil {
   private static L4JLogger log = L4JLogger.getLogger();
 
@@ -118,6 +130,109 @@ public class RestUtil {
 
       throw lrne;
     }
+  }
+
+  /**
+   * Provides the REST template to be used to make the call to a REST service.
+   * 
+   * @param connectTimeout A long with the connection timeout in milliseconds.
+   * @param readTimeout    A long with the read timeout in milliseconds.
+   * 
+   * @return a RestTemplate with the REST template.
+   */
+  public static RestTemplate getRestTemplate(long connectTimeout,
+      long readTimeout) {
+    log.debug2("connectTimeout =  {}", connectTimeout);
+    log.debug2("readTimeout =  {}", readTimeout);
+
+    // Initialize the request to the REST service.
+    RestTemplate restTemplate = new RestTemplate();
+
+    // Do not throw exceptions on non-success response status codes.
+    restTemplate.setErrorHandler(new DefaultResponseErrorHandler() {
+      protected boolean hasError(HttpStatus statusCode) {
+	return false;
+      }
+    });
+
+    // Specify the timeouts.
+    SimpleClientHttpRequestFactory requestFactory =
+	(SimpleClientHttpRequestFactory)restTemplate.getRequestFactory();
+
+    requestFactory.setConnectTimeout((int)connectTimeout);
+    requestFactory.setReadTimeout((int)readTimeout);
+
+    log.debug2("restTemplate = {}", restTemplate);
+    return restTemplate;
+  }
+
+  /**
+   * Provides the URI to be used to make the call to a REST service.
+   * 
+   * @param uriString    A String with the REST Service URI.
+   * @param uriVariables A Map<String, String> with any URI variables to be
+   *                     interpolated..
+   * @param queryParams  A Map<String, String> with any query parameters.
+   * 
+   * @return a URI with the REST service URI.
+   */
+  public static URI getRestUri(String uriString,
+      Map<String, String> uriVariables, Map<String, String> queryParams) {
+    log.debug2("uriString =  {}", uriString);
+    log.debug2("uriVariables =  {}", uriVariables);
+    log.debug2("queryParams =  {}", queryParams);
+
+    // Initialize the URI.
+    UriComponents uriComponents = UriComponentsBuilder.fromUriString(uriString)
+	.build();
+    
+    // Interpolate any URI variables.
+    if (uriVariables != null && !uriVariables.isEmpty()) {
+      uriComponents = uriComponents.expand(uriVariables);
+    }
+
+    UriComponentsBuilder ucb =
+	UriComponentsBuilder.newInstance().uriComponents(uriComponents);
+  
+    // Add any query parameters.
+    if (queryParams != null && !queryParams.isEmpty()) {
+      for (String key : queryParams.keySet()) {
+	ucb = ucb.queryParam(key, queryParams.get(key));
+      }
+    }
+
+    URI uri = ucb.build().encode().toUri();
+    log.trace("uri = {}", uri);
+    return uri;
+  }
+
+  /**
+   * Provides the HTTP request headers with the user credentials, if necessary.
+   * 
+   * @param serviceUser     A String with the name of the user.
+   * @param servicePassword A String with the password of the user.
+   *
+   * @return a HttpHeaders with the HTTP request headers containing the user
+   *         credentials, if necessary.
+   */
+  public static HttpHeaders getCredentialedRequestHeaders(String serviceUser,
+      String servicePassword) {
+    log.debug2("serviceUser =  {}", serviceUser);
+
+    // Initialize the request headers.
+    HttpHeaders requestHeaders = new HttpHeaders();
+
+    // Check whether there are credentials to be sent.
+    if (serviceUser != null && servicePassword != null) {
+      // Yes.
+      String credentials = serviceUser + ":" + servicePassword;
+      String authHeaderValue = "Basic " + Base64.getEncoder()
+      .encodeToString(credentials.getBytes(StandardCharsets.US_ASCII));
+      requestHeaders.set("Authorization", authHeaderValue);
+    }
+
+    log.debug2("requestHeaders = {}", requestHeaders);
+    return requestHeaders;
   }
 
   /**

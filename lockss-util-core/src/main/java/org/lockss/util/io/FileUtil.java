@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2000-2018, Board of Trustees of Leland Stanford Jr. University,
+Copyright (c) 2000-2020, Board of Trustees of Leland Stanford Jr. University,
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -614,5 +614,121 @@ public class FileUtil {
     if (log.isTraceEnabled())
       log.trace("listDirFilesWithExtension(): result = " + result);
     return result;
+  }
+
+  /**
+   * Reads password from file, then overwrites and deletes file.
+   * 
+   * @param keyPasswordFile A String with the password file pathname.
+   * @return a String with the password read from the file.
+   * @throws IOException if there are problems reading the password.
+   */
+  public static String readPasswdFile(String keyPasswordFile)
+      throws IOException {
+    if (log.isTraceEnabled()) log.trace("keyPasswordFile = " + keyPasswordFile);
+
+    // Parameter validation.
+    if (keyPasswordFile == null) {
+      throw new IOException("Null password file");
+    }
+
+    File file = new File(keyPasswordFile);
+      log.trace("file.getAbsolutePath() = {}", file.getAbsolutePath());
+
+    // File length validation.
+    long llen = file.length();
+    if (llen > 1000) {
+      throw new IOException("Unreasonably large password file: " + llen);
+    }
+
+    FileInputStream fis = new FileInputStream(file);
+    int len = (int)llen;
+    byte[] pwdChars = new byte[len];
+
+    try {
+      try {
+	// Read the password.
+	// TODO: Replace with call to StreamUtil.readBytes() once StreamUtil has
+	// been moved out of lockss-core and into lockss-util.
+	int nread = readBytes(fis, pwdChars, len);
+	if (nread != len) {
+	  throw new IOException("short read: " + nread + " instead of " + len);
+	}
+      } finally {
+	// TODO: Replace with call to IOUtil.safeClose() once IOUtil has been
+	// moved out of lockss-core and into lockss-util.
+	safeClose(fis);
+      }
+    } finally {
+      overwriteAndDelete(file, len);
+    }
+    return new String(pwdChars);
+  }
+
+  // TODO: Remove once StreamUtil has been moved out of lockss-core and into
+  // lockss-util.
+  /** Read size bytes from stream into buf.  Keeps trying to read until
+   * enough bytes have been read or EOF or error.
+   * @param ins stream to read from
+   * @param buf buffer to read into
+   * @param size number of bytes to read
+   * @return number of bytes read, which will be less than size iff EOF is
+   * reached
+   * @throws IOException
+   */
+  private static int readBytes(InputStream ins, byte[] buf, int size)
+      throws IOException {
+    int off = 0;
+    while ( off < size) {
+      int nread = ins.read(buf, off, size - off);
+      if (nread == -1) {
+	return off;
+      }
+      off += nread;
+    }
+    return off;
+  }
+
+  // TODO: Remove once IOUtil has been moved out of lockss-core and into
+  // lockss-util.
+  /** Call close() on the stream, ignoring any errors */
+  private static void safeClose(InputStream s) {
+    // No need for null check, NPE will be ignored
+    try {
+      s.close();
+    } catch (Exception e) {}
+  }
+
+  /**
+   * Overwrites and deletes a file, trapping and logging any exceptions.
+   * 
+   * @param file A File with the file to be overwritten and deleted.
+   * @param len  An int with the length of data to be used to overwrite the
+   *             file.
+   */
+  private static void overwriteAndDelete(File file, int len) {
+    OutputStream fos = null;
+    try {
+      fos = new FileOutputStream(file);
+      byte[] junk = new byte[len];
+      Arrays.fill(junk, (byte)0x5C);
+      fos.write(junk);
+    } catch (IOException e) {
+      log.warn("Couldn't overwrite file: " + file + ": " + e);
+    } finally {
+      // TODO: Replace with call to IOUtil.safeClose() once IOUtil has been
+      // moved out of lockss-core and into lockss-util.
+      safeClose(fos);
+    }
+    file.delete();
+  }
+
+  // TODO: Remove once IOUtil has been moved out of lockss-core and into
+  // lockss-util.
+  /** Call close() on the stream, ignoring any errors */
+  private static void safeClose(OutputStream s) {
+    try {
+      s.close();
+    } catch (Exception e) {}
   }
 }
