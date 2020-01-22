@@ -28,9 +28,6 @@
 package org.lockss.util.rest;
 
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.Collections;
 import java.util.Map;
 import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.rest.exception.LockssRestHttpException;
@@ -38,7 +35,6 @@ import org.lockss.util.rest.exception.LockssRestNetworkException;
 import org.lockss.log.L4JLogger;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -204,35 +200,6 @@ public class RestUtil {
     URI uri = ucb.build().encode().toUri();
     log.trace("uri = {}", uri);
     return uri;
-  }
-
-  /**
-   * Provides the HTTP request headers with the user credentials, if necessary.
-   * 
-   * @param serviceUser     A String with the name of the user.
-   * @param servicePassword A String with the password of the user.
-   *
-   * @return a HttpHeaders with the HTTP request headers containing the user
-   *         credentials, if necessary.
-   */
-  public static HttpHeaders getCredentialedRequestHeaders(String serviceUser,
-      String servicePassword) {
-    log.debug2("serviceUser =  {}", serviceUser);
-
-    // Initialize the request headers.
-    HttpHeaders requestHeaders = new HttpHeaders();
-
-    // Check whether there are credentials to be sent.
-    if (serviceUser != null && servicePassword != null) {
-      // Yes.
-      String credentials = serviceUser + ":" + servicePassword;
-      String authHeaderValue = "Basic " + Base64.getEncoder()
-      .encodeToString(credentials.getBytes(StandardCharsets.US_ASCII));
-      requestHeaders.set("Authorization", authHeaderValue);
-    }
-
-    log.debug2("requestHeaders = {}", requestHeaders);
-    return requestHeaders;
   }
 
   /**
