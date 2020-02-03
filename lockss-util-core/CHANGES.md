@@ -1,6 +1,6 @@
 # Release Notes
 
-## Changes Since `lockss-util` 1.7.0
+## 1.8.0
 
 ### Features
 
