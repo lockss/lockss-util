@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+Copyright (c) 2000-2019, Board of Trustees of Leland Stanford Jr. University
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors
+may be used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
+-->
+<Configuration status="WARN">
+
+  <!-- Log4j2 default configuration for LAAWS projects (that depend on this
+       project). Downstream projects can modify this configuration by
+       placing log4j2-project.xml on their classpath.  Default log level
+       and appender layout patterns can be overridden by redefining the
+       properties below.  Or the appenders and/or loggers themselves can be
+       replaced, or others added. -->
+
+  <Properties>
+    <!-- Default log level -->
+    <Property name="root.level">INFO</Property>
+
+    <!-- Minimum level to log to console -->
+    <Property name="level.min.console">DEBUG3</Property>
+
+    <!-- Default log dir -->
+    <Property name="log.dir">logs</Property>
+
+    <!-- Default log file name -->
+    <Property name="log.file">app</Property>
+
+    <!-- Default rolling file size trigger -->
+    <Property name="log.rollingfile.sizetrigger">10 MB</Property>
+
+    <!-- Default rolling file max rollover -->
+    <Property name="log.rollingfile.maxrollover">10</Property>
+
+    <!-- Default pattern for log output to console -->
+    <Property name="layout.console">
+      %ld{HH:mm:ss.SSS} [%t] %-5level %logger{36}: %msg%lex%n
+    </Property>
+
+    <!-- Default pattern for log output to console from org.lockss.**
+         loggers.  Uses simple logger name as we're familiar with these
+         names. -->
+    <Property name="layout.console.lockss">
+      %ld{HH:mm:ss.SSS} [%t] %-5level %logger{1}: %msg%lex%n
+    </Property>
+
+    <!-- Patterns for file output and lockss file output default to
+         corresponding console patterns. -->
+    <Property name="layout.file">
+      ${layout.console}
+    </Property>
+    <Property name="layout.file.lockss">
+      ${layout.console.lockss}
+    </Property>
+
+  </Properties>
+
+  <!-- Define LOCKSS log levels that aren't present in log4j -->
+  <!-- Must agree with those in org.lockss.log.L4JLevel  -->
+  <CustomLevels>
+    <CustomLevel name="SITE_ERROR" intLevel="210" />
+    <CustomLevel name="SITE_WARNING" intLevel="310" />
+    <CustomLevel name="DEBUG2" intLevel="550" />
+    <CustomLevel name="DEBUG3" intLevel="600" />
+  </CustomLevels>
+
+  <Appenders>
+
+    <Console name="Console" target="SYSTEM_OUT">
+      <PatternLayout>
+	<Pattern>${layout.console}</Pattern>
+      </PatternLayout>
+      <ThresholdFilter level="${level.min.console}" onMatch="ACCEPT" onMismatch="DENY"/>
+    </Console>
+
+    <Console name="Console.Lockss" target="SYSTEM_OUT">
+      <PatternLayout>
+	<Pattern>${layout.console.lockss}</Pattern>
+      </PatternLayout>
+      <ThresholdFilter level="${level.min.console}" onMatch="ACCEPT" onMismatch="DENY"/>
+    </Console>
+
+    <RollingFile name="File">
+      <FileName>${log.dir}/${log.file}.log</FileName>
+      <FilePattern>${log.dir}/${log.file}-%i.log.gz</FilePattern>
+<!--       <FilePattern>${log.dir}/%d{yyyy-MM-dd}-%i.log.gz</FilePattern> -->
+      <PatternLayout>
+	<Pattern>${layout.file}</Pattern>
+	<header>File started Timestamp: $${date:EEE dd MMM yyyy HH:mm:ss zzz}\n</header>
+	<footer>File ended Timestamp: $${date:EEE dd MMM yyyy HH:mm:ss zzz}\n</footer>
+      </PatternLayout>
+      <Policies>
+<!--         <TimeBasedTriggeringPolicy /> -->
+	<SizeBasedTriggeringPolicy size="${log.rollingfile.sizetrigger}"/>
+      </Policies>
+      <DefaultRolloverStrategy max="${log.rollingfile.maxrollover}" />
+    </RollingFile>
+
+    <RollingFile name="File.Lockss">
+      <FileName>${log.dir}/${log.file}.log</FileName>
+      <FilePattern>${log.dir}/${log.file}-%i.log.gz</FilePattern>
+<!--       <FilePattern>${log.dir}/%d{yyyy-MM-dd}-%i.log.gz</FilePattern> -->
+      <PatternLayout>
+	<Pattern>${layout.file.lockss}</Pattern>
+	<header>File started Timestamp: ${date:EEE dd MMM yyyy HH:mm:ss.SSS zzz}\n</header>
+	<footer>File ended Timestamp: ${date:EEE dd MMM yyyy HH:mm:ss.SSS zzz}\n</footer>
+      </PatternLayout>
+      <Policies>
+<!--         <TimeBasedTriggeringPolicy /> -->
+	<SizeBasedTriggeringPolicy size="${log.rollingfile.sizetrigger}"/>
+      </Policies>
+      <DefaultRolloverStrategy max="${log.rollingfile.maxrollover}" />
+    </RollingFile>
+
+  </Appenders>
+
+  <Loggers>
+
+    <Root level="${root.level}">
+      <AppenderRef ref="Console"/>
+      <AppenderRef ref="File"/>
+    </Root>
+
+    <Logger name="org.lockss" additivity="false">
+      <AppenderRef ref="Console.Lockss"/>
+      <AppenderRef ref="File.Lockss"/>
+    </Logger>
+
+    <!-- Defaults for other components that log too much at info or debug
+         levels -->
+    <Logger name="org.apache.http" level="WARN"/>
+    <Logger name="AbstractInactivityMonitor" level="WARN"/>
+    <Logger name="DefaultListableBeanFactory" level="WARN"/>
+
+  </Loggers>
+</Configuration>

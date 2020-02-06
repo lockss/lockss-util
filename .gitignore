@@ -11,3 +11,5 @@ logs/
 # Old file versions
 *~
 
+/TAGS
+/lockss-util-*/TAGS
