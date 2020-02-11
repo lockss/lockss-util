@@ -1,6 +1,3 @@
 # `lockss-util`
 
-Aggregator project for the LOCKSS utility libraries:
-
-*   `lockss-util-core`: LOCKSS utility library for core functionality (I/O, collections, testing, logging...)
-*   `lockss-util-rest`: LOCKSS utility library for REST
+LOCKSS utility library for Web Services entities. This includes common objects for REST and legacy SOAP services. Part of the wider `lockss-util` aggregator project.
