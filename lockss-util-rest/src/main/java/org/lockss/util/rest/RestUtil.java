@@ -77,13 +77,11 @@ public class RestUtil {
       URI uri, HttpMethod method, HttpEntity<?> requestEntity,
       Class<T> responseType, String exceptionMessage)
 	  throws LockssRestException {
-    if (log.isDebug2Enabled()) {
-      log.debug2("uri = " + uri);
-      log.debug2("method = " + method);
-      log.debug2("requestEntity = " + requestEntity);
-      log.debug2("responseType = " + responseType);
-      log.debug2("exceptionMessage = " + exceptionMessage);
-    }
+    log.debug2("uri = {}", uri);
+    log.debug2("method = {}", method);
+    log.debug2("requestEntity = {}", requestEntity);
+    log.debug2("responseType = {}", responseType);
+    log.debug2("exceptionMessage = {}", exceptionMessage);
 
     try {
       // Make the call to the REST service and get the response.
@@ -138,8 +136,8 @@ public class RestUtil {
    */
   public static RestTemplate getRestTemplate(long connectTimeout,
       long readTimeout) {
-    log.debug2("connectTimeout =  {}", connectTimeout);
-    log.debug2("readTimeout =  {}", readTimeout);
+    log.debug2("connectTimeout = {}", connectTimeout);
+    log.debug2("readTimeout = {}", readTimeout);
 
     // Initialize the request to the REST service.
     RestTemplate restTemplate = new RestTemplate();
@@ -174,18 +172,21 @@ public class RestUtil {
    */
   public static URI getRestUri(String uriString,
       Map<String, String> uriVariables, Map<String, String> queryParams) {
-    log.debug2("uriString =  {}", uriString);
-    log.debug2("uriVariables =  {}", uriVariables);
-    log.debug2("queryParams =  {}", queryParams);
+    log.debug2("uriString = {}", uriString);
+    log.debug2("uriVariables = {}", uriVariables);
+    log.debug2("queryParams = {}", queryParams);
 
     // Initialize the URI.
     UriComponents uriComponents = UriComponentsBuilder.fromUriString(uriString)
 	.build();
-    
+    log.trace("uriComponents = {}", uriComponents);
+
     // Interpolate any URI variables.
     if (uriVariables != null && !uriVariables.isEmpty()) {
       uriComponents = uriComponents.expand(uriVariables);
     }
+
+    log.trace("uriComponents = {}", uriComponents);
 
     UriComponentsBuilder ucb =
 	UriComponentsBuilder.newInstance().uriComponents(uriComponents);
@@ -193,12 +194,16 @@ public class RestUtil {
     // Add any query parameters.
     if (queryParams != null && !queryParams.isEmpty()) {
       for (String key : queryParams.keySet()) {
-	ucb = ucb.queryParam(key, queryParams.get(key));
+	log.trace("key = {}", key);
+	String value = queryParams.get(key);
+	log.trace("value = {}", value);
+
+	ucb = ucb.queryParam(key, value);
       }
     }
 
     URI uri = ucb.build().encode().toUri();
-    log.trace("uri = {}", uri);
+    log.debug2("uri = {}", uri);
     return uri;
   }
 

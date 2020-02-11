@@ -43,7 +43,6 @@ POSSIBILITY OF SUCH DAMAGE.
     <relativePath />
   </parent>
   
-  <groupId>org.lockss</groupId>
   <artifactId>lockss-util-rest</artifactId>
   <version>1.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
@@ -97,6 +96,19 @@ POSSIBILITY OF SUCH DAMAGE.
       <artifactId>mockserver-netty</artifactId>
       <version>5.6.1</version>
       <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.validation</groupId>
+      <artifactId>validation-api</artifactId>
+      <version>1.1.0.Final</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>io.swagger</groupId>
+      <artifactId>swagger-annotations</artifactId>
+      <version>1.5.10</version>
     </dependency>
 
   </dependencies>
