@@ -31,12 +31,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.lockss.util.rest.poller;
 
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import com.fasterxml.jackson.core.type.TypeReference;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.lockss.log.L4JLogger;
 import org.lockss.util.rest.RestBaseClient;
 import org.lockss.util.rest.exception.LockssRestException;
-import org.lockss.util.rest.exception.LockssRestNetworkException;
+import org.lockss.ws.entities.PeerWsResult;
+import org.lockss.ws.entities.PollWsResult;
+import org.lockss.ws.entities.VoteWsResult;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 
 /**
  * A client of the Poller REST service.
@@ -103,13 +109,13 @@ public class RestPollerClient extends RestBaseClient {
    * @return a String with the AUID of the Archival Unit involved in the poll.
    * @throws LockssRestException if there were problems calling the poll.
    */
-  public String callPoll(PollDesc body) throws LockssRestException  {
+  public String callPoll(PollDesc body) throws LockssRestException {
     log.debug2("body = {}", body);
 
     try {
       // Make the REST call.
       log.trace("Calling RestUtil.callRestService");
-      ResponseEntity<String> response =  callRestService("/polls", null, null,
+      ResponseEntity<String> response = callRestService("/polls", null, null,
 	  HttpMethod.POST, null, body, String.class, "Can't call poll");
       log.trace("Back from RestUtil.callRestService");
 
@@ -117,7 +123,121 @@ public class RestPollerClient extends RestBaseClient {
       log.debug2("result = " + result);
       return result;
     } catch (RuntimeException e) {
-      throw new LockssRestNetworkException(e);
+      throw new LockssRestException(e);
+    }
+  }
+
+  /**
+   * Provides the selected properties of selected peers in the system.
+   * 
+   * @param peerQuery A String with the
+   *                  <a href="package-summary.html#SQL-Like_Query">SQL-like
+   *                  query</a> used to specify what properties to retrieve from
+   *                  which peers.
+   * @return a {@code List<PeerWsResult>} with the results.
+   * @throws LockssRestException if there were problems making the query.
+   */
+  public List<PeerWsResult> queryPeers(String peerQuery)
+      throws LockssRestException {
+    log.debug2("peerQuery = {}", peerQuery);
+
+    try {
+      // Prepare the query parameters.
+      Map<String, String> queryParams = new HashMap<>(1);
+      queryParams.put("peerQuery", peerQuery);
+      log.trace("queryParams = {}", queryParams);
+
+      // Make the REST call.
+      log.trace("Calling RestUtil.callRestService");
+      ResponseEntity<String> response = callRestService("/peers", null,
+	  queryParams, HttpMethod.GET, null, null, String.class,
+	  "Can't query peers");
+      log.trace("Back from RestUtil.callRestService");
+
+      // Get the response body.
+      List<PeerWsResult> result = getJsonMapper().readValue(response.getBody(),
+	  new TypeReference<List<PeerWsResult>>(){});
+
+      log.debug2("result = " + result);
+      return result;
+    } catch (Exception e) {
+      throw new LockssRestException(e);
+    }
+  }
+
+  /**
+   * Provides the selected properties of selected polls in the system.
+   * 
+   * @param pollQuery A String with the
+   *                  <a href="package-summary.html#SQL-Like_Query">SQL-like
+   *                  query</a> used to specify what properties to retrieve from
+   *                  which polls.
+   * @return a {@code List<PollWsResult>} with the results.
+   * @throws LockssRestException if there were problems making the query.
+   */
+  public List<PollWsResult> queryPolls(String pollQuery)
+      throws LockssRestException {
+    log.debug2("pollQuery = {}", pollQuery);
+
+    try {
+      // Prepare the query parameters.
+      Map<String, String> queryParams = new HashMap<>(1);
+      queryParams.put("pollQuery", pollQuery);
+      log.trace("queryParams = {}", queryParams);
+
+      // Make the REST call.
+      log.trace("Calling RestUtil.callRestService");
+      ResponseEntity<String> response = callRestService("/polls", null,
+	  queryParams, HttpMethod.GET, null, null, String.class,
+	  "Can't query polls");
+      log.trace("Back from RestUtil.callRestService");
+
+      // Get the response body.
+      List<PollWsResult> result = getJsonMapper().readValue(response.getBody(),
+	  new TypeReference<List<PollWsResult>>(){});
+
+      log.debug2("result = " + result);
+      return result;
+    } catch (Exception e) {
+      throw new LockssRestException(e);
+    }
+  }
+
+  /**
+   * Provides the selected properties of selected votes in the system.
+   * 
+   * @param voteQuery A String with the
+   *                  <a href="package-summary.html#SQL-Like_Query">SQL-like
+   *                  query</a> used to specify what properties to retrieve from
+   *                  which votes.
+   * @return a {@code List<VoteWsResult>} with the results.
+   * @throws LockssRestException if there were problems making the query.
+   */
+  public List<VoteWsResult> queryVotes(String voteQuery)
+      throws LockssRestException {
+    log.debug2("voteQuery = {}", voteQuery);
+
+    try {
+      // Prepare the query parameters.
+      Map<String, String> queryParams = new HashMap<>(1);
+      queryParams.put("voteQuery", voteQuery);
+      log.trace("queryParams = {}", queryParams);
+
+      // Make the REST call.
+      log.trace("Calling RestUtil.callRestService");
+      ResponseEntity<String> response = callRestService("/votes", null,
+	  queryParams, HttpMethod.GET, null, null, String.class,
+	  "Can't query votes");
+      log.trace("Back from RestUtil.callRestService");
+
+      // Get the response body.
+      List<VoteWsResult> result = getJsonMapper().readValue(response.getBody(),
+	  new TypeReference<List<VoteWsResult>>(){});
+
+      log.debug2("result = " + result);
+      return result;
+    } catch (Exception e) {
+      throw new LockssRestException(e);
     }
   }
 }

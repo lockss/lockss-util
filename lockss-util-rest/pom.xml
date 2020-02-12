@@ -66,6 +66,12 @@ POSSIBILITY OF SUCH DAMAGE.
       <version>${version.lockss.lockss-util-core}</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.lockss</groupId>
+      <artifactId>lockss-util-entities</artifactId>
+      <version>${version.lockss.lockss-util-entities}</version>
+    </dependency>
+
     <!--  Needed by org.lockss.util.MultipartUtil and org.lockss.util.MimeMultipartHttpMessageConverter -->
     <dependency>
       <groupId>com.sun.mail</groupId>

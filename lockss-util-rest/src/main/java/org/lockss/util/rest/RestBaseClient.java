@@ -31,6 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.lockss.util.rest;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
 import java.util.Map;
 import org.lockss.log.L4JLogger;
@@ -167,6 +169,17 @@ public class RestBaseClient {
 	readTimeout), uri, httpMethod,
 	new HttpEntity<T>(body, fullRequestHeaders), responseType,
 	exceptionMessage);
+  }
+
+  /**
+   * Provides a mapper that can be used to unmarshall JSON.
+   * 
+   * @return an ObjectMapper with the mapper that can be used to unmarshall
+   *         JSON.
+   */
+  public ObjectMapper getJsonMapper() {
+    return new ObjectMapper()
+	.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
 
   /**
