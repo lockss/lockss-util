@@ -31,17 +31,33 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.lockss.util.rest.poller;
 
+import static org.lockss.ws.entities.HasherWsResult.BLOCK_FILE_TYPE;
+import static org.lockss.ws.entities.HasherWsResult.RECORD_FILE_TYPE;
 import com.fasterxml.jackson.core.type.TypeReference;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
+import javax.activation.DataHandler;
+import org.apache.cxf.attachment.AttachmentDataSource;
 import org.lockss.log.L4JLogger;
 import org.lockss.util.rest.RestBaseClient;
 import org.lockss.util.rest.exception.LockssRestException;
+import org.lockss.util.rest.multipart.MultipartResponse;
+import org.lockss.util.rest.multipart.MultipartResponse.Part;
+import org.lockss.ws.entities.HasherWsAsynchronousResult;
+import org.lockss.ws.entities.HasherWsParams;
+import org.lockss.ws.entities.HasherWsResult;
 import org.lockss.ws.entities.PeerWsResult;
 import org.lockss.ws.entities.PollWsResult;
 import org.lockss.ws.entities.VoteWsResult;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 /**
@@ -120,7 +136,7 @@ public class RestPollerClient extends RestBaseClient {
       log.trace("Back from RestUtil.callRestService");
 
       String result = response.getBody();
-      log.debug2("result = " + result);
+      log.debug2("result = {}", result);
       return result;
     } catch (RuntimeException e) {
       throw new LockssRestException(e);
@@ -158,7 +174,7 @@ public class RestPollerClient extends RestBaseClient {
       List<PeerWsResult> result = getJsonMapper().readValue(response.getBody(),
 	  new TypeReference<List<PeerWsResult>>(){});
 
-      log.debug2("result = " + result);
+      log.debug2("result = {}", result);
       return result;
     } catch (Exception e) {
       throw new LockssRestException(e);
@@ -196,7 +212,7 @@ public class RestPollerClient extends RestBaseClient {
       List<PollWsResult> result = getJsonMapper().readValue(response.getBody(),
 	  new TypeReference<List<PollWsResult>>(){});
 
-      log.debug2("result = " + result);
+      log.debug2("result = {}", result);
       return result;
     } catch (Exception e) {
       throw new LockssRestException(e);
@@ -234,10 +250,368 @@ public class RestPollerClient extends RestBaseClient {
       List<VoteWsResult> result = getJsonMapper().readValue(response.getBody(),
 	  new TypeReference<List<VoteWsResult>>(){});
 
-      log.debug2("result = " + result);
+      log.debug2("result = {}", result);
       return result;
     } catch (Exception e) {
       throw new LockssRestException(e);
     }
+  }
+
+  /**
+   * Performs the hashing of an AU or a URL.
+   * 
+   * @param wsParams A HasherWsParams with the parameters of the hashing
+   *                 operation.
+   * @return a HasherWsResult with the result of the hashing operation.
+   * @throws LockssRestException if there are problems.
+   */
+  public HasherWsResult hash(HasherWsParams wsParams)
+      throws LockssRestException {
+    log.debug2("wsParams = {}", wsParams);
+
+    try {
+      // Prepare the query parameter variables.
+      Map<String, String> queryParams = new HashMap<>();
+      queryParams.put("isAsynchronous", "false");
+      log.trace("queryParams = {}", queryParams);
+
+      // Make the REST call.
+      MultipartResponse response = getMultipartResponse("/hashes", null,
+	  queryParams, new HttpHeaders(), HttpMethod.PUT, wsParams);
+
+      // Get the single hash result from the response.
+      HasherWsResult result = extractSingleHashResult(response);
+      log.debug2("result = {}", result);
+      return result;
+    } catch (Exception e) {
+      throw new LockssRestException(e);
+    }
+  }
+
+  /**
+   * Performs asynchronously the hashing of an AU or a URL.
+   * 
+   * @param wsParams A HasherWsParams with the parameters of the hashing
+   *                 operation.
+   * @return a HasherWsAsynchronousResult with the result of the hashing
+   *         operation.
+   * @throws LockssRestException if there are problems.
+   */
+  public HasherWsAsynchronousResult hashAsynchronously(HasherWsParams wsParams)
+      throws LockssRestException {
+    log.debug2("wsParams = {}", wsParams);
+
+    try {
+      // Make the REST call.
+      MultipartResponse response = getMultipartResponse("/hashes", null, null,
+	  new HttpHeaders(), HttpMethod.PUT, wsParams);
+
+      // Get the single hash result from the response.
+      HasherWsAsynchronousResult result = extractSingleHashResult(response);
+      log.debug2("result = {}", result);
+      return result;
+    } catch (Exception e) {
+      throw new LockssRestException(e);
+    }
+  }
+
+  /**
+   * Provides the result of an asynchronous hashing operation.
+   * 
+   * @param requestId A String with the identifier of the requested asynchronous
+   *                  hashing operation.
+   * @return a HasherWsAsynchronousResult with the result of the hashing
+   *         operation.
+   * @throws LockssRestException if there are problems.
+   */
+  public HasherWsAsynchronousResult getAsynchronousHashResult(String requestId)
+      throws LockssRestException {
+    log.debug2("requestId = {}", requestId);
+
+    try {
+      // Prepare the URI path variables.
+      Map<String, String> uriVariables = new HashMap<>();
+      uriVariables.put("requestId", requestId);
+      log.trace("uriVariables = {}", uriVariables);
+
+      // Make the REST call.
+      MultipartResponse response = getMultipartResponse(
+	  "/hashes/requests/{requestId}", uriVariables, null, new HttpHeaders(),
+	  HttpMethod.GET, null);
+
+      // Get the single hash result from the response.
+      HasherWsAsynchronousResult result = extractSingleHashResult(response);
+      log.debug2("result = {}", result);
+      return result;
+    } catch (Exception e) {
+      throw new LockssRestException(e);
+    }
+  }
+
+  /**
+   * Provides the results of all the asynchronous hashing operations.
+   * 
+   * @return a {@code List<HasherWsAsynchronousResult>} with the results of the
+   *         hashing operations.
+   * @throws LockssRestException if there are problems.
+   */
+  public List<HasherWsAsynchronousResult> getAllAsynchronousHashResults()
+      throws LockssRestException {
+    log.debug2("Invoked.");
+
+    try {
+      // Make the REST call.
+      MultipartResponse response = getMultipartResponse("/hashes", null, null,
+	  new HttpHeaders(), HttpMethod.GET, null);
+
+      // Get all the hash results from the response.
+      List<HasherWsAsynchronousResult> wsResults =
+	  extractAllHashResults(response);
+      log.debug2("wsResults = {}", wsResults);
+      return wsResults;
+    } catch (Exception e) {
+      throw new LockssRestException(e);
+    }
+  }
+
+  /**
+   * Removes from the system an asynchronous hashing operation, terminating it
+   * if it's still running.
+   * 
+   * @param requestId A String with the identifier of the requested asynchronous
+   *                  hashing operation.
+   * @return a HasherWsAsynchronousResult with the result of the removal of the
+   *         hashing operation.
+   * @throws LockssRestException if there are problems.
+   */
+  public HasherWsAsynchronousResult removeAsynchronousHashRequest(String
+      requestId) throws LockssRestException {
+    log.debug2("requestId = {}", requestId);
+
+    try {
+      // Prepare the URI path variables.
+      Map<String, String> uriVariables = new HashMap<>();
+      uriVariables.put("requestId", requestId);
+      log.trace("uriVariables = {}", uriVariables);
+
+      // Make the REST call.
+      ResponseEntity<String> response = callRestService(
+	  "/hashes/requests/{requestId}", uriVariables, null, HttpMethod.DELETE,
+	  null, (Void)null, String.class, "Can't remove asynchronous hash");
+
+      // Get the response body.
+      String responseBody = response.getBody();
+      log.trace("responseBody = {}", responseBody);
+
+      // Populate the result.
+      HasherWsAsynchronousResult result = new HasherWsAsynchronousResult();
+      result.setRequestId(requestId);
+      result.setStatus(responseBody);
+      log.debug2("result = {}", result);
+      return result;
+    } catch (Exception e) {
+      throw new LockssRestException(e);
+    }
+  }
+
+  /**
+   * Extracts a single hash result from a multi-part response.
+   * 
+   * @param response A MultipartResponse from where to extract the hash result.
+   * @return an HasherWsAsynchronousResult with the extracted hash result.
+   * @throws IOException if there are problems getting the hash results from the
+   *                     response.
+   */
+  private HasherWsAsynchronousResult extractSingleHashResult(
+      MultipartResponse response) throws IOException {
+    log.debug2("Invoked");
+
+    // Get all the results from the response.
+    List<HasherWsAsynchronousResult> wsResults =
+	extractAllHashResults(response);
+
+    // Check whether a single hash result was included the response.
+    if (wsResults.size() == 1) {
+      // Yes: Return it.
+      HasherWsAsynchronousResult result = wsResults.get(0);
+      log.debug2("result = {}", result);
+      return result;
+    } else {
+      // No: report the problem.
+      String message = "REST service returned " + wsResults.size()
+      + "hash results instead of a single hash result";
+      log.error(message);
+      throw new RuntimeException(message);
+    }
+  }
+
+  /**
+   * Extracts all hash results from a multi-part response.
+   * 
+   * @param response A MultipartResponse from where to extract all the hash
+   *                 results.
+   * @return a {@code List<HasherWsAsynchronousResult>} with the extracted hash
+   *         results.
+   * @throws IOException if there are problems getting the hash results from the
+   *                     response.
+   */
+  private List<HasherWsAsynchronousResult> extractAllHashResults(
+      MultipartResponse response) throws IOException {
+    log.debug2("Invoked");
+
+    // Get the status code included in the response.
+    HttpStatus statusCode = response.getStatusCode();
+    log.trace("statusCode = {}", statusCode);
+
+    // Check whether the operation indicates success.
+    if (statusCode.equals(HttpStatus.OK)) {
+      // Yes: Get the results.
+      List<HasherWsAsynchronousResult> wsResults = getHasherResults(response);
+      log.debug2("wsResults = {}", wsResults);
+      return wsResults;
+    } else {
+      // No: report the problem.
+      String message = "REST service returned statusCode '" + statusCode
+	  + ", statusMessage = '" + response.getStatusMessage() + "'";
+
+      log.error(message);
+      throw new RuntimeException(message);
+    }
+  }
+
+  /**
+   * Provides the hash results included in a multi-part response.
+   * 
+   * @param response A MultipartResponse from where to get the hash results.
+   * @return a {@code List<HasherWsAsynchronousResult>} with the extracted hash
+   *         results.
+   * @throws IOException if there are problems getting the hash results from the
+   *                     response.
+   */
+  private List<HasherWsAsynchronousResult> getHasherResults(
+      MultipartResponse response) throws IOException {
+    log.debug2("Invoked");
+
+    // Maps, keyed by requestId, of the different types of part contents.
+    Map<String, HasherWsAsynchronousResult> hwarMap = new HashMap<>();
+    Map<String, AttachmentDataSource> blockFileMap = new HashMap<>();
+    Map<String, AttachmentDataSource> recordFileMap = new HashMap<>();
+
+    // Get the response parts.
+    Map<String, Part> parts = response.getParts();
+    log.trace("parts = {}", parts);
+
+    int partCount = parts.size();
+    log.trace("partCount = {}", partCount);
+
+    // Loop through all the response parts.
+    for (String partName : parts.keySet()) {
+      log.trace("partName = {}", partName);
+
+      // Get the requestId and file type corresponding to this part.
+      String requestId = partName;
+      String fileType = null;
+
+      int separatorLoc = partName.indexOf("-");
+      log.trace("separatorLoc = {}", separatorLoc);
+
+      if (separatorLoc > 0) {
+	requestId = partName.substring(0, separatorLoc);
+	fileType = partName.substring(separatorLoc + 1);
+      }
+
+      log.trace("requestId = {}", requestId);
+      log.trace("fileType = {}", fileType);
+
+      // Get the part.
+      Part part = parts.get(partName);
+      log.trace("part = {}", part);
+
+      // Get the part content type.
+      String contentType = part.getHeaders().get(HttpHeaders.CONTENT_TYPE);
+      log.trace("contentType = {}", contentType);
+
+      // Check whether this part does not involve a file and it's JSON.
+      if (fileType == null
+	  && contentType.startsWith(MediaType.APPLICATION_JSON_VALUE)) {
+	// Yes.
+	try (InputStream partInputStream = part.getInputStream();
+	    Scanner s = new Scanner(partInputStream).useDelimiter("\\A")) {
+	  // Read the part content.
+	  String result = s.hasNext() ? s.next() : "";
+	  log.trace("result = {}", result);
+
+	  // Parse it as a hash result.
+	  HasherWsAsynchronousResult hwar = getJsonMapper().readValue(result,
+	      HasherWsAsynchronousResult.class);
+	  log.trace("hwar = {}", hwar);
+
+	  // Add the hash result to the appropriate map.
+	  hwarMap.put(requestId, hwar);
+	}
+	// No: Check whether this part involves a file.
+      } else if (fileType != null) {
+	// Yes: Get its data source.
+	AttachmentDataSource source =
+	    new AttachmentDataSource(contentType, part.getInputStream());
+	log.trace("source = {}", source);
+
+	// Check whether this part involves a block file.
+	if (fileType.equals(BLOCK_FILE_TYPE)) {
+	  // Yes: Add its data source to the appropriate map.
+	  blockFileMap.put(requestId, source);
+	  // No: Check whether this part involves a record file.
+	} else if (fileType.equals(RECORD_FILE_TYPE)) {
+	  // Yes: Add its data source to the appropriate map.
+	  recordFileMap.put(requestId, source);
+	} else {
+	  log.warn("Ignoring unexpected part with contentType = '{}', "
+	      + "fileType = '{}'", contentType, fileType);
+	}
+      } else {
+	log.warn("Ignoring unexpected part with contentType = '{}', "
+	    + "fileType = '{}'", contentType, fileType);
+      }
+
+      log.trace("Done processing part with name '{}'", partName);
+    }
+
+    // Initialize the response.
+    List<HasherWsAsynchronousResult> wsResults =
+	new ArrayList<HasherWsAsynchronousResult>();
+
+    // Loop through all the requestIds of hash results included in the response.
+    for (String requestId : hwarMap.keySet()) {
+      log.trace("requestId = {}", requestId);
+
+      // Get the hash result.
+      HasherWsAsynchronousResult wsResult = hwarMap.get(requestId);
+
+      // Populate the appropriate block file data source, if any.
+      AttachmentDataSource blockFileDataSource = blockFileMap.get(requestId);
+      log.trace("blockFileDataSource == null? {}", blockFileDataSource == null);
+
+      if (blockFileDataSource != null) {
+	wsResult.setBlockFileDataHandler(new DataHandler(blockFileDataSource));
+      }
+
+      // Populate the appropriate record file data source, if any.
+      AttachmentDataSource recordFileDataSource = recordFileMap.get(requestId);
+      log.trace("recordFileDataSource == null? {}",
+	  recordFileDataSource == null);
+
+      if (recordFileDataSource != null) {
+	wsResult.setRecordFileDataHandler(new DataHandler(
+	    recordFileDataSource));
+      }
+
+      log.trace("wsResult = {}", wsResult);
+
+      // Add this hash result to the overall results.
+      wsResults.add(wsResult);
+    }
+
+    log.debug2("wsResults = {}", wsResults);
+    return wsResults;
   }
 }

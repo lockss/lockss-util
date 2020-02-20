@@ -33,14 +33,20 @@ package org.lockss.util.rest;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Map;
+import javax.mail.MessagingException;
 import org.lockss.log.L4JLogger;
 import org.lockss.util.Constants;
 import org.lockss.util.rest.exception.LockssRestException;
+import org.lockss.util.rest.multipart.MultipartConnector;
+import org.lockss.util.rest.multipart.MultipartResponse;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 /**
@@ -180,6 +186,51 @@ public class RestBaseClient {
   public ObjectMapper getJsonMapper() {
     return new ObjectMapper()
 	.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+  }
+
+  /**
+   * Makes a call to a REST service endpoint that returns a multi-part response.
+   * 
+   * @param pathQuery        A String with the path and query parts of the REST
+   *                         service endpoint.
+   * @param uriVariables     A Map<String, String> with any variables to be
+   *                         interpolated in the URI.
+   * @param queryParams      A Map<String, String> with any query parameters.
+   * @param requestHeaders   An HttpHeaders with HTTP request headers used to
+   *                         make the call to the REST service.
+   * @param httpMethod       An HttpMethod with HTTP method used to make the
+   *                         call to the REST service.
+   * @param body             A T with the contents of the body to be included
+   *                         with the request, if any.
+   * @return a MultipartResponse with the response from the REST service.
+   * @throws LockssRestException if any problems arise in the call to the REST
+   *                             service.
+   */
+  protected <T> MultipartResponse getMultipartResponse(String pathQuery,
+      Map<String, String> uriVariables, Map<String, String> queryParams,
+      HttpHeaders requestHeaders, HttpMethod httpMethod, T body)
+	  throws IOException, MessagingException {
+    log.debug2("pathQuery = {}", pathQuery);
+    log.debug2("uriVariables = {}", uriVariables);
+    log.debug2("queryParams = {}", queryParams);
+    log.debug2("requestHeaders = {}", requestHeaders);
+    log.debug2("httpMethod = {}", httpMethod);
+    log.debug2("body = {}", body);
+
+    URI uri = RestUtil.getRestUri(serviceUrl + pathQuery, uriVariables,
+	queryParams);
+    log.trace("uri = {}", uri);
+
+    requestHeaders.setAccept(Arrays.asList(MediaType.MULTIPART_FORM_DATA,
+	MediaType.APPLICATION_JSON));
+
+    HttpHeaders fullRequestHeaders = addAuthorizationHeader(requestHeaders);
+    log.trace("fullRequestHeaders = {}", fullRequestHeaders);
+
+    // Make the REST call.
+    log.trace("Calling MultipartConnector.requestGet");
+    return new MultipartConnector(uri, fullRequestHeaders).request(httpMethod,
+	body, (int)connectTimeout, (int)readTimeout);
   }
 
   /**

@@ -117,6 +117,12 @@ POSSIBILITY OF SUCH DAMAGE.
       <version>1.5.10</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.cxf</groupId>
+      <artifactId>cxf-core</artifactId>
+      <version>3.2.7</version>
+    </dependency>
+
   </dependencies>
 
 </project>
