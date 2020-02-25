@@ -38,6 +38,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestClientException;
@@ -139,8 +140,17 @@ public class RestUtil {
     log.debug2("connectTimeout = {}", connectTimeout);
     log.debug2("readTimeout = {}", readTimeout);
 
-    // Initialize the request to the REST service.
-    RestTemplate restTemplate = new RestTemplate();
+    // It's necessary to specify the factory to get Spring support for PATCH
+    // operations.
+    HttpComponentsClientHttpRequestFactory requestFactory =
+	new HttpComponentsClientHttpRequestFactory();
+
+    // Specify the timeouts.
+    requestFactory.setConnectTimeout((int)connectTimeout);
+    requestFactory.setReadTimeout((int)readTimeout);
+
+    // Get the template.
+    RestTemplate restTemplate =	new RestTemplate(requestFactory);
 
     // Do not throw exceptions on non-success response status codes.
     restTemplate.setErrorHandler(new DefaultResponseErrorHandler() {
@@ -148,13 +158,6 @@ public class RestUtil {
 	return false;
       }
     });
-
-    // Specify the timeouts.
-    SimpleClientHttpRequestFactory requestFactory =
-	(SimpleClientHttpRequestFactory)restTemplate.getRequestFactory();
-
-    requestFactory.setConnectTimeout((int)connectTimeout);
-    requestFactory.setReadTimeout((int)readTimeout);
 
     log.debug2("restTemplate = {}", restTemplate);
     return restTemplate;
