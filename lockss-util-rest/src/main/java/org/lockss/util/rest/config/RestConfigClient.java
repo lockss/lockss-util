@@ -36,6 +36,7 @@ import java.util.Map;
 import org.lockss.log.L4JLogger;
 import org.lockss.util.rest.RestBaseClient;
 import org.lockss.util.rest.exception.LockssRestException;
+import org.lockss.ws.entities.CheckSubstanceResult;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -114,9 +115,9 @@ public class RestConfigClient extends RestBaseClient {
    */
   public String patchArchivalUnitState(String auId, String auState,
       String xLockssRequestCookie) throws LockssRestException {
-    log.debug2("auId = " + auId);
-    log.debug2("auState = " + auState);
-    log.debug2("xLockssRequestCookie = " + xLockssRequestCookie);
+    log.debug2("auId = {}", auId);
+    log.debug2("auState = {}", auState);
+    log.debug2("xLockssRequestCookie = {}", xLockssRequestCookie);
 
     // Prepare the URI path variables.
     Map<String, String> uriVariables = new HashMap<>();
@@ -141,6 +142,35 @@ public class RestConfigClient extends RestBaseClient {
     log.trace("Back from RestUtil.callRestService");
 
     String result = response.getBody();
+    log.debug2("result = {}", result);
+    return result;
+  }
+
+  /**
+   * Updates the substance check of an archival unit in the system.
+   * 
+   * @param auId A String with the identifier of the archival unit.
+   * @return a CheckSubstanceResult with the substance check information of the
+   *         archival unit.
+   * @throws LockssRestException if there are problems updating the Archival
+   *                             Unit substance.
+   */
+  public CheckSubstanceResult putAuSubstanceCheck(String auId) 
+      throws LockssRestException {
+    log.debug2("auId = {}", auId);
+
+    // Prepare the URI path variables.
+    Map<String, String> uriVariables = new HashMap<>();
+    uriVariables.put("auid", auId);
+    log.trace("uriVariables = {}", uriVariables);
+
+    // Make the REST call.
+    ResponseEntity<CheckSubstanceResult> response = callRestService(
+	"/ausubstances/{auid}", uriVariables, null, HttpMethod.PUT, null, null,
+	CheckSubstanceResult.class, "Cannot update AU substance");
+    log.trace("Back from RestUtil.callRestService");
+
+    CheckSubstanceResult result = response.getBody();
     log.debug2("result = {}", result);
     return result;
   }
