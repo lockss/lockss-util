@@ -1,6 +1,6 @@
 /*
 
- Copyright (c) 2019 Board of Trustees of Leland Stanford Jr. University,
+ Copyright (c) 2019-2020 Board of Trustees of Leland Stanford Jr. University,
  all rights reserved.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -28,11 +28,11 @@
 package org.lockss.util.rest;
 
 import java.net.ConnectException;
-import java.net.NoRouteToHostException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.UnknownHostException;
+import org.apache.http.conn.ConnectTimeoutException;
 import org.junit.*;
 import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.test.*;
@@ -42,8 +42,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -72,7 +70,7 @@ public class TestRestUtil extends LockssTestCase5 {
       assertMatchesRE(message + ".*UnknownHostException.*fake-fake",
 		      lre.getMessage());
       assertClass(UnknownHostException.class, lre.getCause());
-      assertEquals("fake-fake", lre.getCause().getMessage());
+      assertMatchesRE("^fake-fake", lre.getCause().getMessage());
     }
 
     message = "Cannot perform call to 192.0.2.0";
@@ -111,7 +109,7 @@ public class TestRestUtil extends LockssTestCase5 {
     } catch (LockssRestException lre) {
       assertMatchesRE(message + ".*Connection refused", lre.getMessage());
       assertClass(ConnectException.class, lre.getCause());
-      assertMatchesRE("^Connection refused", lre.getCause().getMessage());
+      assertMatchesRE("Connection refused", lre.getCause().getMessage());
     }
 
     message = "Cannot perform call to www.lockss.org";
@@ -121,8 +119,8 @@ public class TestRestUtil extends LockssTestCase5 {
       fail("Should have thrown LockssRestException");
     } catch (LockssRestException lre) {
       assertMatchesRE(message + ".*SocketTimeoutException", lre.getMessage());
-      assertClass(SocketTimeoutException.class, lre.getCause());
-      assertMatchesRE("^connect timed out", lre.getCause().getMessage());
+      assertClass(ConnectTimeoutException.class, lre.getCause());
+      assertMatchesRE("connect timed out", lre.getCause().getMessage());
     }
   }
 
@@ -239,21 +237,7 @@ public class TestRestUtil extends LockssTestCase5 {
    */
   private ResponseEntity<String> doCallRestService(String url, String message)
       throws LockssRestException {
-    RestTemplate restTemplate =	new RestTemplate();
-
-    // Do not throw exceptions on non-success response status codes.
-    restTemplate.setErrorHandler(new DefaultResponseErrorHandler(){
-      protected boolean hasError(HttpStatus statusCode) {
-	return false;
-      }
-    });
-
-    // Specify the timeouts.
-    SimpleClientHttpRequestFactory requestFactory =
-	(SimpleClientHttpRequestFactory)restTemplate.getRequestFactory();
-
-    requestFactory.setConnectTimeout(2000);
-    requestFactory.setReadTimeout(2000);
+    RestTemplate restTemplate =	RestUtil.getRestTemplate(2000, 2000);
 
     // Create the URI of the request to the REST service.
     URI uri = UriComponentsBuilder.newInstance()

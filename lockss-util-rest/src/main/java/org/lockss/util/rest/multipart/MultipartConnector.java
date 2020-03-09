@@ -32,7 +32,6 @@ import java.net.URI;
 import java.util.List;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
-import org.lockss.util.Constants;
 import org.lockss.util.rest.HttpResponseStatusAndHeaders;
 import org.lockss.util.rest.RestUtil;
 import org.lockss.util.rest.exception.LockssRestException;
@@ -40,12 +39,9 @@ import org.lockss.log.L4JLogger;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -54,8 +50,6 @@ import org.springframework.web.client.RestTemplate;
  */
 public class MultipartConnector {
   private static L4JLogger log = L4JLogger.getLogger();
-
-  private final int DEFAULT_TIMEOUT = (int)(60 * Constants.SECOND);
 
   private URI uri;
   private HttpHeaders requestHeaders;
@@ -102,23 +96,24 @@ public class MultipartConnector {
    *           if there are other problems.
    */
   public MultipartResponse requestGet() throws IOException, MessagingException {
-    return requestGet(DEFAULT_TIMEOUT, DEFAULT_TIMEOUT);
+    return requestGet(RestUtil.DEFAULT_CONNECT_TIMEOUT,
+	RestUtil.DEFAULT_READ_TIMEOUT);
   }
 
   /**
    * Performs the GET request.
    * 
    * @param connectTimeout
-   *          An int with the connection timeout in ms.
+   *          A long with the connection timeout in ms.
    * @param readTimeout
-   *          An int with the read timeout in ms.
+   *          A long with the read timeout in ms.
    * @return a MultipartResponse with the response.
    * @throws IOException
    *           if there are problems getting a part payload.
    * @throws MessagingException
    *           if there are other problems.
    */
-  public MultipartResponse requestGet(int connectTimeout, int readTimeout)
+  public MultipartResponse requestGet(long connectTimeout, long readTimeout)
       throws IOException, MessagingException {
     log.debug2("connectTimeout = {}", connectTimeout);
     log.debug2("readTimeout = {}", readTimeout);
@@ -156,17 +151,19 @@ public class MultipartConnector {
    * Creates the REST template for the request.
    * 
    * @param connectTimeout
-   *          An int with the connection timeout in ms.
+   *          A long with the connection timeout in ms.
    * @param readTimeout
-   *          An int with the read timeout in ms.
+   *          A long with the read timeout in ms.
    * @return a RestTemplate with the REST template for the request.
    */
-  private RestTemplate createRestTemplate(int connectTimeout, int readTimeout) {
+  private RestTemplate createRestTemplate(long connectTimeout,
+      long readTimeout) {
     log.debug2("connectTimeout = {}", connectTimeout);
     log.debug2("readTimeout = {}", readTimeout);
 
     // Initialize the request to the REST service.
-    RestTemplate restTemplate = new RestTemplate();
+    RestTemplate restTemplate =
+	RestUtil.getRestTemplate(connectTimeout, readTimeout);
 
     // Get the current message converters.
     List<HttpMessageConverter<?>> messageConverters =
@@ -177,20 +174,6 @@ public class MultipartConnector {
     messageConverters.add(new MimeMultipartHttpMessageConverter());
     log.trace("messageConverters = {}", messageConverters);
 
-    // Do not throw exceptions on non-success response status codes.
-    restTemplate.setErrorHandler(new DefaultResponseErrorHandler(){
-      protected boolean hasError(HttpStatus statusCode) {
-	return false;
-      }
-    });
-
-    // Specify the timeouts.
-    SimpleClientHttpRequestFactory requestFactory =
-	(SimpleClientHttpRequestFactory)restTemplate.getRequestFactory();
-
-    requestFactory.setConnectTimeout(connectTimeout);
-    requestFactory.setReadTimeout(readTimeout);
-
     return restTemplate;
   }
 
@@ -200,20 +183,21 @@ public class MultipartConnector {
    * @return an HttpStatus with the response status.
    */
   public HttpResponseStatusAndHeaders requestPut() {
-    return requestPut(DEFAULT_TIMEOUT, DEFAULT_TIMEOUT);
+    return requestPut(RestUtil.DEFAULT_CONNECT_TIMEOUT,
+	RestUtil.DEFAULT_READ_TIMEOUT);
   }
 
   /**
    * Performs the PUT request.
    * 
    * @param connectTimeout
-   *          An int with the connection timeout in ms.
+   *          A long with the connection timeout in ms.
    * @param readTimeout
-   *          An int with the read timeout in ms.
+   *          A long with the read timeout in ms.
    * @return an HttpStatus with the response status.
    */
-  public HttpResponseStatusAndHeaders requestPut(int connectTimeout,
-      int readTimeout) {
+  public HttpResponseStatusAndHeaders requestPut(long connectTimeout,
+      long readTimeout) {
     log.debug2("connectTimeout = {}", connectTimeout);
     log.debug2("readTimeout = {}", readTimeout);
 
@@ -257,7 +241,8 @@ public class MultipartConnector {
    */
   public <T> MultipartResponse request(HttpMethod method, T body)
       throws IOException, MessagingException {
-    return request(method, body, DEFAULT_TIMEOUT, DEFAULT_TIMEOUT);
+    return request(method, body, RestUtil.DEFAULT_CONNECT_TIMEOUT,
+	RestUtil.DEFAULT_READ_TIMEOUT);
   }
 
   /**
@@ -268,9 +253,9 @@ public class MultipartConnector {
    * @param body
    *          A T with the body of the request, if any.
    * @param connectTimeout
-   *          An int with the connection timeout in ms.
+   *          A long with the connection timeout in ms.
    * @param readTimeout
-   *          An int with the read timeout in ms.
+   *          A long with the read timeout in ms.
    * @return a MultipartResponse with the response.
    * @throws IOException
    *           if there are problems getting a part payload.
@@ -278,7 +263,7 @@ public class MultipartConnector {
    *           if there are other problems.
    */
   public <T> MultipartResponse request(HttpMethod httpMethod, T body,
-      int connectTimeout, int readTimeout)
+      long connectTimeout, long readTimeout)
 	  throws IOException, MessagingException {
     log.debug2("httpMethod = {}", httpMethod);
     log.debug2("body = {}", body);

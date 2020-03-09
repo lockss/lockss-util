@@ -29,6 +29,7 @@ package org.lockss.util.rest;
 
 import java.net.URI;
 import java.util.Map;
+import org.lockss.util.Constants;
 import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.rest.exception.LockssRestHttpException;
 import org.lockss.util.rest.exception.LockssRestNetworkException;
@@ -39,7 +40,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -50,6 +50,16 @@ import org.springframework.web.util.UriComponentsBuilder;
  * Utility methods used for invoking REST services.
  */
 public class RestUtil {
+  /**
+   * The default connection timeout in ms.
+   */
+  public static final long DEFAULT_CONNECT_TIMEOUT = 15 * Constants.SECOND;
+
+  /**
+   * The default read timeout in ms.
+   */
+  public static final long DEFAULT_READ_TIMEOUT = 60 * Constants.SECOND;
+
   private static L4JLogger log = L4JLogger.getLogger();
 
   /**
@@ -128,6 +138,16 @@ public class RestUtil {
   }
 
   /**
+   * Provides the REST template to be used to make the call to a REST service
+   * using default timeouts.
+   * 
+   * @return a RestTemplate with the REST template.
+   */
+  public static RestTemplate getRestTemplate() {
+    return getRestTemplate(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT);
+  }
+
+  /**
    * Provides the REST template to be used to make the call to a REST service.
    * 
    * @param connectTimeout A long with the connection timeout in milliseconds.
@@ -140,7 +160,7 @@ public class RestUtil {
     log.debug2("connectTimeout = {}", connectTimeout);
     log.debug2("readTimeout = {}", readTimeout);
 
-    // It's necessary to specify the factory to get Spring support for PATCH
+    // It's necessary to specify this factory to get Spring support for PATCH
     // operations.
     HttpComponentsClientHttpRequestFactory requestFactory =
 	new HttpComponentsClientHttpRequestFactory();
@@ -148,6 +168,10 @@ public class RestUtil {
     // Specify the timeouts.
     requestFactory.setConnectTimeout((int)connectTimeout);
     requestFactory.setReadTimeout((int)readTimeout);
+
+    // Do not buffer the request body internally, to avoid running out of
+    // memory, or other failures, when sending large amounts of data.
+    requestFactory.setBufferRequestBody(false);
 
     // Get the template.
     RestTemplate restTemplate =	new RestTemplate(requestFactory);
