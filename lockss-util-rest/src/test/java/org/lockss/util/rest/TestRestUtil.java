@@ -32,7 +32,6 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.UnknownHostException;
-import org.apache.http.conn.ConnectTimeoutException;
 import org.junit.*;
 import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.test.*;
@@ -44,7 +43,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-
 import org.mockserver.junit.*;
 import org.mockserver.client.*;
 import static org.mockserver.model.HttpRequest.*;
@@ -70,7 +68,7 @@ public class TestRestUtil extends LockssTestCase5 {
       assertMatchesRE(message + ".*UnknownHostException.*fake-fake",
 		      lre.getMessage());
       assertClass(UnknownHostException.class, lre.getCause());
-      assertMatchesRE("^fake-fake", lre.getCause().getMessage());
+      assertEquals("fake-fake", lre.getCause().getMessage());
     }
 
     message = "Cannot perform call to 192.0.2.0";
@@ -109,7 +107,7 @@ public class TestRestUtil extends LockssTestCase5 {
     } catch (LockssRestException lre) {
       assertMatchesRE(message + ".*Connection refused", lre.getMessage());
       assertClass(ConnectException.class, lre.getCause());
-      assertMatchesRE("Connection refused", lre.getCause().getMessage());
+      assertMatchesRE("^Connection refused", lre.getCause().getMessage());
     }
 
     message = "Cannot perform call to www.lockss.org";
@@ -119,8 +117,8 @@ public class TestRestUtil extends LockssTestCase5 {
       fail("Should have thrown LockssRestException");
     } catch (LockssRestException lre) {
       assertMatchesRE(message + ".*SocketTimeoutException", lre.getMessage());
-      assertClass(ConnectTimeoutException.class, lre.getCause());
-      assertMatchesRE("connect timed out", lre.getCause().getMessage());
+      assertClass(SocketTimeoutException.class, lre.getCause());
+      assertMatchesRE("^connect timed out", lre.getCause().getMessage());
     }
   }
 
@@ -237,7 +235,8 @@ public class TestRestUtil extends LockssTestCase5 {
    */
   private ResponseEntity<String> doCallRestService(String url, String message)
       throws LockssRestException {
-    RestTemplate restTemplate =	RestUtil.getRestTemplate(2000, 2000);
+    RestTemplate restTemplate =
+	RestUtil.getSimpleFactoryRestTemplate(2000, 2000);
 
     // Create the URI of the request to the REST service.
     URI uri = UriComponentsBuilder.newInstance()

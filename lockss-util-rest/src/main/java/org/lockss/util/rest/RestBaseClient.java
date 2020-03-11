@@ -171,8 +171,8 @@ public class RestBaseClient {
 
     // Make the REST call.
     log.trace("Calling RestUtil.callRestService");
-    return RestUtil.callRestService(RestUtil.getRestTemplate(connectTimeout,
-	readTimeout), uri, httpMethod,
+    return RestUtil.callRestService(RestUtil.getHttpFactoryRestTemplate(
+	connectTimeout, readTimeout), uri, httpMethod,
 	new HttpEntity<T>(body, fullRequestHeaders), responseType,
 	exceptionMessage);
   }

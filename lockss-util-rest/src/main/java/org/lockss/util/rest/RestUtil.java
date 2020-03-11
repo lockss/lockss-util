@@ -29,7 +29,6 @@ package org.lockss.util.rest;
 
 import java.net.URI;
 import java.util.Map;
-import org.lockss.util.Constants;
 import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.rest.exception.LockssRestHttpException;
 import org.lockss.util.rest.exception.LockssRestNetworkException;
@@ -40,6 +39,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -50,16 +50,6 @@ import org.springframework.web.util.UriComponentsBuilder;
  * Utility methods used for invoking REST services.
  */
 public class RestUtil {
-  /**
-   * The default connection timeout in ms.
-   */
-  public static final long DEFAULT_CONNECT_TIMEOUT = 15 * Constants.SECOND;
-
-  /**
-   * The default read timeout in ms.
-   */
-  public static final long DEFAULT_READ_TIMEOUT = 60 * Constants.SECOND;
-
   private static L4JLogger log = L4JLogger.getLogger();
 
   /**
@@ -129,8 +119,7 @@ public class RestUtil {
       // Report the problem back to the caller.
       LockssRestNetworkException lrne =
 	new LockssRestNetworkException(exceptionMessage + ": " +
-				       ExceptionUtils.getRootCauseMessage(cause),
-				       cause);
+	    ExceptionUtils.getRootCauseMessage(cause), cause);
       log.trace("lrne = {}", lrne);
 
       throw lrne;
@@ -139,23 +128,110 @@ public class RestUtil {
 
   /**
    * Provides the REST template to be used to make the call to a REST service
-   * using default timeouts.
+   * using the SimpleClientHttpRequestFactory, default timeouts and not throwing
+   * exceptions.
    * 
    * @return a RestTemplate with the REST template.
    */
-  public static RestTemplate getRestTemplate() {
-    return getRestTemplate(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT);
+  public static RestTemplate getSimpleFactoryRestTemplate() {
+    return getSimpleFactoryRestTemplate(0, 0, false);
   }
 
   /**
-   * Provides the REST template to be used to make the call to a REST service.
+   * Provides the REST template to be used to make the call to a REST service
+   * using the SimpleClientHttpRequestFactory and default timeouts.
+   * 
+   * @param doThrow A boolean indicating whether to throw exceptions instead of
+   *                returning an error status code.
+   * 
+   * @return a RestTemplate with the REST template.
+   */
+  public static RestTemplate getSimpleFactoryRestTemplate(boolean doThrow) {
+    return getSimpleFactoryRestTemplate(0, 0, doThrow);
+  }
+
+  /**
+   * Provides the REST template to be used to make the call to a REST service
+   * using the SimpleClientHttpRequestFactory and not throwing exceptions.
    * 
    * @param connectTimeout A long with the connection timeout in milliseconds.
    * @param readTimeout    A long with the read timeout in milliseconds.
    * 
    * @return a RestTemplate with the REST template.
    */
-  public static RestTemplate getRestTemplate(long connectTimeout,
+  public static RestTemplate getSimpleFactoryRestTemplate(long connectTimeout,
+      long readTimeout) {
+    return getSimpleFactoryRestTemplate(connectTimeout, readTimeout, false);
+  }
+
+  /**
+   * Provides the REST template to be used to make the call to a REST service
+   * using the SimpleClientHttpRequestFactory.
+   * 
+   * @param connectTimeout A long with the connection timeout in milliseconds.
+   * @param readTimeout    A long with the read timeout in milliseconds.
+   * @param doThrow        A boolean indicating whether to throw exceptions
+   *                       instead of returning an error status code.
+   * 
+   * @return a RestTemplate with the REST template.
+   */
+  public static RestTemplate getSimpleFactoryRestTemplate(long connectTimeout,
+      long readTimeout, boolean doThrow) {
+    log.debug2("connectTimeout = {}", connectTimeout);
+    log.debug2("readTimeout = {}", readTimeout);
+    log.debug2("doThrow = {}", doThrow);
+
+    SimpleClientHttpRequestFactory requestFactory =
+	new SimpleClientHttpRequestFactory();
+
+    // Specify the timeouts.
+    requestFactory.setConnectTimeout((int)connectTimeout);
+    requestFactory.setReadTimeout((int)readTimeout);
+
+    // Do not buffer the request body internally, to avoid running out of
+    // memory, or other failures, when sending large amounts of data.
+    //requestFactory.setBufferRequestBody(false);
+
+    // Get the template.
+    RestTemplate restTemplate =	new RestTemplate(requestFactory);
+
+    // Check whether do not throw exceptions instead of returning an error
+    // status code.
+    if (!doThrow) {
+      // Yes: Do not throw exceptions on non-success response status codes.
+      restTemplate.setErrorHandler(new DefaultResponseErrorHandler() {
+	protected boolean hasError(HttpStatus statusCode) {
+	  return false;
+	}
+      });
+    }
+
+    log.debug2("restTemplate = {}", restTemplate);
+    return restTemplate;
+  }
+
+  /**
+   * Provides the REST template to be used to make the call to a REST service
+   * using the HttpComponentsClientHttpRequestFactory, default timeouts and not
+   * throwing exceptions.
+   * 
+   * @return a RestTemplate with the REST template.
+   */
+  public static RestTemplate getHttpFactoryRestTemplate() {
+    return getHttpFactoryRestTemplate(0, 0);
+  }
+
+  /**
+   * Provides the REST template to be used to make the call to a REST service
+   * using the HttpComponentsClientHttpRequestFactory and not throwing
+   * exceptions.
+   * 
+   * @param connectTimeout A long with the connection timeout in milliseconds.
+   * @param readTimeout    A long with the read timeout in milliseconds.
+   * 
+   * @return a RestTemplate with the REST template.
+   */
+  public static RestTemplate getHttpFactoryRestTemplate(long connectTimeout,
       long readTimeout) {
     log.debug2("connectTimeout = {}", connectTimeout);
     log.debug2("readTimeout = {}", readTimeout);

@@ -32,6 +32,7 @@ import java.net.URI;
 import java.util.List;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
+import org.lockss.util.Constants;
 import org.lockss.util.rest.HttpResponseStatusAndHeaders;
 import org.lockss.util.rest.RestUtil;
 import org.lockss.util.rest.exception.LockssRestException;
@@ -50,6 +51,8 @@ import org.springframework.web.client.RestTemplate;
  */
 public class MultipartConnector {
   private static L4JLogger log = L4JLogger.getLogger();
+
+  private final long DEFAULT_TIMEOUT = 60 * Constants.SECOND;
 
   private URI uri;
   private HttpHeaders requestHeaders;
@@ -96,8 +99,7 @@ public class MultipartConnector {
    *           if there are other problems.
    */
   public MultipartResponse requestGet() throws IOException, MessagingException {
-    return requestGet(RestUtil.DEFAULT_CONNECT_TIMEOUT,
-	RestUtil.DEFAULT_READ_TIMEOUT);
+    return requestGet(DEFAULT_TIMEOUT, DEFAULT_TIMEOUT);
   }
 
   /**
@@ -162,8 +164,8 @@ public class MultipartConnector {
     log.debug2("readTimeout = {}", readTimeout);
 
     // Initialize the request to the REST service.
-    RestTemplate restTemplate =
-	RestUtil.getRestTemplate(connectTimeout, readTimeout);
+    RestTemplate restTemplate = RestUtil.getSimpleFactoryRestTemplate(
+	connectTimeout, readTimeout, false);
 
     // Get the current message converters.
     List<HttpMessageConverter<?>> messageConverters =
@@ -183,8 +185,7 @@ public class MultipartConnector {
    * @return an HttpStatus with the response status.
    */
   public HttpResponseStatusAndHeaders requestPut() {
-    return requestPut(RestUtil.DEFAULT_CONNECT_TIMEOUT,
-	RestUtil.DEFAULT_READ_TIMEOUT);
+    return requestPut(DEFAULT_TIMEOUT, DEFAULT_TIMEOUT);
   }
 
   /**
@@ -241,8 +242,7 @@ public class MultipartConnector {
    */
   public <T> MultipartResponse request(HttpMethod method, T body)
       throws IOException, MessagingException {
-    return request(method, body, RestUtil.DEFAULT_CONNECT_TIMEOUT,
-	RestUtil.DEFAULT_READ_TIMEOUT);
+    return request(method, body, DEFAULT_TIMEOUT, DEFAULT_TIMEOUT);
   }
 
   /**
