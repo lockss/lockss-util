@@ -165,7 +165,7 @@ public class MultipartConnector {
 
     // Initialize the request to the REST service.
     RestTemplate restTemplate = RestUtil.getSimpleFactoryRestTemplate(
-	connectTimeout, readTimeout, false);
+	connectTimeout, readTimeout);
 
     // Get the current message converters.
     List<HttpMessageConverter<?>> messageConverters =

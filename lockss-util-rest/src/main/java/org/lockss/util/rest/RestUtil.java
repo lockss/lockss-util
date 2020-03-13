@@ -217,8 +217,8 @@ public class RestUtil {
    * 
    * @return a RestTemplate with the REST template.
    */
-  public static RestTemplate getHttpFactoryRestTemplate() {
-    return getHttpFactoryRestTemplate(0, 0);
+  public static RestTemplate getRestTemplate() {
+    return getRestTemplate(0, 0);
   }
 
   /**
@@ -231,7 +231,7 @@ public class RestUtil {
    * 
    * @return a RestTemplate with the REST template.
    */
-  public static RestTemplate getHttpFactoryRestTemplate(long connectTimeout,
+  public static RestTemplate getRestTemplate(long connectTimeout,
       long readTimeout) {
     log.debug2("connectTimeout = {}", connectTimeout);
     log.debug2("readTimeout = {}", readTimeout);
