@@ -152,20 +152,6 @@ public class RestUtil {
 
   /**
    * Provides the REST template to be used to make the call to a REST service
-   * using the SimpleClientHttpRequestFactory and not throwing exceptions.
-   * 
-   * @param connectTimeout A long with the connection timeout in milliseconds.
-   * @param readTimeout    A long with the read timeout in milliseconds.
-   * 
-   * @return a RestTemplate with the REST template.
-   */
-  public static RestTemplate getSimpleFactoryRestTemplate(long connectTimeout,
-      long readTimeout) {
-    return getSimpleFactoryRestTemplate(connectTimeout, readTimeout, false);
-  }
-
-  /**
-   * Provides the REST template to be used to make the call to a REST service
    * using the SimpleClientHttpRequestFactory.
    * 
    * @param connectTimeout A long with the connection timeout in milliseconds.
