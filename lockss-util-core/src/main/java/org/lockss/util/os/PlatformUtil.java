@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2000-2018, Board of Trustees of Leland Stanford Jr. University
+Copyright (c) 2000-2020, Board of Trustees of Leland Stanford Jr. University
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -43,6 +43,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.*;
 import org.lockss.util.lang.EncodingUtil;
 import org.lockss.util.net.IPAddr;
+import org.lockss.util.storage.StorageInfo;
 import org.lockss.util.time.TimeUtil;
 //import org.lockss.config.*;
 import org.slf4j.*;
@@ -899,6 +900,27 @@ public class PlatformUtil {
       DF df = new DF();
       df.avail = minFreeMB * 1024;
       df.percent = minFreePercent == 0.0 ? -1.0 : 1.0 - minFreePercent;
+      return df;
+    }
+
+    /**
+     * Create a DF using the information in a StorageInfo object.
+     * 
+     * @param storageInfo A StorageInfo with the source data.
+     * @return a DF populated wih the data from the StorageInfo object.
+     */
+    public static DF fromStorageInfo(StorageInfo storageInfo) {
+      DF df = new DF();
+
+      if (storageInfo != null) {
+        df.mnt = storageInfo.getName();
+        df.size = storageInfo.getSize() / 1024; // From bytes to KB.
+        df.used = storageInfo.getUsed() / 1024; // From bytes to KB.
+        df.avail = storageInfo.getAvail() / 1024; // From bytes to KB.
+        df.percentString = storageInfo.getPercentUsedString();
+        df.percent = storageInfo.getPercentUsed();
+      }
+
       return df;
     }
 
