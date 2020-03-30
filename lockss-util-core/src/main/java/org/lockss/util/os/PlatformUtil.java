@@ -919,6 +919,9 @@ public class PlatformUtil {
         df.avail = storageInfo.getAvail() / 1024; // From bytes to KB.
         df.percentString = storageInfo.getPercentUsedString();
         df.percent = storageInfo.getPercentUsed();
+      } else {
+	throw new NullPointerException(
+	    "Platform.DF received a null StorageInfo");
       }
 
       return df;
