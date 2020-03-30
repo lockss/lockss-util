@@ -53,6 +53,8 @@ import org.lockss.ws.entities.HasherWsParams;
 import org.lockss.ws.entities.HasherWsResult;
 import org.lockss.ws.entities.PeerWsResult;
 import org.lockss.ws.entities.PollWsResult;
+import org.lockss.ws.entities.RepositorySpaceWsResult;
+import org.lockss.ws.entities.RepositoryWsResult;
 import org.lockss.ws.entities.VoteWsResult;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -249,6 +251,85 @@ public class RestPollerClient extends RestBaseClient {
       // Get the response body.
       List<VoteWsResult> result = getJsonMapper().readValue(response.getBody(),
 	  new TypeReference<List<VoteWsResult>>(){});
+
+      log.debug2("result = {}", result);
+      return result;
+    } catch (Exception e) {
+      throw new LockssRestException(e);
+    }
+  }
+
+  /**
+   * Provides the selected properties of selected repositories in the system.
+   * 
+   * @param repositoryQuery A String with the
+   *                        <a href="package-summary.html#SQL-Like_Query">SQL-like
+   *                        query</a> used to specify what properties to
+   *                        retrieve from which repositories.
+   * @return a {@code List<RepositoryWsResult>} with the results.
+   * @throws LockssRestException if there were problems making the query.
+   */
+  public List<RepositoryWsResult> queryRepositories(String repositoryQuery)
+      throws LockssRestException {
+    log.debug2("repositoryQuery = {}", repositoryQuery);
+
+    try {
+      // Prepare the query parameters.
+      Map<String, String> queryParams = new HashMap<>(1);
+      queryParams.put("repositoryQuery", repositoryQuery);
+      log.trace("queryParams = {}", queryParams);
+
+      // Make the REST call.
+      log.trace("Calling RestUtil.callRestService");
+      ResponseEntity<String> response = callRestService("/repositories", null,
+	  queryParams, HttpMethod.GET, null, null, String.class,
+	  "Can't query repositories");
+      log.trace("Back from RestUtil.callRestService");
+
+      // Get the response body.
+      List<RepositoryWsResult> result = getJsonMapper()
+	  .readValue(response.getBody(),
+	  new TypeReference<List<RepositoryWsResult>>(){});
+
+      log.debug2("result = {}", result);
+      return result;
+    } catch (Exception e) {
+      throw new LockssRestException(e);
+    }
+  }
+
+  /**
+   * Provides the selected properties of selected repository spaces in the
+   * system.
+   * 
+   * @param repositorySpaceQuery A String with the <a href=
+   *                             "package-summary.html#SQL-Like_Query">SQL-like
+   *                             query</a> used to specify what properties to
+   *                             retrieve from which repository spaces.
+   * @return a {@code List<RepositorySpaceWsResult>} with the results.
+   * @throws LockssRestException if there were problems making the query.
+   */
+  public List<RepositorySpaceWsResult> queryRepositorySpaces(
+      String repositorySpaceQuery) throws LockssRestException {
+    log.debug2("repositorySpaceQuery = {}", repositorySpaceQuery);
+
+    try {
+      // Prepare the query parameters.
+      Map<String, String> queryParams = new HashMap<>(1);
+      queryParams.put("repositorySpaceQuery", repositorySpaceQuery);
+      log.trace("queryParams = {}", queryParams);
+
+      // Make the REST call.
+      log.trace("Calling RestUtil.callRestService");
+      ResponseEntity<String> response = callRestService("/repositoryspaces",
+	  null, queryParams, HttpMethod.GET, null, null, String.class,
+	  "Can't query repository spaces");
+      log.trace("Back from RestUtil.callRestService");
+
+      // Get the response body.
+      List<RepositorySpaceWsResult> result = getJsonMapper().
+	  readValue(response.getBody(),
+	  new TypeReference<List<RepositorySpaceWsResult>>(){});
 
       log.debug2("result = {}", result);
       return result;
