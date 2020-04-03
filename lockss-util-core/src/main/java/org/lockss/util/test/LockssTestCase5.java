@@ -162,9 +162,21 @@ public class LockssTestCase5 {
    *           if I/O exceptions occur in the process.
    */
   @AfterEach
-  public final void afterEachTmpDirs() throws Exception {
-    if (tmpDirs != null && !isKeepTempFiles()) {
-      for (Iterator<File> iter = tmpDirs.iterator() ; iter.hasNext() ; ) {
+  public final void afterEachTempDirs() throws Exception {
+    deleteTempFiles(tmpDirs);
+  }
+
+  /**
+   * Clean up temporary directories.
+   * @param tmpList list of temporary files and directories that was passed
+   * to getTempDir() and getTempFile()
+   *
+   * @throws Exception
+   *           if I/O exceptions occur in the process.
+   */
+  public static void deleteTempFiles(List<File> tmpList) throws Exception {
+    if (tmpList != null && !isKeepTempFiles()) {
+      for (Iterator<File> iter = tmpList.iterator() ; iter.hasNext() ; ) {
         File dir = iter.next();
         File idFile = new File(dir, TEST_ID_FILE_NAME);
         String idContent = null;
@@ -273,9 +285,7 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
 
   /**
    * Create and return the name of a temp dir.  The dir is created within
-   * the default temp file dir.
-   * It will be deleted following the test, by tearDown().  (So if you
-   * override tearDown(), be sure to call <code>super.tearDown()</code>.)
+   * the default temp file dir.  It will be deleted following the test
    * @return The newly created directory
    * @throws IOException
    */
@@ -295,41 +305,84 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
 
   /**
    * Create and return the name of a temp dir.  The dir is created within
-   * the default temp file dir.
-   * It will be deleted following the test, by tearDown().  (So if you
-   * override tearDown(), be sure to call <code>super.tearDown()</code>.)
+   * the default temp file dir.  It will be deleted following the test.
    * @param prefix the prefix of the name of the directory
    * @return The newly created directory
    * @throws IOException
    */
   public File getTempDir(String prefix) throws IOException {
-    File tmpdir = FileUtil.createTempDir(prefix, null);
-    if (tmpdir != null) {
-      if (tmpDirs == null) {
-        tmpDirs = new LinkedList<File>();
-      }
-      tmpDirs.add(tmpdir);
+    if (tmpDirs == null) {
+      tmpDirs = new LinkedList<File>();
     }
+    return getTempDir(tmpDirs, prefix);
+  }
+
+  /**
+   * Static method to create and return the name of a temp dir, for callers
+   * that must be static.  The dir is created within the default temp file
+   * dir. {@link #deleteTempFiles(List<File>)} should be called at the
+   * conclusion of the tests to delete the temp dirs..
+   * @param tmpList a list where the file will be recorded, to pass to
+   * {@link #deleteTempFiles(List<File>)}
+   * @return The newly created directory
+   * @throws IOException
+   */
+  public static File getTempDir(List<File> tmpList) throws IOException {
+    return getTempDir(tmpList, "locksstest");
+  }
+
+  /**
+   * Static method to create and return the name of a temp dir, for callers
+   * that must be static.  The dir is created within the default temp file
+   * dir. {@link #deleteTempFiles(List<File>)} should be called at the
+   * conclusion of the tests to delete the temp dirs.
+   * @param tmpList a list where the file will be recorded, to pass to
+   * {@link #deleteTmpFiles()}
+   * @param prefix the prefix of the name of the directory
+   * @return The newly created directory
+   * @throws IOException
+   */
+  public static File getTempDir(List<File> tmpList, String prefix)
+      throws IOException {
+    File tmpdir = FileUtil.createTempDir(prefix, null);
+    tmpList.add(tmpdir);
     return tmpdir;
   }
 
   /**
    * Create and return the name of a temp file.  The file is created within
    * the default temp dir.
-   * It will be deleted following the test, by tearDown().  (So if you
-   * override tearDown(), be sure to call <code>super.tearDown()</code>.)
+   * It will be deleted following the test.
    * @param prefix the prefix of the name of the file
    * @param suffix the suffix of the name of the file
    * @return The newly created file
    * @throws IOException
    */
   public File getTempFile(String prefix, String suffix) throws IOException {
+    if (tmpDirs == null) {
+      tmpDirs = new LinkedList<File>();
+    }
+    return getTempFile(tmpDirs, prefix, suffix);
+  }
+
+  /**
+   * Static method to create and return the name of a temp file.  The file
+   * is created within the default temp dir.  {@link
+   * #deleteTempFiles(List<File>)} should be called at the conclusion of
+   * the tests to delete the temp files.
+   * @param tmpList a list where the file will be recorded, to pass to
+   * {@link #deleteTempFiles(List<File>)}
+   * @param prefix the prefix of the name of the file
+   * @param suffix the suffix of the name of the file
+   * @return The newly created file
+   * @throws IOException
+   */
+  public static File getTempFile(List<File> tmpList,
+				 String prefix, String suffix)
+      throws IOException {
     File tmpfile = FileUtil.createTempFile(prefix, suffix);
     if (tmpfile != null) {
-      if (tmpDirs == null) {
-        tmpDirs = new LinkedList<File>();
-      }
-      tmpDirs.add(tmpfile);
+      tmpList.add(tmpfile);
     }
     return tmpfile;
   }
