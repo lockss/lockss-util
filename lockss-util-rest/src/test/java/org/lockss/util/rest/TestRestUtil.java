@@ -85,21 +85,6 @@ public class TestRestUtil extends LockssTestCase5 {
 //       assertMatchesRE("^No route to host", lre.getCause().getMessage());
     }
 
-    message = "Cannot perform call to 224.0.0.0";
-
-    try {
-      doCallRestService("http://224.0.0.0:34567/v2/api-docs", message);
-      fail("Should have thrown LockssRestException");
-    } catch (LockssRestException lre) {
-      assertMatchesRE(message, lre.getMessage());
-      Throwable cause = lre.getCause();
-      if (! (cause instanceof SocketException ||
-	     cause instanceof SocketTimeoutException)) {
-	fail("Expected LockssRestException cause to be SocketException or SocketTimeoutException but was: "
-	     + cause);
-      }
-    }
-
     message = "Cannot perform call to 127.0.0.1";
 
     try {
