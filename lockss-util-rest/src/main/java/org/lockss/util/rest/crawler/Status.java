@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.lockss.util.rest.crawler;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
@@ -48,6 +49,19 @@ public class Status   {
   // A text message explaining this status.
   @JsonProperty("msg")
   private String msg = null;
+
+  /**
+   * Default constructor.
+   */
+  public Status() {
+  }
+
+  @JsonCreator
+  public Status(@JsonProperty("code") Integer code,
+      @JsonProperty("msg") String msg) {
+    this.code = code;
+    this.msg = msg;
+  }
 
   public Status code(Integer code) {
     this.code = code;
