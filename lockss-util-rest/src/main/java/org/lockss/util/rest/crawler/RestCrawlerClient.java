@@ -98,21 +98,22 @@ public class RestCrawlerClient extends RestBaseClient {
   /**
    * Sends to the Crawler REST service a request to perform a crawl.
    * 
-   * @param crawlDesc A CrawlDesc with the description of the crawl to be performed.
-   * @return a Crawl with information regarding the crawl to be performed.
+   * @param crawlDesc A CrawlDesc with the description of the crawl to be
+   *                  performed.
+   * @return a CrawlJob with information regarding the job performing the crawl.
    * @throws LockssRestException if there were problems performing the crawl.
    */
-  public Crawl callCrawl(CrawlDesc crawlDesc) throws LockssRestException {
+  public CrawlJob callCrawl(CrawlDesc crawlDesc) throws LockssRestException {
     log.debug2("crawlDesc = {}", crawlDesc);
 
     try {
       // Make the REST call.
       log.trace("Calling RestUtil.callRestService");
-      ResponseEntity<Crawl> response = callRestService("/crawls", null, null,
-	  HttpMethod.POST, null, crawlDesc, Crawl.class, "Can't call crawl");
+      ResponseEntity<CrawlJob> response = callRestService("/crawls", null, null,
+	  HttpMethod.POST, null, crawlDesc, CrawlJob.class, "Can't call crawl");
       log.trace("Back from RestUtil.callRestService");
 
-      Crawl result = response.getBody();
+      CrawlJob result = response.getBody();
       log.debug2("result = {}", result);
       return result;
     } catch (RuntimeException e) {

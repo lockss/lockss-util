@@ -35,7 +35,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Map;
 import javax.mail.MessagingException;
 import org.lockss.log.L4JLogger;
@@ -257,5 +259,29 @@ public class RestBaseClient {
 
     log.debug2("fullRequestHeaders = {}", fullRequestHeaders);
     return fullRequestHeaders;
+  }
+
+  /**
+   * Provides the authentication header value for a set of credentials.
+   * 
+   * @param serviceUser     A String with the user name of the service.
+   * @param servicePassword A String with the password of the service user.
+   * @return a String with the authentication header value.
+   */
+  public static String getAuthHeaderValue(String serviceUser,
+      String servicePassword) {
+    log.debug2("serviceUser = {}", serviceUser);
+    log.debug2("servicePassword = {}", servicePassword);
+
+    String authHeaderValue = null;
+
+    if (serviceUser != null && servicePassword != null) {
+      String credentials = serviceUser + ":" + servicePassword;
+      authHeaderValue = "Basic " + Base64.getEncoder()
+      .encodeToString(credentials.getBytes(StandardCharsets.US_ASCII));
+    }
+
+    log.debug2("authHeaderValue = {}", authHeaderValue);
+    return authHeaderValue;
   }
 }

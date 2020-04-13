@@ -48,10 +48,10 @@ public class CrawlDesc   {
   @JsonProperty("auId")
   private String auId = null;
 
-  // The kind of crawl being performed. For now, this is either
-  // FollowLinkCrawler or RepairCrawler.
+  // The kind of crawl being performed. For now, this is either 'newContent' or
+  // 'repair'.
   @JsonProperty("crawlKind")
-  private String crawlKind = null;
+  private CrawlKind crawlKind = null;
 
   // The crawler to be used for this crawl.
   @JsonProperty("crawler")
@@ -62,8 +62,8 @@ public class CrawlDesc   {
   @Valid
   private List<String> repairList = null;
 
-  // An indication of whether the crawl is to be forced, even if outside the
-  // crawl window.
+  // An indication of whether the crawl is to be forced, suppressing conditions
+  // that might otherwise prevent the crawl from happening.
   @JsonProperty("forceCrawl")
   private Boolean forceCrawl = false;
 
@@ -84,21 +84,10 @@ public class CrawlDesc   {
   @JsonProperty("crawlDepth")
   private Integer crawlDepth = null;
 
-  // The tags to include, if different from default anchor tags.
-  @JsonProperty("tags")
+  // A JSON object with content required by the crawler.
+  @JsonProperty("extraCrawlerData")
   @Valid
-  private List<String> tags = null;
-
-  // A list of regular expressions of URLS to include, if not in the exclude
-  // list.
-  @JsonProperty("includeRegex")
-  @Valid
-  private List<String> includeRegex = null;
-
-  // A list of regular expressions of URLS to exclude.
-  @JsonProperty("excludeRegex")
-  @Valid
-  private List<String> excludeRegex = null;
+  private String extraCrawlerData = null;
 
   public CrawlDesc auId(String auId) {
     this.auId = auId;
@@ -118,22 +107,22 @@ public class CrawlDesc   {
     this.auId = auId;
   }
 
-  public CrawlDesc crawlKind(String crawlKind) {
+  public CrawlDesc crawlKind(CrawlKind crawlKind) {
     this.crawlKind = crawlKind;
     return this;
   }
 
   /**
-   * The kind of crawl being performed. For now, this is either
-   * FollowLinkCrawler or RepairCrawler.
+   * The kind of crawl being performed. For now, this is either 'newContent' or
+   * 'repair'.
    * @return crawlKind
   **/
   @NotNull
-  public String getCrawlKind() {
+  public CrawlKind getCrawlKind() {
     return crawlKind;
   }
 
-  public void setCrawlKind(String crawlKind) {
+  public void setCrawlKind(CrawlKind crawlKind) {
     this.crawlKind = crawlKind;
   }
 
@@ -185,8 +174,8 @@ public class CrawlDesc   {
   }
 
   /**
-   * An indication of whether the crawl is to be forced, even if outside the
-   * crawl window.
+   * An indication of whether the crawl is to be forced, suppressing conditions
+   * that might otherwise prevent the crawl from happening.
    * @return forceCrawl
   **/
   public Boolean isForceCrawl() {
@@ -273,82 +262,22 @@ public class CrawlDesc   {
     this.crawlDepth = crawlDepth;
   }
 
-  public CrawlDesc tags(List<String> tags) {
-    this.tags = tags;
-    return this;
-  }
-
-  public CrawlDesc addTagsItem(String tagsItem) {
-    if (this.tags == null) {
-      this.tags = new ArrayList<>();
-    }
-    this.tags.add(tagsItem);
+  public CrawlDesc extraCrawlerData(String extraCrawlerData) {
+    this.extraCrawlerData = extraCrawlerData;
     return this;
   }
 
   /**
-   * The tags to include, if different from default anchor tags.
-   * @return tags
+   * A JSON object with content required by the crawler.
+   * @return extraCrawlerData
   **/
-  public List<String> getTags() {
-    return tags;
+  public String getExtraCrawlerData() {
+    return extraCrawlerData;
   }
 
-  public void setTags(List<String> tags) {
-    this.tags = tags;
+  public void setExtraCrawlerData(String extraCrawlerData) {
+    this.extraCrawlerData = extraCrawlerData;
   }
-
-  public CrawlDesc includeRegex(List<String> includeRegex) {
-    this.includeRegex = includeRegex;
-    return this;
-  }
-
-  public CrawlDesc addIncludeRegexItem(String includeRegexItem) {
-    if (this.includeRegex == null) {
-      this.includeRegex = new ArrayList<>();
-    }
-    this.includeRegex.add(includeRegexItem);
-    return this;
-  }
-
-  /**
-   * A list of regular expressions of URLS to include, if not in the exclude
-   * list.
-   * @return includeRegex
-  **/
-  public List<String> getIncludeRegex() {
-    return includeRegex;
-  }
-
-  public void setIncludeRegex(List<String> includeRegex) {
-    this.includeRegex = includeRegex;
-  }
-
-  public CrawlDesc excludeRegex(List<String> excludeRegex) {
-    this.excludeRegex = excludeRegex;
-    return this;
-  }
-
-  public CrawlDesc addExcludeRegexItem(String excludeRegexItem) {
-    if (this.excludeRegex == null) {
-      this.excludeRegex = new ArrayList<>();
-    }
-    this.excludeRegex.add(excludeRegexItem);
-    return this;
-  }
-
-  /**
-   * A list of regular expressions of URLS to exclude.
-   * @return excludeRegex
-  **/
-  public List<String> getExcludeRegex() {
-    return excludeRegex;
-  }
-
-  public void setExcludeRegex(List<String> excludeRegex) {
-    this.excludeRegex = excludeRegex;
-  }
-
 
   @Override
   public boolean equals(java.lang.Object o) {
@@ -368,16 +297,13 @@ public class CrawlDesc   {
         Objects.equals(this.priority, crawlDesc.priority) &&
         Objects.equals(this.crawlList, crawlDesc.crawlList) &&
         Objects.equals(this.crawlDepth, crawlDesc.crawlDepth) &&
-        Objects.equals(this.tags, crawlDesc.tags) &&
-        Objects.equals(this.includeRegex, crawlDesc.includeRegex) &&
-        Objects.equals(this.excludeRegex, crawlDesc.excludeRegex);
+        Objects.equals(this.extraCrawlerData, crawlDesc.extraCrawlerData);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(auId, crawlKind, crawler, repairList, forceCrawl,
-	refetchDepth, priority, crawlList, crawlDepth, tags, includeRegex,
-	excludeRegex);
+	refetchDepth, priority, crawlList, crawlDepth, extraCrawlerData);
   }
 
   @Override
@@ -400,11 +326,8 @@ public class CrawlDesc   {
     .append("\n");
     sb.append("    crawlDepth: ").append(toIndentedString(crawlDepth))
     .append("\n");
-    sb.append("    tags: ").append(toIndentedString(tags)).append("\n");
-    sb.append("    includeRegex: ").append(toIndentedString(includeRegex))
-    .append("\n");
-    sb.append("    excludeRegex: ").append(toIndentedString(excludeRegex))
-    .append("\n");
+    sb.append("    extraCrawlerData: ")
+    .append(toIndentedString(extraCrawlerData)).append("\n");
     sb.append("}");
     return sb.toString();
   }

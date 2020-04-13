@@ -31,25 +31,30 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.lockss.util.rest.crawler;
 
-import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.time.LocalDate;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import java.time.LocalDateTime;
+import java.util.Objects;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 
 /**
- * The result from a request to perform a crawl.
+ * The job resulting from a request to perform a crawl.
  */
 @Validated
-public class Crawl   {
+public class CrawlJob   {
   // The descriptor of the crawl.
   @JsonProperty("crawlDesc")
   private CrawlDesc crawlDesc = null;
 
   // The time, in ISO-8601 format, the crawl was requested.
   @JsonProperty("creationDate")
-  private LocalDate creationDate = null;
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+  private LocalDateTime creationDate = null;
 
   // Identifier of the job performing the crawl.
   @JsonProperty("jobId")
@@ -61,11 +66,15 @@ public class Crawl   {
 
   // The time, in ISO-8601 format, the crawl began.
   @JsonProperty("startDate")
-  private LocalDate startDate = null;
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+  private LocalDateTime startDate = null;
 
   // The time, in ISO-8601 format, the crawl ended.
   @JsonProperty("endDate")
-  private LocalDate endDate = null;
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+  private LocalDateTime endDate = null;
 
   // A URI which can be used to retrieve the crawl data.
   @JsonProperty("result")
@@ -75,7 +84,7 @@ public class Crawl   {
   @JsonProperty("delayReason")
   private String delayReason = null;
 
-  public Crawl crawlDesc(CrawlDesc crawlDesc) {
+  public CrawlJob crawlDesc(CrawlDesc crawlDesc) {
     this.crawlDesc = crawlDesc;
     return this;
   }
@@ -94,7 +103,12 @@ public class Crawl   {
     this.crawlDesc = crawlDesc;
   }
 
-  public Crawl creationDate(LocalDate creationDate) {
+  @JsonSetter("creationDate")
+  public void setCreationDate(String isoDate) {
+    this.creationDate = LocalDateTime.parse(isoDate);
+  }
+
+  public CrawlJob creationDate(LocalDateTime creationDate) {
     this.creationDate = creationDate;
     return this;
   }
@@ -105,15 +119,15 @@ public class Crawl   {
   **/
   @NotNull
   @Valid
-  public LocalDate getCreationDate() {
+  public LocalDateTime getCreationDate() {
     return creationDate;
   }
 
-  public void setCreationDate(LocalDate creationDate) {
+  public void setCreationDate(LocalDateTime creationDate) {
     this.creationDate = creationDate;
   }
 
-  public Crawl jobId(String jobId) {
+  public CrawlJob jobId(String jobId) {
     this.jobId = jobId;
     return this;
   }
@@ -131,7 +145,7 @@ public class Crawl   {
     this.jobId = jobId;
   }
 
-  public Crawl status(Status status) {
+  public CrawlJob status(Status status) {
     this.status = status;
     return this;
   }
@@ -150,7 +164,7 @@ public class Crawl   {
     this.status = status;
   }
 
-  public Crawl startDate(LocalDate startDate) {
+  public CrawlJob startDate(LocalDateTime startDate) {
     this.startDate = startDate;
     return this;
   }
@@ -160,15 +174,20 @@ public class Crawl   {
    * @return startDate
   **/
   @Valid
-  public LocalDate getStartDate() {
+  public LocalDateTime getStartDate() {
     return startDate;
   }
 
-  public void setStartDate(LocalDate startDate) {
+  @JsonSetter("startDate")
+  public void setStartDate(String isoDate) {
+    this.startDate = LocalDateTime.parse(isoDate);
+  }
+
+  public void setStartDate(LocalDateTime startDate) {
     this.startDate = startDate;
   }
 
-  public Crawl endDate(LocalDate endDate) {
+  public CrawlJob endDate(LocalDateTime endDate) {
     this.endDate = endDate;
     return this;
   }
@@ -178,15 +197,20 @@ public class Crawl   {
    * @return endDate
   **/
   @Valid
-  public LocalDate getEndDate() {
+  public LocalDateTime getEndDate() {
     return endDate;
   }
 
-  public void setEndDate(LocalDate endDate) {
+  @JsonSetter("endDate")
+  public void setEndDate(String isoDate) {
+    this.endDate = LocalDateTime.parse(isoDate);
+  }
+
+  public void setEndDate(LocalDateTime endDate) {
     this.endDate = endDate;
   }
 
-  public Crawl result(String result) {
+  public CrawlJob result(String result) {
     this.result = result;
     return this;
   }
@@ -203,7 +227,7 @@ public class Crawl   {
     this.result = result;
   }
 
-  public Crawl delayReason(String delayReason) {
+  public CrawlJob delayReason(String delayReason) {
     this.delayReason = delayReason;
     return this;
   }
@@ -228,7 +252,7 @@ public class Crawl   {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    Crawl crawl = (Crawl) o;
+    CrawlJob crawl = (CrawlJob) o;
     return Objects.equals(this.crawlDesc, crawl.crawlDesc) &&
         Objects.equals(this.creationDate, crawl.creationDate) &&
         Objects.equals(this.jobId, crawl.jobId) &&
@@ -248,7 +272,7 @@ public class Crawl   {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class Crawl {\n");
+    sb.append("class CrawlJob {\n");
     
     sb.append("    crawlDesc: ").append(toIndentedString(crawlDesc))
     .append("\n");
