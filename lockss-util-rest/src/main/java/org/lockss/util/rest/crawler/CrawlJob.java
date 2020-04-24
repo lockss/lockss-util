@@ -105,7 +105,9 @@ public class CrawlJob   {
 
   @JsonSetter("creationDate")
   public void setCreationDate(String isoDate) {
-    this.creationDate = LocalDateTime.parse(isoDate);
+    if (isoDate != null) {
+      this.creationDate = LocalDateTime.parse(isoDate);
+    }
   }
 
   public CrawlJob creationDate(LocalDateTime creationDate) {
@@ -180,7 +182,9 @@ public class CrawlJob   {
 
   @JsonSetter("startDate")
   public void setStartDate(String isoDate) {
-    this.startDate = LocalDateTime.parse(isoDate);
+    if (isoDate != null) {
+      this.startDate = LocalDateTime.parse(isoDate);
+    }
   }
 
   public void setStartDate(LocalDateTime startDate) {
@@ -203,7 +207,9 @@ public class CrawlJob   {
 
   @JsonSetter("endDate")
   public void setEndDate(String isoDate) {
-    this.endDate = LocalDateTime.parse(isoDate);
+    if (isoDate != null) {
+      this.endDate = LocalDateTime.parse(isoDate);
+    }
   }
 
   public void setEndDate(LocalDateTime endDate) {
