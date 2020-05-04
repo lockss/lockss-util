@@ -43,7 +43,17 @@ import org.springframework.validation.annotation.Validated;
  * A descriptor for a crawl.
  */
 @Validated
-public class CrawlDesc   {
+public class CrawlDesc {
+  /**
+   * The identifier of the LOCKSS crawler.
+   */
+  public static final String LOCKSS_CRAWLER_ID = "lockss";
+
+  /**
+   * The identifier of the wget crawler.
+   */
+  public static final String WGET_CRAWLER_ID = "wget";
+
   // The identifier of the archival unit to be crawled.
   @JsonProperty("auId")
   private String auId = null;
@@ -55,7 +65,7 @@ public class CrawlDesc   {
 
   // The crawler to be used for this crawl.
   @JsonProperty("crawler")
-  private String crawler = "lockss";
+  private String crawler = LOCKSS_CRAWLER_ID;
 
   // The repair URLs in a repair crawl.
   @JsonProperty("repairList")
