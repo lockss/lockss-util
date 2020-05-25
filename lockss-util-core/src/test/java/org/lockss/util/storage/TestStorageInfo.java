@@ -33,6 +33,8 @@ import org.lockss.util.test.LockssTestCase5;
 import org.lockss.util.os.*;
 
 public class TestStorageInfo extends LockssTestCase5 {
+  private static L4JLogger log = L4JLogger.getLogger();
+
   private StorageInfo identifier;
 
   @Test
@@ -49,5 +51,13 @@ public class TestStorageInfo extends LockssTestCase5 {
 
     StorageInfo si2 = StorageInfo.fromDF("notdisk", df);
     assertFalse(si.isSameDevice(si2));
+  }
+
+  @Test
+  public void testFromRuntime() throws Exception {
+    StorageInfo si = StorageInfo.fromRuntime();
+    assertTrue(si.getSize() > 0);
+    assertTrue(si.getSize() > si.getAvail());
+    assertTrue(si.getSize() > si.getUsed());
   }
 }

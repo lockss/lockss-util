@@ -952,7 +952,35 @@ public class PlatformUtil {
       return mnt;
     }
     public String toString() {
-      return "[DF: " + fs + "]";
+      StringBuilder sb = new StringBuilder();
+      sb.append("[DF: ");
+      if (fs != null) {
+	sb.append("fs: ");
+	sb.append(fs);
+	sb.append(", ");
+      }
+      if (path != null) {
+	sb.append("path: ");
+	sb.append(path);
+	sb.append(", ");
+      }
+      if (mnt != null) {
+	sb.append("mnt: ");
+	sb.append(mnt);
+	sb.append(", ");
+      }
+      sb.append("size: ");
+      sb.append(size);
+      sb.append("K, ");
+      sb.append("used: ");
+      sb.append(used);
+      sb.append("K, ");
+      sb.append("avail: ");
+      sb.append(avail);
+      sb.append("K, ");
+      sb.append(percentString);
+      sb.append(" used]");
+      return sb.toString();
     }
     public boolean isFullerThan(DF threshold) {
       if (threshold.getAvail() > 0 &&

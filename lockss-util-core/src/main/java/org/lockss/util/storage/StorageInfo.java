@@ -29,6 +29,7 @@
 package org.lockss.util.storage;
 
 import java.io.Serializable;
+import java.util.List;
 import org.lockss.util.os.PlatformUtil;
 
 /**
@@ -38,11 +39,13 @@ public class StorageInfo implements Serializable {
 
   private String type;   // Currently just informative: "disk", "memory", etc.
   private String name;   // Indentifying name such as mount point
+  private String path;   // Path, if applicable
   private long size = -1; // Size in bytes of the storage area.
   private long used = -1; // Size in bytes of the used storage area.
   private long avail = -1; // Size in bytes of the available storage area
   private String percentUsedString;
   private double percentUsed = -1.0;
+  private List<StorageInfo> components;	// Storage areas that comprise this one
 
   /**
    * Default constructor.
@@ -57,6 +60,22 @@ public class StorageInfo implements Serializable {
    */
   public static StorageInfo fromDF(PlatformUtil.DF df) {
     return fromDF("disk", df);
+  }
+
+  /** Create a StorageInfo representing the JVM memory.  Not particularly
+   * meaningful, provided so in-memory implementations have something easy
+   * to return
+   * @return StorageInfo
+   */
+  public static StorageInfo fromRuntime() {
+    Runtime rt = Runtime.getRuntime();
+    StorageInfo si = new StorageInfo("memory")
+      .setAvail(rt.freeMemory())
+      .setSize(rt.maxMemory())
+      .setUsed(rt.totalMemory());
+    si.setPercentUsed((double)si.getUsed() / (double)si.getSize());
+    si.setPercentUsedString(Math.round(100 * si.getPercentUsed()) + "%");
+    return si;
   }
 
   /** Create a StorageInfo representing the disk usage information in the
@@ -91,8 +110,9 @@ public class StorageInfo implements Serializable {
     return type;
   }
 
-  public void setType(String type) {
+  public StorageInfo setType(String type) {
     this.type = type;
+    return this;
   }
 
   /** Return storage name, e.g., mount point */
@@ -100,8 +120,19 @@ public class StorageInfo implements Serializable {
     return name;
   }
 
-  public void setName(String name) {
+  public StorageInfo setName(String name) {
     this.name = name;
+    return this;
+  }
+
+  /** Return storage path or not if not applicable */
+  public String getPath() {
+    return path;
+  }
+
+  public StorageInfo setPath(String path) {
+    this.path = path;
+    return this;
   }
 
   /** Return total size in bytes */
@@ -109,8 +140,9 @@ public class StorageInfo implements Serializable {
     return size;
   }
 
-  public void setSize(long size) {
+  public StorageInfo setSize(long size) {
     this.size = size;
+    return this;
   }
 
   /** Return used size in bytes */
@@ -118,8 +150,9 @@ public class StorageInfo implements Serializable {
     return used;
   }
 
-  public void setUsed(long used) {
+  public StorageInfo setUsed(long used) {
     this.used = used;
+    return this;
   }
 
   /** Return available size in bytes */
@@ -127,8 +160,9 @@ public class StorageInfo implements Serializable {
     return avail;
   }
 
-  public void setAvail(long avail) {
+  public StorageInfo setAvail(long avail) {
     this.avail = avail;
+    return this;
   }
 
   /** Return percent used as a string: <code><i>nn<i>%</code> */
@@ -136,8 +170,9 @@ public class StorageInfo implements Serializable {
     return percentUsedString;
   }
 
-  public void setPercentUsedString(String percentUsedString) {
+  public StorageInfo setPercentUsedString(String percentUsedString) {
     this.percentUsedString = percentUsedString;
+    return this;
   }
 
   /** Return percent used as a double between 0.0 and 1.0 */
@@ -145,8 +180,19 @@ public class StorageInfo implements Serializable {
     return percentUsed;
   }
 
-  public void setPercentUsed(double percentUsed) {
+  public StorageInfo setPercentUsed(double percentUsed) {
     this.percentUsed = percentUsed;
+    return this;
+  }
+
+  /** Return StorageInfo of component storage areas, or null. */
+  public List<StorageInfo> getComponents() {
+    return components;
+  }
+
+  public StorageInfo setComponents(List<StorageInfo> components) {
+    this.components = components;
+    return this;
   }
 
   /** Return true if on the same device as <i>other<i>.  I.e., if the name
@@ -164,6 +210,7 @@ public class StorageInfo implements Serializable {
     sb.append("[StorageInfo");
     addIf(sb, "type", type);
     addIf(sb, "name", name);
+    addIf(sb, "path", path);
     addIf(sb, "size", size);
     addIf(sb, "used", used);
     addIf(sb, "avail", avail);
