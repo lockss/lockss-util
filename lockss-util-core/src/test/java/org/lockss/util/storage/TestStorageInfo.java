@@ -29,6 +29,7 @@
 package org.lockss.util.storage;
 
 import org.junit.jupiter.api.*;
+import org.lockss.log.L4JLogger;
 import org.lockss.util.test.LockssTestCase5;
 import org.lockss.util.os.*;
 
