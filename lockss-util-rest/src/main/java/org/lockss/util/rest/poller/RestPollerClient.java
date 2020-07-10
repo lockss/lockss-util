@@ -609,7 +609,7 @@ public class RestPollerClient extends RestBaseClient {
       log.trace("part = {}", part);
 
       // Get the part content type.
-      String contentType = part.getHeaders().get(HttpHeaders.CONTENT_TYPE);
+      String contentType = part.getHeaders().get(HttpHeaders.CONTENT_TYPE).get(0);
       log.trace("contentType = {}", contentType);
 
       // Check whether this part does not involve a file and it's JSON.
