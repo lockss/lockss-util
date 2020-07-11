@@ -315,7 +315,7 @@ public class MultipartResponse {
      */
     public long getContentLength() throws NumberFormatException {
       final String DEBUG_HEADER = "getContentLength(): ";
-      String contentLengthValue = headers.get(HttpHeaders.CONTENT_LENGTH).get(0);
+      String contentLengthValue = headers.getFirst(HttpHeaders.CONTENT_LENGTH);
 
       if (contentLengthValue == null) {
 	return -1;
@@ -337,7 +337,7 @@ public class MultipartResponse {
      */
     public String getLastModified() {
       final String DEBUG_HEADER = "getLastModified(): ";
-      String lastModified = headers.get(HttpHeaders.LAST_MODIFIED).get(0);
+      String lastModified = headers.getFirst(HttpHeaders.LAST_MODIFIED);
       if (log.isTraceEnabled())
 	log.trace(DEBUG_HEADER + "lastModified = " + lastModified);
 
@@ -351,7 +351,7 @@ public class MultipartResponse {
      */
     public String getEtag() {
       final String DEBUG_HEADER = "getEtag(): ";
-      String etag = headers.get(HttpHeaders.ETAG).get(0);
+      String etag = headers.getFirst(HttpHeaders.ETAG);
       if (log.isTraceEnabled()) log.trace(DEBUG_HEADER + "etag = " + etag);
 
       return etag;
@@ -386,7 +386,7 @@ public class MultipartResponse {
 
       if (name == null) {
 	// Get the value of the Content-Disposition header.
-	String cdHeaderValue = headers.get("Content-Disposition").get(0);
+	String cdHeaderValue = headers.getFirst("Content-Disposition");
 	if (log.isTraceEnabled())
 	  log.trace(DEBUG_HEADER + "cdHeaderValue = '" + cdHeaderValue + "'");
 
