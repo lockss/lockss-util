@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.lockss.util.rest.multipart.MultipartResponse.Part;
 import org.lockss.util.test.*;
 import org.lockss.log.*;
+import org.springframework.http.HttpHeaders;
 
 /**
  * Test class for org.lockss.rs.multipart.MultipartResponse.
@@ -83,8 +84,8 @@ public class TestMultipartResponse extends LockssTestCase5 {
    * @return a Part with the created part.
    */
   private Part createPart(String contentDisposition) {
-    Map<String, String> headers = new HashMap<String, String>();
-    headers.put("Content-Disposition", contentDisposition);
+    HttpHeaders headers = new HttpHeaders();
+    headers.add("Content-Disposition", contentDisposition);
 
     Part part = new Part();
     part.setHeaders(headers);

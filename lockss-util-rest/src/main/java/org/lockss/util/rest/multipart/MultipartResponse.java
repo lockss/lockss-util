@@ -29,10 +29,7 @@ package org.lockss.util.rest.multipart;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.*;
 import javax.mail.Header;
 import javax.mail.MessagingException;
@@ -126,7 +123,7 @@ public class MultipartResponse {
       MimeBodyPart partBody = (MimeBodyPart)responseBody.getBodyPart(i);
 
       // Process the part headers.
-      Map<String, String> partHeaders = new HashMap<String, String>();
+      HttpHeaders partHeaders = new HttpHeaders();
       
       for (Enumeration<?> enumeration = partBody.getAllHeaders();
   	enumeration.hasMoreElements();) {
@@ -138,7 +135,7 @@ public class MultipartResponse {
   	if (log.isTraceEnabled()) log.trace(DEBUG_HEADER + "headerName = "
   	    + headerName + ", headerValue = " + headerValue);
 
-  	partHeaders.put(headerName, headerValue);
+  	partHeaders.add(headerName, headerValue);
       }
 
       // Create and save the part.
@@ -285,7 +282,7 @@ public class MultipartResponse {
   public static class Part {
     private static L4JLogger log = L4JLogger.getLogger();
 
-    Map<String, String> headers;
+    HttpHeaders headers;
     InputStream inputStream;
     String name;
 
@@ -294,7 +291,7 @@ public class MultipartResponse {
      *
      * @return a {@code Map<String, String>} with the part headers.
      */
-    public Map<String, String> getHeaders() {
+    public HttpHeaders getHeaders() {
       return headers;
     }
 
@@ -303,7 +300,7 @@ public class MultipartResponse {
      * 
      * @param headers A {@code Map<String, String>} with the part headers.
      */
-    public void setHeaders(Map<String, String> headers) {
+    public void setHeaders(HttpHeaders headers) {
       this.headers = headers;
     }
 
@@ -318,7 +315,7 @@ public class MultipartResponse {
      */
     public long getContentLength() throws NumberFormatException {
       final String DEBUG_HEADER = "getContentLength(): ";
-      String contentLengthValue = headers.get(HttpHeaders.CONTENT_LENGTH);
+      String contentLengthValue = headers.getFirst(HttpHeaders.CONTENT_LENGTH);
 
       if (contentLengthValue == null) {
 	return -1;
@@ -340,7 +337,7 @@ public class MultipartResponse {
      */
     public String getLastModified() {
       final String DEBUG_HEADER = "getLastModified(): ";
-      String lastModified = headers.get(HttpHeaders.LAST_MODIFIED);
+      String lastModified = headers.getFirst(HttpHeaders.LAST_MODIFIED);
       if (log.isTraceEnabled())
 	log.trace(DEBUG_HEADER + "lastModified = " + lastModified);
 
@@ -354,7 +351,7 @@ public class MultipartResponse {
      */
     public String getEtag() {
       final String DEBUG_HEADER = "getEtag(): ";
-      String etag = headers.get(HttpHeaders.ETAG);
+      String etag = headers.getFirst(HttpHeaders.ETAG);
       if (log.isTraceEnabled()) log.trace(DEBUG_HEADER + "etag = " + etag);
 
       return etag;
@@ -372,7 +369,7 @@ public class MultipartResponse {
     /**
      * Populates the input stream of the part content.
      * 
-     * @param payload
+     * @param inputStream
      *          An InputStream with the input stream to the content of the part.
      */
     public void setInputStream(InputStream inputStream) {
@@ -389,7 +386,7 @@ public class MultipartResponse {
 
       if (name == null) {
 	// Get the value of the Content-Disposition header.
-	String cdHeaderValue = headers.get("Content-Disposition");
+	String cdHeaderValue = headers.getFirst("Content-Disposition");
 	if (log.isTraceEnabled())
 	  log.trace(DEBUG_HEADER + "cdHeaderValue = '" + cdHeaderValue + "'");
 
