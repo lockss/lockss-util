@@ -134,9 +134,6 @@ public class MultipartMessage {
    */
   public static void writeTo(OutputStream body) {
     // TODO
-
-    new FileUpload()
-
     throw new NotImplementedException("TODO");
   }
 
