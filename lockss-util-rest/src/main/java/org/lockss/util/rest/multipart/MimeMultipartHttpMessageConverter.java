@@ -40,6 +40,12 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 
+/**
+ * Deprecated.
+ *
+ * See {@link MultipartMessageHttpMessageConverter}.
+ */
+@Deprecated
 public class MimeMultipartHttpMessageConverter
     implements HttpMessageConverter<MimeMultipart> {
 
