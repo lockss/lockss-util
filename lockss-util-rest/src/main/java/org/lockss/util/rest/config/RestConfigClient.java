@@ -47,60 +47,21 @@ import org.springframework.http.ResponseEntity;
  * 
  * @author Fernando García-Loygorri
  */
-public class RestConfigClient extends RestBaseClient {
+public class RestConfigClient extends RestBaseClient<RestConfigClient> {
   private static final String X_LOCKSS_REQUEST_COOKIE_NAME =
       "X-Lockss-Request-Cookie";
 
   private static L4JLogger log = L4JLogger.getLogger();
 
   /**
-   * Constructor without authentication and with default timeouts.
+   * Constructor
    * 
    * @param serviceUrl A String with the information necessary to access the
    *                   REST Poller web service.
    */
   public RestConfigClient(String serviceUrl) {
-    super(serviceUrl);
-  }
-
-  /**
-   * Constructor with authentication and default timeouts.
-   * 
-   * @param serviceUrl      A String with the information necessary to access
-   *                        the REST Poller web service.
-   * @param authHeaderValue A String with the Authorization header value to be
-   *                        used, if any.
-   */
-  public RestConfigClient(String serviceUrl, String authHeaderValue) {
-    super(serviceUrl, authHeaderValue);
-  }
-
-  /**
-   * Constructor without authentication and with specified timeouts.
-   * 
-   * @param serviceUrl     A String with the information necessary to access the
-   *                       REST Poller web service.
-   * @param connectTimeout A long with the connection timeout in milliseconds.
-   * @param readTimeout    A long with the read timeout in milliseconds.
-   */
-  public RestConfigClient(String serviceUrl, long connectTimeout,
-      long readTimeout) {
-    super(serviceUrl, connectTimeout, readTimeout);
-  }
-
-  /**
-   * Constructor with authentication and specified timeouts.
-   * 
-   * @param serviceUrl      A String with the information necessary to access
-   *                        the REST Poller web service.
-   * @param authHeaderValue A String with the Authorization header value to be
-   *                        used, if any.
-   * @param connectTimeout  A long with the connection timeout in milliseconds.
-   * @param readTimeout     A long with the read timeout in milliseconds.
-   */
-  public RestConfigClient(String serviceUrl, String authHeaderValue,
-      long connectTimeout, long readTimeout) {
-    super(serviceUrl, authHeaderValue, connectTimeout, readTimeout);
+    super(RestConfigClient.class);
+    setServiceUrl(serviceUrl);
   }
 
   /**
