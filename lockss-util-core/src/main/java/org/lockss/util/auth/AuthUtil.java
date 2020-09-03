@@ -62,7 +62,7 @@ public class AuthUtil {
     // No: Extract the individual credential items, the user name and the
     // password.
     String[] result = new String(decodedBytes).split(":", 2);
-    log.debug2("result = [{}, ****", result[0]);
+    log.debug2("result = [{}, ****]", result[0]);
     return result;
   }
 }
