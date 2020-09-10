@@ -28,6 +28,10 @@ public class MultipartMessage {
   // List containing parts of this multipart message
   private List<FileItem> parts = new ArrayList<>();
 
+  public MultipartMessage() {
+    // Intentionally left blank
+  }
+
   /**
    * Constructor that reads a {@link MultipartStream} and parses it into {@link FileItem} parts.
    *

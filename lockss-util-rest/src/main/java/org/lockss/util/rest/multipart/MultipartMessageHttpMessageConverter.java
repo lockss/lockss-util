@@ -49,12 +49,37 @@ public class MultipartMessageHttpMessageConverter implements HttpMessageConverte
 
   @Override
   public boolean canRead(Class<?> clazz, MediaType mediaType) {
-    return clazz.isAssignableFrom(MultipartMessage.class);
+    if (!clazz.isAssignableFrom(MultipartMessage.class)) {
+      return false;
+    }
+
+    if (mediaType == null) {
+      return true;
+    }
+
+    for (MediaType supportedMediaType : getSupportedMediaTypes()) {
+      if (supportedMediaType.includes(mediaType)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   @Override
   public boolean canWrite(Class<?> clazz, MediaType mediaType) {
-    return clazz.isAssignableFrom(MultipartMessage.class);
+    if (!MultipartMessage.class.isAssignableFrom(clazz)) {
+      return false;
+    }
+    if (mediaType == null || MediaType.ALL.equals(mediaType)) {
+      return true;
+    }
+    for (MediaType supportedMediaType : getSupportedMediaTypes()) {
+      if (supportedMediaType.isCompatibleWith(mediaType)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
