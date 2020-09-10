@@ -35,6 +35,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -71,6 +72,16 @@ public class MultipartMessageHttpMessageConverter implements HttpMessageConverte
     // Get multipart boundary from HttpInputMessage's Content-Type field
     MediaType inputContentType = inputHeaders.getContentType();
     String boundary = inputContentType.getParameter("boundary");
+
+    if (!StringUtils.hasLength(boundary)) {
+      // FIXME: This is a workaround to prevent the malformed multipart response from being parsed before our code can
+      //        detect the response error status. This is the same way MimeMultipartHttpMessageConverter was dealing
+      //        with (well, ignoring) malformed responses but the proper fix is to fix the Repository service but we're
+      //        fighting the Spring framework.
+
+//      throw new HttpMessageNotReadableException("Multipart boundary is  missing");
+      return null;
+    }
 
     // Construct a multipart stream
     MultipartStream multipartStream = new MultipartStream(
