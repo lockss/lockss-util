@@ -36,7 +36,7 @@ import org.lockss.log.*;
 import org.springframework.http.HttpHeaders;
 
 /**
- * Test class for org.lockss.rs.multipart.MultipartResponse.
+ * Test class for org.lockss.util.rest.MultipartResponse.
  */
 public class TestMultipartResponse extends LockssTestCase5 {
   private static L4JLogger log = L4JLogger.getLogger();
