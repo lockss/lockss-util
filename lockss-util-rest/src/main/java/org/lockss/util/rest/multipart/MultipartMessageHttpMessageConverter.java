@@ -99,13 +99,7 @@ public class MultipartMessageHttpMessageConverter implements HttpMessageConverte
     String boundary = inputContentType.getParameter("boundary");
 
     if (!StringUtils.hasLength(boundary)) {
-      // FIXME: This is a workaround to prevent the malformed multipart response from being parsed before our code can
-      //        detect the response error status. This is the same way MimeMultipartHttpMessageConverter was dealing
-      //        with (well, ignoring) malformed responses but the proper fix is to fix the Repository service but we're
-      //        fighting the Spring framework.
-
-//      throw new HttpMessageNotReadableException("Multipart boundary is  missing");
-      return null;
+      throw new HttpMessageNotReadableException("Multipart boundary is  missing");
     }
 
     // Construct a multipart stream
