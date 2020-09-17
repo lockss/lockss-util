@@ -37,6 +37,9 @@ public class LockssRestHttpException extends LockssRestException {
   private String httpStatusMessage;
   private HttpHeaders responseHeaders;
 
+  // Temporary
+  private String contextMessage;
+
   /**
    * Default constructor.
    */
@@ -119,12 +122,19 @@ public class LockssRestHttpException extends LockssRestException {
     sb.append(getHttpStatusCode());
     sb.append(" ");
     sb.append(getHttpStatusMessage());
-    String message = super.getMessage();
+
+//    String message = super.getMessage();
+    String message = contextMessage;
+
     if (message != null) {
       sb.append(": ");
       sb.append(message);
     }
     return sb.toString();
+  }
+
+  public void setMessage(String message) {
+    contextMessage = message;
   }
 }
 

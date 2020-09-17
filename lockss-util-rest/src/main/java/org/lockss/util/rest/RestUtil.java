@@ -107,6 +107,19 @@ public class RestUtil {
 
       // No: Return the received response.
       return response;
+
+    } catch (LockssResponseErrorHandler.WrappedLockssRestHttpException e) {
+
+      // Catch exception thrown by LockssResponseErrorHandler
+
+      // This is here because {@link RestTemplate#doExecute(URI, HttpMethod, RequestCallback, ResponseExtractor)} catches
+      // IOException which is extended by {@link LockssRestException} and {@link LockssRestHttpException}.
+
+      LockssRestHttpException lrhe = e.getLHRE();
+      lrhe.setMessage(exceptionMessage);
+      throw lrhe;
+
+
     } catch (RestClientException rce) {
       log.trace("rce", rce);
       // Get the cause, or this exception if there is no cause.
@@ -157,7 +170,7 @@ public class RestUtil {
     HttpComponentsClientHttpRequestFactory requestFactory =
 	new HttpComponentsClientHttpRequestFactory();
 
-    // Specify the timeouts.
+    // Specify the timeout
     requestFactory.setConnectTimeout((int)connectTimeout);
     requestFactory.setReadTimeout((int)readTimeout);
 
@@ -165,15 +178,10 @@ public class RestUtil {
     // memory, or other failures, when sending large amounts of data.
     requestFactory.setBufferRequestBody(false);
 
-    // Get the template.
+    // use our own ResponseErrorHandler implementation
     RestTemplate restTemplate =	new RestTemplate(requestFactory);
 
-    // Do not throw exceptions on non-success response status codes.
-    restTemplate.setErrorHandler(new DefaultResponseErrorHandler() {
-      protected boolean hasError(HttpStatus statusCode) {
-	return false;
-      }
-    });
+    restTemplate.setErrorHandler(new LockssResponseErrorHandler());
 
     log.debug2("restTemplate = {}", restTemplate);
     return restTemplate;
