@@ -39,7 +39,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.*;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -167,7 +166,7 @@ public class RestUtil {
     HttpComponentsClientHttpRequestFactory requestFactory =
 	new HttpComponentsClientHttpRequestFactory();
 
-    // Specify the timeout
+    // Specify the timeouts.
     requestFactory.setConnectTimeout((int)connectTimeout);
     requestFactory.setReadTimeout((int)readTimeout);
 
@@ -175,7 +174,7 @@ public class RestUtil {
     // memory, or other failures, when sending large amounts of data.
     requestFactory.setBufferRequestBody(false);
 
-    // use our own ResponseErrorHandler implementation
+    // Get the template.
     RestTemplate restTemplate =	new RestTemplate(requestFactory);
 
     // Use our own ResponseErrorHandler implementation

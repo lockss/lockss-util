@@ -99,7 +99,7 @@ public class MultipartMessageHttpMessageConverter implements HttpMessageConverte
     String boundary = inputContentType.getParameter("boundary");
 
     if (!StringUtils.hasLength(boundary)) {
-      throw new HttpMessageNotReadableException("Multipart boundary is  missing");
+      throw new HttpMessageNotReadableException("Multipart boundary is missing");
     }
 
     // Construct a multipart stream
