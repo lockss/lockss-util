@@ -35,7 +35,9 @@ import javax.mail.MessagingException;
 
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemHeaders;
+import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.lang3.StringUtils;
+import org.lockss.util.CloseCallbackInputStream;
 import org.lockss.util.rest.HttpResponseStatusAndHeaders;
 import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.rest.exception.LockssRestHttpException;
@@ -131,7 +133,18 @@ public class MultipartResponse {
       // Create and save the part.
       Part part = new Part();
       part.setHeaders(partHeaders);
-      part.setInputStream(partBody.getInputStream());
+      InputStream contentIs = partBody.getInputStream();
+      if (partBody instanceof DiskFileItem) {
+	// Ensure that the temp file is deleted promptly after it's used.
+	contentIs =
+	  new CloseCallbackInputStream(contentIs,
+				       new CloseCallbackInputStream.Callback() {
+					 public void streamClosed(Object o) {
+					   ((DiskFileItem)o).delete();
+					 }},
+				       partBody);
+      }
+      part.setInputStream(contentIs);
       addPart(part);
 
       if (log.isTraceEnabled()) {

@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.lockss.util.auth;
 
 import java.util.Base64;
+import java.nio.charset.StandardCharsets;
 import org.lockss.log.L4JLogger;
 
 /**
@@ -64,5 +65,29 @@ public class AuthUtil {
     String[] result = new String(decodedBytes).split(":", 2);
     log.debug2("result = [{}, ****]", result[0]);
     return result;
+  }
+
+  /**
+   * Compute the value of a basic Authorization header for the supplied
+   * user and password
+   *
+   * @param user The username
+   * @param password The password
+   * @return The value for the Authorization header for basic authorization
+   */
+  public static String basicAuthHeaderValue(String user, String password) {
+    return basicAuthHeaderValue(user + ":" + password);
+  }
+
+  /**
+   * Compute the value of a basic Authorization header for the supplied
+   * user:password string
+   *
+   * @param userPass A user:password Wring
+   * @return The value for the Authorization header for basic authorization
+   */
+  public static String basicAuthHeaderValue(String userPass) {
+    return "Basic " + Base64.getEncoder()
+      .encodeToString(userPass.getBytes(StandardCharsets.US_ASCII));
   }
 }

@@ -167,7 +167,7 @@ public class RestUtil {
     HttpComponentsClientHttpRequestFactory requestFactory =
 	new HttpComponentsClientHttpRequestFactory();
 
-    // Specify the timeouts.
+    // Specify the timeout
     requestFactory.setConnectTimeout((int)connectTimeout);
     requestFactory.setReadTimeout((int)readTimeout);
 
@@ -175,7 +175,7 @@ public class RestUtil {
     // memory, or other failures, when sending large amounts of data.
     requestFactory.setBufferRequestBody(false);
 
-    // Get the template.
+    // use our own ResponseErrorHandler implementation
     RestTemplate restTemplate =	new RestTemplate(requestFactory);
 
     // Use our own ResponseErrorHandler implementation
