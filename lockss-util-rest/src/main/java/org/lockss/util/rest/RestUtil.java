@@ -112,7 +112,7 @@ public class RestUtil {
       // This is here because {@link RestTemplate#doExecute(URI, HttpMethod, RequestCallback, ResponseExtractor)} catches
       // IOException which is extended by {@link LockssRestException} and {@link LockssRestHttpException}.
 
-      LockssRestHttpException lrhe = e.getLHRE();
+      LockssRestHttpException lrhe = e.getLRHE();
       lrhe.setMessage(exceptionMessage);
       throw lrhe;
 
@@ -169,6 +169,7 @@ public class RestUtil {
     // Specify the timeouts.
     requestFactory.setConnectTimeout((int)connectTimeout);
     requestFactory.setReadTimeout((int)readTimeout);
+    requestFactory.setBufferRequestBody(false);
 
     // Do not buffer the request body internally, to avoid running out of
     // memory, or other failures, when sending large amounts of data.
@@ -177,8 +178,7 @@ public class RestUtil {
     // Get the template.
     RestTemplate restTemplate =	new RestTemplate(requestFactory);
 
-    // Use our own ResponseErrorHandler implementation
-    restTemplate.setErrorHandler(new LockssResponseErrorHandler());
+    restTemplate.setErrorHandler(new LockssResponseErrorHandler(restTemplate.getMessageConverters()));
 
     log.debug2("restTemplate = {}", restTemplate);
     return restTemplate;
