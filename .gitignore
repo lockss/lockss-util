@@ -2,7 +2,7 @@
 target/
 logs/
 
-# Eclipse artifacts
+# Eclipse artifactReferences
 .classpath
 .project
 .settings/

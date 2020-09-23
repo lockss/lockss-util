@@ -50,7 +50,7 @@ POSSIBILITY OF SUCH DAMAGE.
     <module>lockss-util-entities</module>
   </modules>
 
-  <!-- Not itself a real artifact, do not install or deploy -->
+  <!-- Not itself a real artifactReference, do not install or deploy -->
   <properties>
     <maven.install.skip>true</maven.install.skip>
     <maven.deploy.skip>true</maven.deploy.skip>
