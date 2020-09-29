@@ -30,26 +30,22 @@ package org.lockss.util.io;
 
 import java.io.*;
 import org.apache.commons.io.input.*;
+import org.lockss.util.LockssWatchdog;
 
-/** InputStream wrapper that remembers when end-of-file has been reached,
- * i.e., when read() has returned. */
-public class EofRememberingInputStream extends ProxyInputStream {
-  private boolean atEof = false;
+/** InputStream wrapper that pokes a watchdog (at roughly 4 times its
+ * required rate). */
+public class WatchdogUpdatingInputStream extends ProxyInputStream {
+  private LockssWatchdog wdog;
 
-  public EofRememberingInputStream(InputStream in) {
+  public WatchdogUpdatingInputStream(InputStream in, LockssWatchdog wdog) {
     super(in);
+    this.wdog = wdog;
   }
 
   @Override
   protected void afterRead(int n) {
-    if (n < 0) {
-      atEof = true;
+    if (wdog != null) {
+      wdog.pokeWDog();
     }
   }
-
-  /** Return true iff the underlying stream has reached end-of-file */
-  public boolean isAtEof() {
-    return atEof;
-  }
-
 }

@@ -50,6 +50,7 @@ public class CloseCallbackInputStream extends ProxyInputStream {
     this.cookie = cookie;
   }
 
+  @Override
   public void close() throws IOException {
     try {
       super.close();

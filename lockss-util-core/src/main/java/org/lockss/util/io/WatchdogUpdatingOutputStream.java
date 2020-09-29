@@ -29,27 +29,23 @@ in this Software without prior written authorization from Stanford University.
 package org.lockss.util.io;
 
 import java.io.*;
-import org.apache.commons.io.input.*;
+import org.apache.commons.io.output.*;
+import org.lockss.util.LockssWatchdog;
 
-/** InputStream wrapper that remembers when end-of-file has been reached,
- * i.e., when read() has returned. */
-public class EofRememberingInputStream extends ProxyInputStream {
-  private boolean atEof = false;
+/** OutputStream wrapper that pokes a watchdog (at roughly 4 times its
+ * required rate). */
+public class WatchdogUpdatingOutputStream extends ProxyOutputStream {
+  private LockssWatchdog wdog;
 
-  public EofRememberingInputStream(InputStream in) {
+  public WatchdogUpdatingOutputStream(OutputStream in, LockssWatchdog wdog) {
     super(in);
+    this.wdog = wdog;
   }
 
   @Override
-  protected void afterRead(int n) {
-    if (n < 0) {
-      atEof = true;
+  protected void afterWrite(int n) {
+    if (wdog != null) {
+      wdog.pokeWDog();
     }
   }
-
-  /** Return true iff the underlying stream has reached end-of-file */
-  public boolean isAtEof() {
-    return atEof;
-  }
-
 }
