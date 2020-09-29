@@ -26,7 +26,7 @@ in this Software without prior written authorization from Stanford University.
 
 */
 
-package org.lockss.test;
+package org.lockss.util;
 
 import org.lockss.util.LockssWatchdog;
 import junit.framework.*;
