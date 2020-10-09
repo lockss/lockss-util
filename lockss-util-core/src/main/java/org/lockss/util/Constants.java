@@ -105,6 +105,12 @@ public interface Constants {
   /** LOCKSS HTTP header, can have multiple values */
   public static String X_LOCKSS = "X-Lockss";
 
+  /** X-LOCKSS value representing the time the file was originally fetched
+   * from the orign server.  (This is unreleated to the Date: header from
+   * the server.  The property name is highly misleading and inconsistent
+   * but difficult to change as it already appears in many places. */
+  public static String X_LOCKSS_FETCH_TIME = "X_Lockss-server-date";
+
   /** X-LOCKSS value indicating this is a repair request */
   public static String X_LOCKSS_REPAIR = "Repair";
 
