@@ -78,7 +78,7 @@ POSSIBILITY OF SUCH DAMAGE.
     <!-- route slf4j to log4j2 -->
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
-      <!-- The name of this artifactReference depends on the slf4j version.  See
+      <!-- The name of this artifact depends on the slf4j version.  See
            parent pom -->
       <artifactId>${lockss.log4j.slf4j.binding}</artifactId>
       <version>${version.group.log4j}</version>
