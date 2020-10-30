@@ -1,6 +1,6 @@
 /*
 
- Copyright (c) 2018-2019 Board of Trustees of Leland Stanford Jr. University,
+ Copyright (c) 2018-2020 Board of Trustees of Leland Stanford Jr. University,
  all rights reserved.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,70 +27,52 @@
  */
 package org.lockss.util.rest.status;
 
-import java.net.URI;
 import org.springframework.http.*;
-import org.springframework.http.client.*;
-import org.springframework.web.client.*;
-import org.springframework.web.util.*;
 import org.lockss.log.*;
-import org.lockss.util.Constants;
+import org.lockss.util.rest.RestBaseClient;
 import org.lockss.util.rest.exception.*;
-import org.lockss.util.rest.RestUtil;
 import org.lockss.util.rest.status.ApiStatus;
 
-public class RestStatusClient /*extends BaseClient*/ {
+/**
+ * A client of the status endpoint of a REST service.
+ */
+public class RestStatusClient extends RestBaseClient {
   private static L4JLogger log = L4JLogger.getLogger();
 
-  private String serviceUrl;
-  private long connectTimeout;
-  private long readTimeout;
-
   /**
-   * Constructor.
+   * Constructor without authentication and with default timeouts.
    * 
-   * @param restConfigServiceUrl
-   *          A String with the information necessary to access the
-   *          REST web service.
+   * @param serviceUrl A String with the information necessary to access the
+   *                   REST Poller web service.
    */
   public RestStatusClient(String serviceUrl) {
-    this(serviceUrl, 10 * Constants.SECOND, 30 * Constants.SECOND);
+    super(serviceUrl);
   }
 
+  /**
+   * Constructor without authentication and with specified timeouts.
+   * 
+   * @param serviceUrl     A String with the information necessary to access the
+   *                       REST Poller web service.
+   * @param connectTimeout A long with the connection timeout in milliseconds.
+   * @param readTimeout    A long with the read timeout in milliseconds.
+   */
   public RestStatusClient(String serviceUrl,
 			  long connectTimeout, long readTimeout) {
-    this.serviceUrl = serviceUrl;
-    this.connectTimeout = connectTimeout;
-    this.readTimeout = readTimeout;
+    super(serviceUrl, connectTimeout, readTimeout);
   }
 
+  /**
+   * Provides the status of the REST service.
+   * 
+   * @return an ApiStatus with the status of the REST service.
+   * @throws LockssRestException if there were problems getting the status.
+   */
   public ApiStatus getStatus() throws LockssRestException  {
-    String template = serviceUrl + "/status";
-
-    // Create the URI of the request to the REST service.
-    UriComponents uriComponents =
-      UriComponentsBuilder.fromUriString(template).build();
-
-    UriComponentsBuilder builder =
-      UriComponentsBuilder.newInstance().uriComponents(uriComponents);
-
-    URI uri = builder.build().encode().toUri();
-    log.debug2("uri = " + uri);
-
-    // Initialize the request headers.
-    HttpHeaders requestHeaders = new HttpHeaders();
-
-//     // Set the authentication credentials.
-//     setAuthenticationCredentials(requestHeaders);
-
-    // Create the request entity.
-    HttpEntity<String> requestEntity =
-	new HttpEntity<String>(null, requestHeaders);
-
     try {
-      ResponseEntity<ApiStatus> response =
-	RestUtil.callRestService(createRestTemplate(), uri, HttpMethod.GET,
-				 requestEntity, ApiStatus.class,
-				 "Can't get status");
+      ResponseEntity<ApiStatus> response = callRestService("/status", null,
+	  null, HttpMethod.GET, null, null, ApiStatus.class,
+	  "Can't get status");
       int status = response.getStatusCodeValue();
       log.debug2("status = " + status);
       ApiStatus result = response.getBody();
@@ -99,44 +81,5 @@ public class RestStatusClient /*extends BaseClient*/ {
     } catch (RuntimeException e) {
       throw new LockssRestNetworkException(e);
     }
-  }
-
-  private RestTemplate createRestTemplate() {
-    final String DEBUG_HEADER = "createRestTemplate(): ";
-
-    // Initialize the request to the REST service.
-    RestTemplate restTemplate = new RestTemplate();
-
-    // Do not throw exceptions on non-success response status codes.
-    restTemplate.setErrorHandler(new DefaultResponseErrorHandler(){
-      protected boolean hasError(HttpStatus statusCode) {
-	return false;
-      }
-    });
-
-    // Specify the timeouts.
-    SimpleClientHttpRequestFactory requestFactory =
-	(SimpleClientHttpRequestFactory)restTemplate.getRequestFactory();
-
-    requestFactory.setConnectTimeout((int)connectTimeout);
-    requestFactory.setReadTimeout((int)readTimeout);
-
-    return restTemplate;
-  }
-
-  private RestTemplate getRestTemplate() {
-    // Specifying the factory is necessary to get Spring support for PATCH
-    // operations.
-    RestTemplate restTemplate =
-	new RestTemplate(new HttpComponentsClientHttpRequestFactory());
-
-    // Do not throw exceptions on non-success response status codes.
-    restTemplate.setErrorHandler(new DefaultResponseErrorHandler(){
-      protected boolean hasError(HttpStatus statusCode) {
-	return false;
-      }
-    });
-
-    return restTemplate;
   }
 }

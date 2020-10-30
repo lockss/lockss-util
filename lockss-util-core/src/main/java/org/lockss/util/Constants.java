@@ -105,6 +105,12 @@ public interface Constants {
   /** LOCKSS HTTP header, can have multiple values */
   public static String X_LOCKSS = "X-Lockss";
 
+  /** X-LOCKSS value representing the time the file was originally fetched
+   * from the orign server.  (This is unrelated to the Date: header from
+   * the server.  The property name is highly misleading and inconsistent
+   * but difficult to change as it already appears in many places.) */
+  public static String X_LOCKSS_FETCH_TIME = "X_Lockss-server-date";
+
   /** X-LOCKSS value indicating this is a repair request */
   public static String X_LOCKSS_REPAIR = "Repair";
 
@@ -127,6 +133,16 @@ public interface Constants {
 
   /** Header used with proxy to request content from a specific AU */
   public static String X_LOCKSS_AUID = "X-Lockss-Auid";
+
+  /** Header in ServeContent response when it serves content from an AU */
+  public static String X_LOCKSS_FROM_AUID = "X-Lockss-From-Auid";
+
+  /** Header in ServeContent response when it serves content from the
+   * publisher, which has been rewritten because it logically belongs to
+   * the AU, but wasn't actually served from the cache (because it's
+   * missing or the publisher has more recent content */
+  public static String X_LOCKSS_REWRITTEN_FOR_AUID =
+    "X-Lockss-Rewritten-For-Auid";
 
   /** The local address to which to the proxy should bind the socket for
    * outgoing requests */

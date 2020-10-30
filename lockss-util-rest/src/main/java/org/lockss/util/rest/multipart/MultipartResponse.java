@@ -29,16 +29,15 @@ package org.lockss.util.rest.multipart;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.*;
-import javax.mail.Header;
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMultipart;
+
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemHeaders;
+import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.lang3.StringUtils;
+import org.lockss.util.CloseCallbackInputStream;
 import org.lockss.util.rest.HttpResponseStatusAndHeaders;
 import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.rest.exception.LockssRestHttpException;
@@ -66,18 +65,16 @@ public class MultipartResponse {
   }
 
   /**
-   * Constructor using a MIME Multipart response entity.
+   * Constructor using a response entity containing a multipart message.
    * 
    * @param response
-   *          A {@code ResponseEntity<MimeMultipart>} with the MIME multipart
-   *          response.
+   *          A {@code ResponseEntity<MultipartMessage>} with a multipart message.
    * @throws IOException
    *           if there are problems getting a part payload.
    * @throws MessagingException
    *           if there are other problems.
    */
-  public MultipartResponse(ResponseEntity<MimeMultipart> response)
-      throws IOException, MessagingException {
+  public MultipartResponse(ResponseEntity<MultipartMessage> response) throws IOException {
     final String DEBUG_HEADER = "MultipartResponse(response): ";
 
     // Populate the status code.
@@ -90,7 +87,7 @@ public class MultipartResponse {
       log.trace(DEBUG_HEADER + "responseHeaders = " + responseHeaders);
 
     // The MIME Multipart response body.
-    MimeMultipart responseBody = response.getBody();
+    MultipartMessage responseBody = response.getBody();
 
     // Check whether no body has been received.
     if (responseBody == null) {
@@ -105,17 +102,13 @@ public class MultipartResponse {
     // Get the count of parts in the response body.
     int partCount = 0;
 
-    try {
       partCount = responseBody.getCount();
       if (log.isTraceEnabled()) log.trace(DEBUG_HEADER + "partCount = " + partCount);
-    } catch (MessagingException me) {
-      log.warn("Cannot get multipart response part count", me);
-    }
 
     if (log.isTraceEnabled()) {
       log.trace(DEBUG_HEADER + "partCount = " + partCount);
       log.trace(DEBUG_HEADER + "responseBody.getContentType() = "
-	+ responseBody.getContentType());
+	+ response.getHeaders().getContentType());
     }
 
     // Loop through all the parts.
@@ -123,31 +116,40 @@ public class MultipartResponse {
       if (log.isTraceEnabled()) log.trace(DEBUG_HEADER + "part index = " + i);
 
       // Get the part body.
-      MimeBodyPart partBody = (MimeBodyPart)responseBody.getBodyPart(i);
+      FileItem partBody = responseBody.getPart(i);
 
       // Process the part headers.
-      Map<String, String> partHeaders = new HashMap<String, String>();
-      
-      for (Enumeration<?> enumeration = partBody.getAllHeaders();
-  	enumeration.hasMoreElements();) {
-  	Header header=(Header)enumeration.nextElement();
-  	if (log.isTraceEnabled()) log.trace(DEBUG_HEADER + "header = " + header);
+      HttpHeaders partHeaders = new HttpHeaders();
 
-  	String headerName = header.getName();
-  	String headerValue = header.getValue();
-  	if (log.isTraceEnabled()) log.trace(DEBUG_HEADER + "headerName = "
-  	    + headerName + ", headerValue = " + headerValue);
+      FileItemHeaders headers = partBody.getHeaders();
 
-  	partHeaders.put(headerName, headerValue);
-      }
+      partBody.getHeaders().getHeaderNames().forEachRemaining(headerName -> {
+        headers.getHeaders(headerName).forEachRemaining(headerValue -> {
+          log.trace(DEBUG_HEADER + "headerName = " + headerName + ", headerValue = " + headerValue);
+          partHeaders.add(headerName, headerValue);
+        });
+      });
 
       // Create and save the part.
       Part part = new Part();
       part.setHeaders(partHeaders);
-      part.setInputStream(partBody.getDataHandler().getInputStream());
+      InputStream contentIs = partBody.getInputStream();
+      if (partBody instanceof DiskFileItem) {
+	// Ensure that the temp file is deleted promptly after it's used.
+	contentIs =
+	  new CloseCallbackInputStream(contentIs,
+				       new CloseCallbackInputStream.Callback() {
+					 public void streamClosed(Object o) {
+					   ((DiskFileItem)o).delete();
+					 }},
+				       partBody);
+      }
+      part.setInputStream(contentIs);
       addPart(part);
-      if (log.isTraceEnabled())
-	log.trace(DEBUG_HEADER + "inputStream = " + part.getInputStream());
+
+      if (log.isTraceEnabled()) {
+        log.trace(DEBUG_HEADER + "inputStream = " + part.getInputStream());
+      }
     }
   }
 
@@ -285,7 +287,7 @@ public class MultipartResponse {
   public static class Part {
     private static L4JLogger log = L4JLogger.getLogger();
 
-    Map<String, String> headers;
+    HttpHeaders headers;
     InputStream inputStream;
     String name;
 
@@ -294,7 +296,7 @@ public class MultipartResponse {
      *
      * @return a {@code Map<String, String>} with the part headers.
      */
-    public Map<String, String> getHeaders() {
+    public HttpHeaders getHeaders() {
       return headers;
     }
 
@@ -303,7 +305,7 @@ public class MultipartResponse {
      * 
      * @param headers A {@code Map<String, String>} with the part headers.
      */
-    public void setHeaders(Map<String, String> headers) {
+    public void setHeaders(HttpHeaders headers) {
       this.headers = headers;
     }
 
@@ -318,7 +320,7 @@ public class MultipartResponse {
      */
     public long getContentLength() throws NumberFormatException {
       final String DEBUG_HEADER = "getContentLength(): ";
-      String contentLengthValue = headers.get(HttpHeaders.CONTENT_LENGTH);
+      String contentLengthValue = headers.getFirst(HttpHeaders.CONTENT_LENGTH);
 
       if (contentLengthValue == null) {
 	return -1;
@@ -340,7 +342,7 @@ public class MultipartResponse {
      */
     public String getLastModified() {
       final String DEBUG_HEADER = "getLastModified(): ";
-      String lastModified = headers.get(HttpHeaders.LAST_MODIFIED);
+      String lastModified = headers.getFirst(HttpHeaders.LAST_MODIFIED);
       if (log.isTraceEnabled())
 	log.trace(DEBUG_HEADER + "lastModified = " + lastModified);
 
@@ -354,7 +356,7 @@ public class MultipartResponse {
      */
     public String getEtag() {
       final String DEBUG_HEADER = "getEtag(): ";
-      String etag = headers.get(HttpHeaders.ETAG);
+      String etag = headers.getFirst(HttpHeaders.ETAG);
       if (log.isTraceEnabled()) log.trace(DEBUG_HEADER + "etag = " + etag);
 
       return etag;
@@ -372,7 +374,7 @@ public class MultipartResponse {
     /**
      * Populates the input stream of the part content.
      * 
-     * @param payload
+     * @param inputStream
      *          An InputStream with the input stream to the content of the part.
      */
     public void setInputStream(InputStream inputStream) {
@@ -389,7 +391,7 @@ public class MultipartResponse {
 
       if (name == null) {
 	// Get the value of the Content-Disposition header.
-	String cdHeaderValue = headers.get("Content-Disposition");
+	String cdHeaderValue = headers.getFirst("Content-Disposition");
 	if (log.isTraceEnabled())
 	  log.trace(DEBUG_HEADER + "cdHeaderValue = '" + cdHeaderValue + "'");
 

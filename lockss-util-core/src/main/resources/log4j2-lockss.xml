@@ -158,6 +158,8 @@ POSSIBILITY OF SUCH DAMAGE.
     <Logger name="org.apache.http" level="WARN"/>
     <Logger name="AbstractInactivityMonitor" level="WARN"/>
     <Logger name="DefaultListableBeanFactory" level="WARN"/>
+    <Logger name="org.lockss.spring.converter.LockssHttpEntityMethodProcessor"
+	    level="INFO"/>
 
   </Loggers>
 </Configuration>

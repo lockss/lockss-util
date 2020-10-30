@@ -1,6 +1,6 @@
 /*
 
- Copyright (c) 2017-2018 Board of Trustees of Leland Stanford Jr. University,
+ Copyright (c) 2017-2020 Board of Trustees of Leland Stanford Jr. University,
  all rights reserved.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,6 +25,7 @@
  in this Software without prior written authorization from Stanford University.
 
  */
+
 package org.lockss.util.rest.multipart;
 
 import java.util.HashMap;
@@ -33,9 +34,10 @@ import org.junit.Test;
 import org.lockss.util.rest.multipart.MultipartResponse.Part;
 import org.lockss.util.test.*;
 import org.lockss.log.*;
+import org.springframework.http.HttpHeaders;
 
 /**
- * Test class for org.lockss.rs.multipart.MultipartResponse.
+ * Test class for org.lockss.util.rest.MultipartResponse.
  */
 public class TestMultipartResponse extends LockssTestCase5 {
   private static L4JLogger log = L4JLogger.getLogger();
@@ -83,8 +85,8 @@ public class TestMultipartResponse extends LockssTestCase5 {
    * @return a Part with the created part.
    */
   private Part createPart(String contentDisposition) {
-    Map<String, String> headers = new HashMap<String, String>();
-    headers.put("Content-Disposition", contentDisposition);
+    HttpHeaders headers = new HttpHeaders();
+    headers.add("Content-Disposition", contentDisposition);
 
     Part part = new Part();
     part.setHeaders(headers);

@@ -1,6 +1,6 @@
 /*
 
- Copyright (c) 2019 Board of Trustees of Leland Stanford Jr. University,
+ Copyright (c) 2019-2020 Board of Trustees of Leland Stanford Jr. University,
  all rights reserved.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,28 +27,32 @@
  */
 package org.lockss.util.rest;
 
+import java.io.*;
+import java.util.*;
 import java.net.ConnectException;
-import java.net.NoRouteToHostException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.UnknownHostException;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.conn.ConnectTimeoutException;
 import org.junit.*;
-import org.lockss.util.rest.exception.LockssRestException;
+import org.lockss.util.*;
+import org.lockss.util.rest.exception.*;
+import org.lockss.util.rest.multipart.*;
 import org.lockss.util.test.*;
 import org.lockss.log.*;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.web.client.DefaultResponseErrorHandler;
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.*;
+import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-
 import org.mockserver.junit.*;
 import org.mockserver.client.*;
+import org.mockserver.model.Header;
 import static org.mockserver.model.HttpRequest.*;
 import static org.mockserver.model.HttpResponse.*;
 
@@ -58,6 +62,20 @@ import static org.mockserver.model.HttpResponse.*;
 public class TestRestUtil extends LockssTestCase5 {
   private static L4JLogger log = L4JLogger.getLogger();
 
+  static final String CT_JSON = "application/json; charset=utf-8";
+
+  int port;
+
+  @Rule
+  public MockServerRule msRule = new MockServerRule(this);
+
+  @Before
+  public void getPort() throws LockssRestException {
+    port = msRule.getPort();
+  }
+
+  private MockServerClient msClient;
+
   /**
    * Tests error reporting for network errors
    */
@@ -66,19 +84,21 @@ public class TestRestUtil extends LockssTestCase5 {
     String message = "Cannot perform call to fake-fake";
 
     try {
-      doCallRestService("http://fake-fake:12345/v2/api-docs", message);
+      doCallRestService("http://fake-fake:12345/v2/api-docs", message,
+			String.class);
       fail("Should have thrown LockssRestException");
     } catch (LockssRestException lre) {
       assertMatchesRE(message + ".*UnknownHostException.*fake-fake",
 		      lre.getMessage());
       assertClass(UnknownHostException.class, lre.getCause());
-      assertEquals("fake-fake", lre.getCause().getMessage());
+      assertMatchesRE("^fake-fake", lre.getCause().getMessage());
     }
 
     message = "Cannot perform call to 192.0.2.0";
 
     try {
-      doCallRestService("http://192.0.2.0:23456/v2/api-docs", message);
+      doCallRestService("http://192.0.2.0:23456/v2/api-docs", message,
+			String.class);
       fail("Should have thrown LockssRestException");
     } catch (LockssRestException lre) {
       assertMatchesRE(message, lre.getMessage());
@@ -88,69 +108,232 @@ public class TestRestUtil extends LockssTestCase5 {
 //       assertMatchesRE("^No route to host", lre.getCause().getMessage());
     }
 
-    message = "Cannot perform call to 224.0.0.0";
-
-    try {
-      doCallRestService("http://224.0.0.0:34567/v2/api-docs", message);
-      fail("Should have thrown LockssRestException");
-    } catch (LockssRestException lre) {
-      assertMatchesRE(message, lre.getMessage());
-      Throwable cause = lre.getCause();
-      if (! (cause instanceof SocketException ||
-	     cause instanceof SocketTimeoutException)) {
-	fail("Expected LockssRestException cause to be SocketException or SocketTimeoutException but was: "
-	     + cause);
-      }
-    }
-
     message = "Cannot perform call to 127.0.0.1";
 
     try {
-      doCallRestService("http://127.0.0.1:45678/v2/api-docs", message);
+      doCallRestService("http://127.0.0.1:45678/v2/api-docs", message,
+			String.class);
       fail("Should have thrown LockssRestException");
     } catch (LockssRestException lre) {
       assertMatchesRE(message + ".*Connection refused", lre.getMessage());
       assertClass(ConnectException.class, lre.getCause());
-      assertMatchesRE("^Connection refused", lre.getCause().getMessage());
+      assertMatchesRE("Connection refused", lre.getCause().getMessage());
     }
 
     message = "Cannot perform call to www.lockss.org";
 
     try {
-      doCallRestService("http://www.lockss.org:45678/v2/api-docs", message);
+      doCallRestService("http://www.lockss.org:45678/v2/api-docs", message,
+			String.class);
       fail("Should have thrown LockssRestException");
     } catch (LockssRestException lre) {
       assertMatchesRE(message + ".*SocketTimeoutException", lre.getMessage());
-      assertClass(SocketTimeoutException.class, lre.getCause());
-      assertMatchesRE("^connect timed out", lre.getCause().getMessage());
+      assertClass(ConnectTimeoutException.class, lre.getCause());
+      assertMatchesRE("connect timed out", lre.getCause().getMessage());
     }
   }
 
-  @Rule
-  public MockServerRule msRule = new MockServerRule(this);
-
-  private MockServerClient msClient;
 
   @Test
+  public void test200String() throws LockssRestException {
+    String exp = "string body";
 
-  public void exampleTest() throws LockssRestException {
-    int port = msRule.getPort();
     msClient
       .when(request()
             .withMethod("GET")
             .withPath("/foo"))
       .respond(response()
-	       .withStatusCode(200));
+	       .withStatusCode(200)
+	       .withHeaders(new Header("Content-Type", "text/plain"))
+	       .withBody(exp));
     ResponseEntity<String> resp =
-      doCallRestService("http://localhost:" + port + "/foo", "bar");
+      doCallRestService("http://localhost:" + port + "/foo", "bar",
+			String.class);
 
-    log.info("resp: {}", resp);
-//     assertTrue(result.wasSuccessful());
-
-//     verify(postRequestedFor(urlMatching("/my/resource/[a-z0-9]+"))
-//             .withRequestBody(matching(".*<message>1234</message>.*"))
-//             .withHeader("Content-Type", notMatching("application/json")));
+    HttpStatus statusCode = resp.getStatusCode();
+    log.debug("statusCode = {}", statusCode);
+    log.debug("response = {}", resp);
+    assertEquals(exp, resp.getBody());
   }
+
+  @Test
+  public void test200Multi() throws IOException {
+    String boundaryVal = "boundless-enthusiasm";
+    String cr = "\r\n";
+    String cr2 = cr + cr;
+    String boundary = "--" + boundaryVal + "\r\n";
+    String lastBoundary = "--" + boundaryVal + "--\r\n";
+
+    String multipartBody =
+      boundary +
+      "Content-Disposition: form-data; name=\"ppp-111\"" + cr +
+      "P1h1: P1v1" + cr +
+      "P1h2: P1v2" + cr2 +
+      "part 1 data" + cr +
+      boundary +
+      "Content-Disposition: form-data; name=\"ppp-222\"" + cr +
+      "P2h1: P2v1" + cr +
+      "P2h2: P2v2" + cr2 +
+      "part 2 data" + cr +
+      lastBoundary;
+
+    msClient
+      .when(request()
+            .withMethod("GET")
+            .withPath("/foo"))
+      .respond(response()
+	       .withStatusCode(200)
+	       .withHeaders(new Header("Content-Type",
+				       "multipart/form-data; boundary=" +
+				       boundaryVal))
+	       .withBody(multipartBody));
+
+
+    RestTemplate template = RestUtil.getRestTemplate();
+    template.getMessageConverters().add(new MultipartMessageHttpMessageConverter());
+
+    ResponseEntity<MultipartMessage> resp =
+      doCallRestService(template,
+			"http://localhost:" + port + "/foo", "bar",
+			null, MultipartMessage.class);
+
+    log.debug("resp: {}", resp);
+    MultipartResponse mresp = new MultipartResponse(resp);
+    Map<String, MultipartResponse.Part> parts = mresp.getParts();
+
+    assertEquals(2, parts.size());
+    log.debug("mresp: {}", mresp);
+    MultipartResponse.Part p1 = parts.get("ppp-111");
+    assertInputStreamMatchesString("part 1 data", p1.getInputStream());
+    HttpHeaders p1h = p1.getHeaders();
+    assertEquals(ListUtil.list("P1v1"), p1h.get("P1h1"));
+    assertEquals(ListUtil.list("P1v2"), p1h.get("P1h2"));
+    MultipartResponse.Part p2 = parts.get("ppp-222");
+    assertInputStreamMatchesString("part 2 data", p2.getInputStream());
+    HttpHeaders p2h = p2.getHeaders();
+    assertEquals(ListUtil.list("P2v1"), p2h.get("P2h1"));
+    assertEquals(ListUtil.list("P2v2"), p2h.get("P2h2"));
+  }
+
+  @Test
+  public void test200Json() throws LockssRestException {
+    Map exp = MapUtil.map("foo", "bar", "gorp", "frazz");
+
+    msClient
+      .when(request()
+            .withMethod("GET")
+            .withPath("/foo"))
+      .respond(response()
+	       .withStatusCode(200)
+	       .withHeaders(new Header("Content-Type", CT_JSON))
+	       .withBody(toJson(exp)));
+    ResponseEntity<Map> resp =
+      doCallRestService("http://localhost:" + port + "/foo", "bar",
+			Map.class);
+
+    HttpStatus statusCode = resp.getStatusCode();
+    log.debug("statusCode = {}", statusCode);
+    log.debug("response = {}", resp);
+    Map resMap = resp.getBody();
+    assertEquals(exp, resMap);
+  }
+
+  @Test
+  public void test401Json() throws LockssRestException {
+    Map exp = MapUtil.map("foo", "bar", "gorp", "frazz",
+			  "message", "in a bottle");
+
+    msClient
+      .when(request()
+            .withMethod("GET")
+            .withPath("/foo"))
+      .respond(response()
+	       .withStatusCode(401)
+	       .withHeaders(new Header("Content-Type", CT_JSON))
+	       .withBody(toJson(exp)));
+    try {
+      ResponseEntity<Map> resp =
+	doCallRestService("http://localhost:" + port + "/foo", "bar",
+			  Map.class);
+      Assert.fail("Should have thrown, but returned: " + resp);
+    } catch (LockssRestHttpException e) {
+      assertEquals(HttpStatus.UNAUTHORIZED, e.getHttpStatus());
+      assertEquals(exp, e.getServerErrorMap());
+      assertEquals("in a bottle", e.getServerErrorMessage());
+    }
+
+  }
+
+  @Test
+  public void test404String() throws LockssRestException {
+    Map exp = MapUtil.map("foo", "bar", "gorp", "frazz");
+
+    msClient
+      .when(request()
+            .withMethod("GET")
+            .withPath("/foo"))
+      .respond(response()
+	       .withStatusCode(404)
+	       .withHeaders(new Header("Content-Type", "text/plain"))
+	       .withBody("Error body"));
+    try {
+      ResponseEntity<Map> resp =
+	doCallRestService("http://localhost:" + port + "/foo", "bar",
+			  Map.class);
+      Assert.fail("Should have thrown, but returned: " + resp);
+    } catch (LockssRestHttpException e) {
+      assertEquals(HttpStatus.NOT_FOUND, e.getHttpStatus());
+      assertEquals("Error body", e.getServerErrorMessage());
+    }
+  }
+
+  /* This is a (failed) attempt to reproduce this error:
+
+     17:32:52.300 [ConfigHandler] INFO  BaseConfigFile: Couldn't load remote config URL: http://lockss-u:lockss-p@localhost:24620/config/file/cluster: java.lang.IllegalArgumentException: Auth scheme may not be null
+
+     which occurs deep inside httpclient after a 401 response.
+  */
+  @Test
+  public void testJson401Full() throws LockssRestException {
+    Map exp = MapUtil.map("foo", "bar", "gorp", "frazz");
+
+    msClient
+      .when(request()
+            .withMethod("GET")
+            .withPath("/foo"))
+      .respond(response()
+	       .withStatusCode(401)
+	       .withHeaders(new Header("Content-Type", CT_JSON),
+			    new Header("WWW-Authenticate", "Basic"),
+			    new Header("X-Content-Type-Options", "nosniff"),
+			    new Header("X-XSS-Protection", "1; mode=block"),
+			    new Header("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate"),
+			    new Header("Pragma", "no-cache"),
+			    new Header("Expires", "0"),
+			    new Header("X-Frame-Options", "DENY"),
+			    new Header("Date", "Thu, 17 Sep 2020 23:42:39 GMT"))
+	       .withBody(toJson(exp)));
+    try {
+      HttpHeaders hdrs = new HttpHeaders();
+      hdrs.add("Authorization", "Basic bG9ja3NzLXU6bG9ja3NzLXA=");
+      ResponseEntity<Map> resp =
+	doCallRestService("http://lockss-u:lockss-p@localhost:" + port + "/foo", "bar",
+			  hdrs, Map.class);
+      Assert.fail("Should have thrown, but returned: " + resp);
+    } catch (LockssRestHttpException e) {
+      assertEquals(HttpStatus.UNAUTHORIZED, e.getHttpStatus());
+    }
+  }
+
+
+  String toJson(Map map) {
+    try {
+      return new ObjectMapper().writeValueAsString(map);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException("Json error", e);
+    }
+  }
+
   /**
    * Tests the success evaluation of an HTTP status code.
    */
@@ -237,23 +420,25 @@ public class TestRestUtil extends LockssTestCase5 {
    * @throws LockssRestException
    *           if there are problems.
    */
-  private ResponseEntity<String> doCallRestService(String url, String message)
+  private <T> ResponseEntity<T> doCallRestService(String url, String message,
+						  Class<T> responseType)
       throws LockssRestException {
-    RestTemplate restTemplate =	new RestTemplate();
+    return doCallRestService(url, message, new HttpHeaders(), responseType);
+  }
 
-    // Do not throw exceptions on non-success response status codes.
-    restTemplate.setErrorHandler(new DefaultResponseErrorHandler(){
-      protected boolean hasError(HttpStatus statusCode) {
-	return false;
-      }
-    });
+  private <T> ResponseEntity<T> doCallRestService(String url, String message,
+						  HttpHeaders reqHeaders,
+						  Class<T> responseType)
+      throws LockssRestException {
+    return doCallRestService(RestUtil.getRestTemplate(2000, 2000),
+			     url, message, reqHeaders, responseType);
+  }
 
-    // Specify the timeouts.
-    SimpleClientHttpRequestFactory requestFactory =
-	(SimpleClientHttpRequestFactory)restTemplate.getRequestFactory();
-
-    requestFactory.setConnectTimeout(2000);
-    requestFactory.setReadTimeout(2000);
+  private <T> ResponseEntity<T> doCallRestService(RestTemplate template,
+						  String url, String message,
+						  HttpHeaders reqHeaders,
+						  Class<T> responseType)
+      throws LockssRestException {
 
     // Create the URI of the request to the REST service.
     URI uri = UriComponentsBuilder.newInstance()
@@ -262,7 +447,7 @@ public class TestRestUtil extends LockssTestCase5 {
     log.trace("uri = {}", uri);
 
     // Perform the call.
-    return RestUtil.callRestService(restTemplate, uri, HttpMethod.GET,
-	new HttpEntity<String>(null, new HttpHeaders()), String.class, message);
+    return RestUtil.callRestService(template, uri, HttpMethod.GET,
+	new HttpEntity<String>(null, reqHeaders), responseType, message);
   }
 }

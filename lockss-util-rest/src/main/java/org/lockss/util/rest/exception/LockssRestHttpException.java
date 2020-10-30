@@ -27,6 +27,7 @@
  */
 package org.lockss.util.rest.exception;
 
+import java.util.Map;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 
@@ -36,6 +37,11 @@ public class LockssRestHttpException extends LockssRestException {
   private HttpStatus httpStatus;
   private String httpStatusMessage;
   private HttpHeaders responseHeaders;
+  private String srvErrMessage;
+  private Map srvErrMap;
+
+  // Temporary
+  private String contextMessage;
 
   /**
    * Default constructor.
@@ -114,17 +120,64 @@ public class LockssRestHttpException extends LockssRestException {
     return this;
   }
 
+  /**
+   * Return the server error message, if any.
+   *
+   * @return Server error message, or null
+   */
+  public String getServerErrorMessage() {
+    return srvErrMessage;
+  }
+
+  /**
+   * Set the server error message, if any.
+   *
+   * @param errMessage Explanatory String returned by the server
+   * @return a LockssRestHttpException with this object.
+   */
+  public LockssRestHttpException setServerErrorMessage(String errMessage) {
+    this.srvErrMessage = errMessage;
+    return this;
+  }
+
+  /**
+   * Return the server error Map, if any.
+   *
+   * @return Map containing error details, or null
+   */
+  public Map getServerErrorMap() {
+    return srvErrMap;
+  }
+
+  /**
+   * Set the server error Map
+   *
+   * @param errMap Explanatory Map returned by the server
+   * @return a LockssRestHttpException with this object.
+   */
+  public LockssRestHttpException setServerErrorMap(Map errMap) {
+    this.srvErrMap = errMap;
+    return this;
+  }
+
   public String getMessage() {
     StringBuilder sb = new StringBuilder();
     sb.append(getHttpStatusCode());
     sb.append(" ");
     sb.append(getHttpStatusMessage());
-    String message = super.getMessage();
+
+//    String message = super.getMessage();
+    String message = contextMessage;
+
     if (message != null) {
       sb.append(": ");
       sb.append(message);
     }
     return sb.toString();
+  }
+
+  public void setMessage(String message) {
+    contextMessage = message;
   }
 }
 

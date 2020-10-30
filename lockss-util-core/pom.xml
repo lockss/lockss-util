@@ -39,13 +39,13 @@ POSSIBILITY OF SUCH DAMAGE.
   <parent>
     <groupId>org.lockss</groupId>
     <artifactId>lockss-parent-pom</artifactId>
-    <version>1.11.0</version>
+    <version>1.12.0</version>
     <relativePath />
   </parent>
   
   <groupId>org.lockss</groupId>
   <artifactId>lockss-util-core</artifactId>
-  <version>1.8.0</version>
+  <version>1.9.0</version>
   <packaging>jar</packaging>
 
   <name>lockss-util-core</name>
@@ -144,6 +144,12 @@ POSSIBILITY OF SUCH DAMAGE.
       <groupId>javax.jms</groupId>
       <artifactId>javax.jms-api</artifactId>
       <version>2.0.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-collections</groupId>
+      <artifactId>commons-collections</artifactId>
+      <version>${version.dependency.commons-collections}</version>
     </dependency>
 
   </dependencies>

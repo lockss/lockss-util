@@ -1,6 +1,6 @@
 /*
 
- Copyright (c) 2017 Board of Trustees of Leland Stanford Jr. University,
+ Copyright (c) 2019-2020 Board of Trustees of Leland Stanford Jr. University,
  all rights reserved.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,40 +25,40 @@
  in this Software without prior written authorization from Stanford University.
 
  */
-package org.lockss.util.rest.multipart;
 
-import java.io.*;
-import javax.activation.DataSource;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.util.ByteArrayDataSource;
-import org.apache.commons.io.IOUtils;
-import org.lockss.util.io.*;
-import org.lockss.log.*;
+package org.lockss.util.storage;
 
-public class MultipartUtil {
+import org.junit.jupiter.api.*;
+import org.lockss.log.L4JLogger;
+import org.lockss.util.test.LockssTestCase5;
+import org.lockss.util.os.*;
+
+public class TestStorageInfo extends LockssTestCase5 {
   private static L4JLogger log = L4JLogger.getLogger();
 
-  public static final String MULTIPART_FORM_DATA = "multipart/form-data";
+  private StorageInfo identifier;
 
-  public static MimeMultipart parse(InputStream inputStream)
-      throws IOException, MessagingException {
-    return parse(inputStream, MULTIPART_FORM_DATA);
+  @Test
+  public void testFromDF() throws Exception {
+    String tmpdir = getTempDir().toString();
+    PlatformUtil.DF df = PlatformUtil.getInstance().getDF(tmpdir);
+    StorageInfo si = StorageInfo.fromDF(df);
+    assertEquals(df.getSize(), si.getSize() / 1024); // From DF in KB.
+    assertEquals("disk", si.getType());
+    assertEquals(df.getMnt(), si.getName());
+    assertEquals(df.getUsed(), si.getUsed() / 1024); // From DF in KB.
+    assertEquals(df.getAvail(), si.getAvail() / 1024); // From DF in KB.
+    assertEquals(df.getPercentString(), si.getPercentUsedString());
+
+    StorageInfo si2 = StorageInfo.fromDF("notdisk", df);
+    assertFalse(si.isSameDevice(si2));
   }
 
-  public static MimeMultipart parse(InputStream inputStream, String mimeType)
-      throws IOException, MessagingException {
-    DeferredTempFileOutputStream dos =
-      new DeferredTempFileOutputStream(10*1024);
-    log.fatal("parse()");
-    try {
-      IOUtils.copyLarge(inputStream, dos);
-    } finally {
-      IOUtils.closeQuietly(dos);
-    }
-    DataSource dataSource =
-      new InputStreamDataSource(dos.getDeleteOnCloseInputStream(), mimeType);
-    log.fatal("parsed()");
-    return new MimeMultipart(dataSource);
+  @Test
+  public void testFromRuntime() throws Exception {
+    StorageInfo si = StorageInfo.fromRuntime();
+    assertTrue(si.getSize() > 0);
+    assertTrue(si.getSize() > si.getAvail());
+    assertTrue(si.getSize() > si.getUsed());
   }
 }

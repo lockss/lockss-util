@@ -1,6 +1,6 @@
 /*
 
- Copyright (c) 2019 Board of Trustees of Leland Stanford Jr. University,
+ Copyright (c) 2019-2020 Board of Trustees of Leland Stanford Jr. University,
  all rights reserved.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -28,6 +28,7 @@
 package org.lockss.util.rest;
 
 import java.net.URI;
+import java.util.Map;
 import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.rest.exception.LockssRestHttpException;
 import org.lockss.util.rest.exception.LockssRestNetworkException;
@@ -37,9 +38,14 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.web.client.*;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
+/**
+ * Utility methods used for invoking REST services.
+ */
 public class RestUtil {
   private static L4JLogger log = L4JLogger.getLogger();
 
@@ -69,18 +75,16 @@ public class RestUtil {
       URI uri, HttpMethod method, HttpEntity<?> requestEntity,
       Class<T> responseType, String exceptionMessage)
 	  throws LockssRestException {
-    if (log.isDebug2Enabled()) {
-      log.debug2("uri = " + uri);
-      log.debug2("method = " + method);
-      log.debug2("requestEntity = " + requestEntity);
-      log.debug2("responseType = " + responseType);
-      log.debug2("exceptionMessage = " + exceptionMessage);
-    }
+    log.debug2("uri = {}", uri);
+    log.debug2("method = {}", method);
+    log.debug2("requestEntity = {}", requestEntity);
+    log.debug2("responseType = {}", responseType);
+    log.debug2("exceptionMessage = {}", exceptionMessage);
 
     try {
       // Make the call to the REST service and get the response.
       ResponseEntity<T> response =
-	  restTemplate.exchange(uri, method, requestEntity, responseType);
+          restTemplate.exchange(uri, method, requestEntity, responseType);
 
       // Get the response status.
       HttpStatus statusCode = response.getStatusCode();
@@ -88,18 +92,30 @@ public class RestUtil {
 
       // Check whether the call status code indicated failure.
       if (!isSuccess(statusCode)) {
-	// Yes: Report it back to the caller.
-	LockssRestHttpException lrhe =
-	    new LockssRestHttpException(exceptionMessage);
-	lrhe.setHttpStatus(statusCode);
-	lrhe.setHttpResponseHeaders(response.getHeaders());
-	log.trace("lrhe = {}", lrhe, (Exception)null);
+        // Yes: Report it back to the caller.
+        LockssRestHttpException lrhe =
+            new LockssRestHttpException(exceptionMessage);
+        lrhe.setHttpStatus(statusCode);
+        lrhe.setHttpResponseHeaders(response.getHeaders());
+        log.trace("lrhe = {}", lrhe, (Exception) null);
 
-	throw lrhe;
+        throw lrhe;
       }
 
       // No: Return the received response.
       return response;
+
+    } catch (LockssResponseErrorHandler.WrappedLockssRestHttpException e) {
+
+      // Catch exception thrown by LockssResponseErrorHandler
+
+      // This is here because {@link RestTemplate#doExecute(URI, HttpMethod, RequestCallback, ResponseExtractor)} catches
+      // IOException which is extended by {@link LockssRestException} and {@link LockssRestHttpException}.
+
+      LockssRestHttpException lrhe = e.getLRHE();
+      lrhe.setMessage(exceptionMessage);
+      throw lrhe;
+
     } catch (RestClientException rce) {
       log.trace("rce", rce);
       // Get the cause, or this exception if there is no cause.
@@ -112,12 +128,107 @@ public class RestUtil {
       // Report the problem back to the caller.
       LockssRestNetworkException lrne =
 	new LockssRestNetworkException(exceptionMessage + ": " +
-				       ExceptionUtils.getRootCauseMessage(cause),
-				       cause);
+	    ExceptionUtils.getRootCauseMessage(cause), cause);
       log.trace("lrne = {}", lrne);
 
       throw lrne;
     }
+  }
+
+  /**
+   * Provides the REST template to be used to make the call to a REST service
+   * using the HttpComponentsClientHttpRequestFactory, default timeouts and not
+   * throwing exceptions.
+   * 
+   * @return a RestTemplate with the REST template.
+   */
+  public static RestTemplate getRestTemplate() {
+    return getRestTemplate(0, 0);
+  }
+
+  /**
+   * Provides the REST template to be used to make the call to a REST service
+   * using the HttpComponentsClientHttpRequestFactory and not throwing
+   * exceptions.
+   * 
+   * @param connectTimeout A long with the connection timeout in milliseconds.
+   * @param readTimeout    A long with the read timeout in milliseconds.
+   * 
+   * @return a RestTemplate with the REST template.
+   */
+  public static RestTemplate getRestTemplate(long connectTimeout,
+      long readTimeout) {
+    log.debug2("connectTimeout = {}", connectTimeout);
+    log.debug2("readTimeout = {}", readTimeout);
+
+    // It's necessary to specify this factory to get Spring support for PATCH
+    // operations.
+    HttpComponentsClientHttpRequestFactory requestFactory =
+	new HttpComponentsClientHttpRequestFactory();
+
+    // Specify the timeouts.
+    requestFactory.setConnectTimeout((int)connectTimeout);
+    requestFactory.setReadTimeout((int)readTimeout);
+    requestFactory.setBufferRequestBody(false);
+
+    // Do not buffer the request body internally, to avoid running out of
+    // memory, or other failures, when sending large amounts of data.
+    requestFactory.setBufferRequestBody(false);
+
+    // Get the template.
+    RestTemplate restTemplate =	new RestTemplate(requestFactory);
+
+    restTemplate.setErrorHandler(new LockssResponseErrorHandler(restTemplate.getMessageConverters()));
+
+    log.debug2("restTemplate = {}", restTemplate);
+    return restTemplate;
+  }
+
+  /**
+   * Provides the URI to be used to make the call to a REST service.
+   * 
+   * @param uriString    A String with the REST Service URI.
+   * @param uriVariables A Map<String, String> with any URI variables to be
+   *                     interpolated..
+   * @param queryParams  A Map<String, String> with any query parameters.
+   * 
+   * @return a URI with the REST service URI.
+   */
+  public static URI getRestUri(String uriString,
+      Map<String, String> uriVariables, Map<String, String> queryParams) {
+    log.debug2("uriString = {}", uriString);
+    log.debug2("uriVariables = {}", uriVariables);
+    log.debug2("queryParams = {}", queryParams);
+
+    // Initialize the URI.
+    UriComponents uriComponents = UriComponentsBuilder.fromUriString(uriString)
+	.build();
+    log.trace("uriComponents = {}", uriComponents);
+
+    // Interpolate any URI variables.
+    if (uriVariables != null && !uriVariables.isEmpty()) {
+      uriComponents = uriComponents.expand(uriVariables);
+    }
+
+    log.trace("uriComponents = {}", uriComponents);
+
+    UriComponentsBuilder ucb =
+	UriComponentsBuilder.newInstance().uriComponents(uriComponents);
+  
+    // Add any query parameters.
+    if (queryParams != null && !queryParams.isEmpty()) {
+      for (String key : queryParams.keySet()) {
+	log.trace("key = {}", key);
+	String value = queryParams.get(key);
+	log.trace("value = {}", value);
+
+	ucb = ucb.queryParam(key, value);
+      }
+    }
+
+    URI uri = ucb.build().encode().toUri();
+    log.debug2("uri = {}", uri);
+    return uri;
   }
 
   /**

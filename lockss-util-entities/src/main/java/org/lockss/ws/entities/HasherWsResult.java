@@ -1,10 +1,6 @@
 /*
- * $Id$
- */
 
-/*
-
- Copyright (c) 2014 Board of Trustees of Leland Stanford Jr. University,
+ Copyright (c) 2014-2020 Board of Trustees of Leland Stanford Jr. University,
  all rights reserved.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -38,6 +34,9 @@ import javax.activation.DataHandler;
  * A wrapper for the result of a hash operation.
  */
 public class HasherWsResult {
+  public static final String BLOCK_FILE_TYPE = "Block";
+  public static final String RECORD_FILE_TYPE = "Record";
+
   private Long startTime;
   private String recordFileName;
   private DataHandler recordFileDataHandler;
