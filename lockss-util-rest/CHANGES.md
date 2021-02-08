@@ -1,6 +1,6 @@
-# Release Notes
+# `lockss-util-rest` Release Notes
 
-## Major Changes Since 1.1.1
+## Changes Since 1.1.1
 
 *   ...
 

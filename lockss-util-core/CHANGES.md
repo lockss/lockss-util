@@ -1,6 +1,6 @@
-# Release Notes
+# `lockss-util-core` Release Notes
 
-## Major Changes Since 1.9.0
+## Changes Since 1.9.0
 
 *   ...
 

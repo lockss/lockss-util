@@ -1,6 +1,6 @@
-# Release Notes
+# `lockss-util` Release Notes
 
-## Major Changes Since 1.10.0
+## Changes Since 1.10.0
 
 *   ...
 
