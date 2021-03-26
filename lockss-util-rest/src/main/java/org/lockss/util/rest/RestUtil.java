@@ -92,6 +92,8 @@ public class RestUtil {
       log.trace("statusCode = {}", statusCode);
 
       // Check whether the call status code indicated failure.
+      // Q: It's possible that this is never taken because 1xx and 3xx series of errors also cause
+      //  RestTemplate#exchange(...) to throw
       if (!isSuccess(statusCode)) {
         // Yes: Report it back to the caller.
         LockssRestHttpException lrhe = new LockssRestHttpException(clientExceptionMessage);
@@ -114,13 +116,19 @@ public class RestUtil {
       lrhe.setClientErrorMessage(clientExceptionMessage);
       throw lrhe;
 
-    } catch (RestClientException rce) {
-      log.trace("rce", rce);
+    } catch (RestClientResponseException e) {
+      // Since this method takes a RestTemplate as an argument, we need to be prepared for the possibility that it
+      // was not configured with our LockssResponseErrorHandler. Handle default RestClientResponseException and its
+      // subclasses here.
+
+      throw LockssRestHttpException.fromRestClientResponseException(e, restTemplate.getMessageConverters());
+
+    } catch (ResourceAccessException e) {
       // Get the cause, or this exception if there is no cause.
-      Throwable cause = rce.getCause();
+      Throwable cause = e.getCause();
 
       if (cause == null) {
-	cause = rce;
+        cause = e;
       }
 
       // Report the problem back to the caller.
