@@ -105,6 +105,12 @@ public interface Constants {
   /** LOCKSS HTTP header, can have multiple values */
   public static String X_LOCKSS = "X-Lockss";
 
+  /** X-LOCKSS value representing the time the file was originally fetched
+   * from the orign server.  (This is unrelated to the Date: header from
+   * the server.  The property name is highly misleading and inconsistent
+   * but difficult to change as it already appears in many places.) */
+  public static String X_LOCKSS_FETCH_TIME = "X_Lockss-server-date";
+
   /** X-LOCKSS value indicating this is a repair request */
   public static String X_LOCKSS_REPAIR = "Repair";
 
@@ -194,6 +200,9 @@ public interface Constants {
 
   /** Exit code - invalid time zone data */
   public static int EXIT_INVALID_TIME_ZONE_DATA = 107;
+
+  /** Exit code - invalid command line */
+  public static int EXIT_INVALID_COMMAND_LINE = 108;
 
   /** Regexp contexts.  Depending on the type of string a regexp will be
    * used to match against, printf arguments substituted into a pattern

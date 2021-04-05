@@ -50,7 +50,7 @@ in this Software without prior written authorization from Stanford University.
 package org.lockss.util.io;
 
 import org.apache.commons.io.output.*;
-import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.lockss.util.CloseCallbackInputStream.DeleteFileOnCloseInputStream;
@@ -67,7 +67,7 @@ public class DeferredTempFileOutputStream extends ThresholdingOutputStream {
    * The output stream to which data will be written prior to the theshold
    * being reached.
    */
-  protected ByteArrayOutputStream memoryOutputStream;
+  protected UnsynchronizedByteArrayOutputStream memoryOutputStream;
 
   /**
    * The output stream to which data will be written at any given time. This
@@ -106,7 +106,7 @@ public class DeferredTempFileOutputStream extends ThresholdingOutputStream {
   public DeferredTempFileOutputStream(int threshold, String name) {
     super(threshold);
     tempName = name;
-    memoryOutputStream = new ByteArrayOutputStream();
+    memoryOutputStream = new UnsynchronizedByteArrayOutputStream();
     currentOutputStream = memoryOutputStream;
   }
 

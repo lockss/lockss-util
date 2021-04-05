@@ -39,10 +39,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.web.client.DefaultResponseErrorHandler;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.*;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -87,7 +84,7 @@ public class RestUtil {
     try {
       // Make the call to the REST service and get the response.
       ResponseEntity<T> response =
-	  restTemplate.exchange(uri, method, requestEntity, responseType);
+          restTemplate.exchange(uri, method, requestEntity, responseType);
 
       // Get the response status.
       HttpStatus statusCode = response.getStatusCode();
@@ -95,18 +92,30 @@ public class RestUtil {
 
       // Check whether the call status code indicated failure.
       if (!isSuccess(statusCode)) {
-	// Yes: Report it back to the caller.
-	LockssRestHttpException lrhe =
-	    new LockssRestHttpException(exceptionMessage);
-	lrhe.setHttpStatus(statusCode);
-	lrhe.setHttpResponseHeaders(response.getHeaders());
-	log.trace("lrhe = {}", lrhe, (Exception)null);
+        // Yes: Report it back to the caller.
+        LockssRestHttpException lrhe =
+            new LockssRestHttpException(exceptionMessage);
+        lrhe.setHttpStatus(statusCode);
+        lrhe.setHttpResponseHeaders(response.getHeaders());
+        log.trace("lrhe = {}", lrhe, (Exception) null);
 
-	throw lrhe;
+        throw lrhe;
       }
 
       // No: Return the received response.
       return response;
+
+    } catch (LockssResponseErrorHandler.WrappedLockssRestHttpException e) {
+
+      // Catch exception thrown by LockssResponseErrorHandler
+
+      // This is here because {@link RestTemplate#doExecute(URI, HttpMethod, RequestCallback, ResponseExtractor)} catches
+      // IOException which is extended by {@link LockssRestException} and {@link LockssRestHttpException}.
+
+      LockssRestHttpException lrhe = e.getLRHE();
+      lrhe.setMessage(exceptionMessage);
+      throw lrhe;
+
     } catch (RestClientException rce) {
       log.trace("rce", rce);
       // Get the cause, or this exception if there is no cause.
@@ -167,6 +176,7 @@ public class RestUtil {
     // Specify the timeouts.
     requestFactory.setConnectTimeout((int)connectTimeout);
     requestFactory.setReadTimeout((int)readTimeout);
+    requestFactory.setBufferRequestBody(false);
 
     // Do not buffer the request body internally, to avoid running out of
     // memory, or other failures, when sending large amounts of data.
@@ -175,12 +185,7 @@ public class RestUtil {
     // Get the template.
     RestTemplate restTemplate =	new RestTemplate(requestFactory);
 
-    // Do not throw exceptions on non-success response status codes.
-    restTemplate.setErrorHandler(new DefaultResponseErrorHandler() {
-      protected boolean hasError(HttpStatus statusCode) {
-	return false;
-      }
-    });
+    restTemplate.setErrorHandler(new LockssResponseErrorHandler(restTemplate.getMessageConverters()));
 
     log.debug2("restTemplate = {}", restTemplate);
     return restTemplate;

@@ -1,13 +1,23 @@
-# Release Notes
+# `lockss-util-core` Release Notes
 
-## Major Changes Since 1.8.0
+## Changes Since 1.9.0
 
-*   (highlights go here)
+*   ...
+
+## 1.9.0
+
+### Features
+
+*   ...
+
+### Fixes
+
+*   ...
 
 ## 1.8.0
 
 ### Features
 
-*   Renamed from `lockss-util` 1.7.0
-*   Log timestamp at start and end of each log file, and at midnight
-*   Reduce logging to console
+*   Renamed from `lockss-util` 1.7.0.
+*   Log timestamp at start and end of each log file, and at midnight.
+*   Reduce logging to console.
