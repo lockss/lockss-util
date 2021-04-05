@@ -100,7 +100,7 @@ public class RestBaseClient<C extends RestBaseClient<?>> {
   public C addRequestHeaders(HttpHeaders headers) {
     additionalReqHeaders =
       SpringHeaderUtil.addHeaders(headers, additionalReqHeaders, true);
-    log.fatal("Additional headers: {}", additionalReqHeaders);
+    log.debug2("Additional headers: {}", additionalReqHeaders);
     return self;
   }
 
@@ -137,8 +137,8 @@ public class RestBaseClient<C extends RestBaseClient<?>> {
     log.debug2("body = {}", body);
     log.debug2("responseType = {}", responseType);
     log.debug2("exceptionMessage = {}", exceptionMessage);
-    log.fatal("connectTimeout = {}", connectTimeout);
-    log.fatal("readTimeout = {}", readTimeout);
+    log.debug2("connectTimeout = {}", connectTimeout);
+    log.debug2("readTimeout = {}", readTimeout);
 
     URI uri =
 	RestUtil.getRestUri(serviceUrl + pathQuery, uriVariables, queryParams);
