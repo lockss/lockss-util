@@ -32,13 +32,8 @@ import javax.activation.DataSource;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
-import org.apache.commons.io.IOUtils;
-import org.lockss.util.io.*;
-import org.lockss.log.*;
 
 public class MultipartUtil {
-  private static L4JLogger log = L4JLogger.getLogger();
-
   public static final String MULTIPART_FORM_DATA = "multipart/form-data";
 
   public static MimeMultipart parse(InputStream inputStream)
@@ -48,17 +43,7 @@ public class MultipartUtil {
 
   public static MimeMultipart parse(InputStream inputStream, String mimeType)
       throws IOException, MessagingException {
-    DeferredTempFileOutputStream dos =
-      new DeferredTempFileOutputStream(10*1024);
-    log.fatal("parse()");
-    try {
-      IOUtils.copyLarge(inputStream, dos);
-    } finally {
-      IOUtils.closeQuietly(dos);
-    }
-    DataSource dataSource =
-      new InputStreamDataSource(dos.getDeleteOnCloseInputStream(), mimeType);
-    log.fatal("parsed()");
+    DataSource dataSource = new ByteArrayDataSource(inputStream, mimeType);
     return new MimeMultipart(dataSource);
   }
 }

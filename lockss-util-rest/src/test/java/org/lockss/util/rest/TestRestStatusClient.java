@@ -141,8 +141,8 @@ public class TestRestStatusClient extends LockssTestCase5 {
 	       .withBody(toJson(AS_READY))
 	       );
 
-    RestStatusClient rsc = new RestStatusClient("http://www.lockss.org:45678",
-						SECOND, MINUTE);
+    RestStatusClient rsc = new RestStatusClient("http://www.lockss.org:45678")
+      .setTimeouts(SECOND, MINUTE);
 
     try {
       ApiStatus as = rsc.getStatus();
@@ -169,7 +169,8 @@ public class TestRestStatusClient extends LockssTestCase5 {
 	       .withBody(toJson(AS_READY))
 	       );
 
-    RestStatusClient rsc = new RestStatusClient(baseUrl(), MINUTE, SECOND);
+    RestStatusClient rsc = new RestStatusClient(baseUrl())
+      .setTimeouts(SECOND, SECOND);
 
     try {
       ApiStatus as = rsc.getStatus();

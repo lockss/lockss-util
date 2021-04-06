@@ -167,6 +167,13 @@ public class RestUtil {
     log.debug2("connectTimeout = {}", connectTimeout);
     log.debug2("readTimeout = {}", readTimeout);
 
+    if (connectTimeout > 0 && connectTimeout < 1000) {
+      log.warn("connectTimeout < 1 sec: {}", connectTimeout);
+    }
+    if (readTimeout > 0 && readTimeout < 1000) {
+      log.warn("readTimeout < 1 sec: {}", readTimeout);
+    }
+
     // It's necessary to specify this factory to get Spring support for PATCH
     // operations.
     HttpComponentsClientHttpRequestFactory requestFactory =
