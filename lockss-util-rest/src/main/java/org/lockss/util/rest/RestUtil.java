@@ -185,6 +185,7 @@ public class RestUtil {
     // Get the template.
     RestTemplate restTemplate =	new RestTemplate(requestFactory);
 
+    // Set a default LockssResponseErrorHandler from the default set of message converters
     restTemplate.setErrorHandler(new LockssResponseErrorHandler(restTemplate.getMessageConverters()));
 
     log.debug2("restTemplate = {}", restTemplate);
