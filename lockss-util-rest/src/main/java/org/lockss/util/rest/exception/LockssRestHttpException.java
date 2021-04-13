@@ -294,6 +294,7 @@ public class LockssRestHttpException extends LockssRestException {
           lrhe.setServerErrorType(responseError.getServerErrorType());
 
           additionalDetailsAdded = true;
+          break;
 
         } catch (IOException | HttpMessageNotReadableException e2) {
           // An error occurred while reading or parsing the error response body
