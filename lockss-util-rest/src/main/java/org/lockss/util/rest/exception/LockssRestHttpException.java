@@ -314,6 +314,13 @@ public class LockssRestHttpException extends LockssRestException {
       lrhe.setServerErrorMessage(e1.getResponseBodyAsString());
     }
 
+    // If we are processing a 5xx error and the server error type was not
+    // specified (default in LRHE is NONE), set it to UNSPECIFIED_ERROR:
+    if (lrhe.getHttpStatus().is5xxServerError() &&
+        lrhe.getServerErrorType() == ServerErrorType.NONE) {
+      lrhe.setServerErrorType(ServerErrorType.UNSPECIFIED_ERROR);
+    }
+
     return lrhe;
   }
 
