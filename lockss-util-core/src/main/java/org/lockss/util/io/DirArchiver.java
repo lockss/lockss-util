@@ -35,46 +35,58 @@ package org.lockss.util.io;
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.*;
-import org.apache.commons.io.input.*;
 import java.util.zip.*;
+import org.apache.commons.io.input.*;
 import org.apache.commons.compress.compressors.gzip.*;
 import org.apache.commons.compress.archivers.tar.*;
+import org.apache.commons.io.FileUtils;
 import org.lockss.log.*;
 
 
-public abstract class DirCompressor {
+/** Utility that mimics tar and zip, creating a compressed archive from a
+ * directory tree */
+public abstract class DirArchiver {
   static L4JLogger log = L4JLogger.getLogger();
 
   File dir;
   File outFile;
-  File relativeTo;
+  File prefix;
   Path srcPath;
   OutputStream outs;
 
-  public static DirCompressor makeZipCompressor() {
+  /** Create a zip archiver */
+  public static DirArchiver makeZipArchiver() {
     return new Zip();
   }
 
-  public static DirCompressor makeTarCompressor() {
+  /** Create a compressed tar archiver */
+  public static DirArchiver makeTarArchiver() {
     return new Tar();
   }
 
-  public DirCompressor setOutFile(File outFile) {
+  /** Set the file to which the archive will be written */
+  public DirArchiver setOutFile(File outFile) {
     this.outFile = outFile;
     return this;
   }
 
-  public DirCompressor setSourceDir(File srcDir) {
+  /** Set the source directory */
+  public DirArchiver setSourceDir(File srcDir) {
     return setSourceDir(srcDir.toPath());
   }
 
-  public DirCompressor setSourceDir(Path srcDir) {
+  /** Set the source directory */
+  public DirArchiver setSourceDir(Path srcDir) {
     this.srcPath = srcDir;
     return this;
   }
 
-  DirCompressor setRelativeTo(File relTo) {
-    this.relativeTo = relTo;
+  /** Set the path relative to which the archive entries will be written */
+  DirArchiver setPrefix(File prefix) {
+    if (prefix.toString().startsWith(File.separator)) {
+      throw new IllegalArgumentException("Prefix must be a relative path");
+    }
+    this.prefix = prefix;
     return this;
   }
 
@@ -83,7 +95,7 @@ public abstract class DirCompressor {
   protected abstract void addFile(Path file, Path target) throws IOException;
   protected abstract void finish() throws IOException;
 
-  static class Zip extends DirCompressor {
+  static class Zip extends DirArchiver {
     ZipOutputStream zout;
 
     protected String getTypeName() {
@@ -106,7 +118,7 @@ public abstract class DirCompressor {
     }
   }
 
-  static class Tar extends DirCompressor {
+  static class Tar extends DirArchiver {
     TarArchiveOutputStream tout;
 
     protected String getTypeName() {
@@ -132,6 +144,7 @@ public abstract class DirCompressor {
 
   }
 
+  /** Build the output file */
   public void build() throws IOException {
     if (outFile == null) {
       throw new IllegalArgumentException("outFile must not be null");
@@ -140,6 +153,16 @@ public abstract class DirCompressor {
       throw new IllegalArgumentException("srcPath must not be null");
     }
     addFiles();
+  }
+
+  /** Build the output file; delete it if an error occurs */
+  public void buildOrDelete() throws IOException {
+    try {
+      build();
+    } catch (IOException e) {
+      FileUtils.deleteQuietly(outFile);
+      throw e;
+    }
   }
 
   protected void addFiles() throws IOException {
@@ -155,14 +178,19 @@ public abstract class DirCompressor {
           @Override
           public FileVisitResult visitFile(Path file,
                                            BasicFileAttributes attributes) {
+            log.fatal("visit: {}", file);
 
-            // only copy files, no symbolic links
-            if (attributes.isSymbolicLink()) {
-              return FileVisitResult.CONTINUE;
-            }
+//             // don't copy symlinks
+//             if (attributes.isSymbolicLink()) {
+//               return FileVisitResult.CONTINUE;
+//             }
 
             // get filename
             Path targetFile = srcPath.relativize(file);
+            if (prefix != null) {
+              targetFile = prefix.toPath().resolve(targetFile);
+            }
+            log.fatal("rel: {}", targetFile);
 
             try {
               addFile(file, targetFile);

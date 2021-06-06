@@ -29,14 +29,17 @@ in this Software without prior written authorization from Stanford University.
 package org.lockss.util.io;
 
 import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 import org.junit.jupiter.api.*;
+import org.lockss.log.*;
 import org.lockss.util.*;
 import org.lockss.util.test.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.*;
 
-public class TestDirCompressor extends LockssTestCase5 {
+public class TestDirArchiver extends LockssTestCase5 {
+  static L4JLogger log = L4JLogger.getLogger();
 
   static List<String> filenames = ListUtil.list("foo",
                                                 "bar.baz",
@@ -44,6 +47,7 @@ public class TestDirCompressor extends LockssTestCase5 {
                                                 "subdir1/f1.aaa",
                                                 "subdi2/file37");
 
+  static final Path TEST_PREFIX = Paths.get("foo/bar");
 
   File srcdir;
   File tgtdir;
@@ -66,24 +70,63 @@ public class TestDirCompressor extends LockssTestCase5 {
   @Test
   public void testZip() throws IOException {
     tgtfile = getTempFile("foo", ".zip");
-    DirCompressor dc = DirCompressor.makeZipCompressor()
+    DirArchiver da = DirArchiver.makeZipArchiver()
       .setSourceDir(srcdir)
       .setOutFile(tgtfile);
-    dc.build();
+    da.build();
     ZipUtil.unzip(tgtfile, tgtdir);
     assertTrue(FileUtil.equalTrees(srcdir, tgtdir));
   }
 
   @Test
+  public void testZipWithPrefix() throws IOException {
+    try {
+      DirArchiver.makeZipArchiver().setPrefix(new File("/foo/bar"));
+      fail("Should be illegal to set absolute prefix");
+    } catch (IllegalArgumentException e) {}
+
+    tgtfile = getTempFile("foo", ".zip");
+    DirArchiver da = DirArchiver.makeZipArchiver()
+      .setSourceDir(srcdir)
+      .setPrefix(new File(TEST_PREFIX.toString()))
+      .setOutFile(tgtfile);
+    da.build();
+    ZipUtil.unzip(tgtfile, tgtdir);
+    File tgtsub = tgtdir.toPath().resolve(TEST_PREFIX).toFile();
+    assertTrue(tgtsub.toString().endsWith(TEST_PREFIX.toString()));
+    assertTrue(FileUtil.equalTrees(srcdir, tgtsub));
+  }
+
+  @Test
   public void testTar() throws IOException {
     tgtfile = getTempFile("foo", ".tgz");
-    DirCompressor dc = DirCompressor.makeTarCompressor()
+    DirArchiver da = DirArchiver.makeTarArchiver()
       .setSourceDir(srcdir)
       .setOutFile(tgtfile);
-    dc.build();
+    da.build();
     TarUtil.untar(tgtfile, tgtdir, true);
     assertTrue(FileUtil.equalTrees(srcdir, tgtdir));
   }
+
+  @Test
+  public void testTarWithPrefix() throws IOException {
+    try {
+      DirArchiver.makeTarArchiver().setPrefix(new File("/foo/bar"));
+      fail("Should be illegal to set absolute prefix");
+    } catch (IllegalArgumentException e) {}
+
+    tgtfile = getTempFile("foo", ".tar");
+    DirArchiver da = DirArchiver.makeTarArchiver()
+      .setSourceDir(srcdir)
+      .setPrefix(new File(TEST_PREFIX.toString()))
+      .setOutFile(tgtfile);
+    da.build();
+    TarUtil.untar(tgtfile, tgtdir, true);
+    File tgtsub = tgtdir.toPath().resolve(TEST_PREFIX).toFile();
+    assertTrue(tgtsub.toString().endsWith(TEST_PREFIX.toString()));
+    assertTrue(FileUtil.equalTrees(srcdir, tgtsub));
+  }
+
 }
 
 
