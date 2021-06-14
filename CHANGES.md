@@ -2,8 +2,6 @@
 
 ## Changes Since 1.10.0
 
-*   Added DirArchiver
-*   Added HostnameUtil.isValidHostname()
 *   ...
 
 ## 1.10.0

@@ -2,7 +2,10 @@
 
 ## Changes Since 1.9.0
 
-*   ...
+### Features
+
+*   Added DirArchiver
+*   Added HostnameUtil.isValidHostname()
 
 ## 1.9.0
 
