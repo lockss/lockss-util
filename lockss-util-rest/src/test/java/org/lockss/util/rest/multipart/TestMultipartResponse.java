@@ -147,7 +147,6 @@ public class TestMultipartResponse extends LockssTestCase5 {
 
     part = addPart("form-data; name=\" \"", response);
 
-    log.fatal("foo: {}", response.getParts());
     assertEquals(4, response.getParts().size());
     assertEquals("", part.getName());
 

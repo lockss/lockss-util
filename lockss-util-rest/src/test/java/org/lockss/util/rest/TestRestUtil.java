@@ -240,8 +240,11 @@ public class TestRestUtil extends LockssTestCase5 {
 
   @Test
   public void test401Json() throws LockssRestException {
-    Map exp = MapUtil.map("foo", "bar", "gorp", "frazz",
-			  "message", "in a bottle");
+    RestResponseErrorBody.RestResponseError error =
+        new RestResponseErrorBody.RestResponseError()
+            .setMessage("in a bottle")
+            .setPath("test")
+            .setTimestamp(1234);
 
     msClient
       .when(request()
@@ -250,15 +253,16 @@ public class TestRestUtil extends LockssTestCase5 {
       .respond(response()
 	       .withStatusCode(401)
 	       .withHeaders(new Header("Content-Type", CT_JSON))
-	       .withBody(toJson(exp)));
+	       .withBody(toJson(error)));
+
     try {
-      ResponseEntity<Map> resp =
-	doCallRestService("http://localhost:" + port + "/foo", "bar",
-			  Map.class);
+      ResponseEntity<RestResponseErrorBody.RestResponseError> resp =
+          doCallRestService("http://localhost:" + port + "/foo", "bar",
+			  RestResponseErrorBody.RestResponseError.class);
       Assert.fail("Should have thrown, but returned: " + resp);
     } catch (LockssRestHttpException e) {
       assertEquals(HttpStatus.UNAUTHORIZED, e.getHttpStatus());
-      assertEquals(exp, e.getServerErrorMap());
+      assertEquals(error, e.getRestResponseError());
       assertEquals("in a bottle", e.getServerErrorMessage());
     }
 
@@ -266,8 +270,6 @@ public class TestRestUtil extends LockssTestCase5 {
 
   @Test
   public void test404String() throws LockssRestException {
-    Map exp = MapUtil.map("foo", "bar", "gorp", "frazz");
-
     msClient
       .when(request()
             .withMethod("GET")
@@ -276,10 +278,11 @@ public class TestRestUtil extends LockssTestCase5 {
 	       .withStatusCode(404)
 	       .withHeaders(new Header("Content-Type", "text/plain"))
 	       .withBody("Error body"));
+
     try {
-      ResponseEntity<Map> resp =
-	doCallRestService("http://localhost:" + port + "/foo", "bar",
-			  Map.class);
+      ResponseEntity<RestResponseErrorBody.RestResponseError> resp =
+          doCallRestService("http://localhost:" + port + "/foo", "bar",
+			  RestResponseErrorBody.RestResponseError.class);
       Assert.fail("Should have thrown, but returned: " + resp);
     } catch (LockssRestHttpException e) {
       assertEquals(HttpStatus.NOT_FOUND, e.getHttpStatus());
@@ -325,10 +328,17 @@ public class TestRestUtil extends LockssTestCase5 {
     }
   }
 
-
   String toJson(Map map) {
     try {
       return new ObjectMapper().writeValueAsString(map);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException("Json error", e);
+    }
+  }
+
+  String toJson(RestResponseErrorBody.RestResponseError error) {
+    try {
+      return new ObjectMapper().writeValueAsString(error);
     } catch (JsonProcessingException e) {
       throw new RuntimeException("Json error", e);
     }

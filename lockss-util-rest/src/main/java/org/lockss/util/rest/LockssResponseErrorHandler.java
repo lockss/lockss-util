@@ -3,89 +3,65 @@ package org.lockss.util.rest;
 import org.lockss.log.L4JLogger;
 import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.rest.exception.LockssRestHttpException;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.web.client.DefaultResponseErrorHandler;
-import org.springframework.web.client.RequestCallback;
-import org.springframework.web.client.ResponseExtractor;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.*;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
-import java.util.Map;
 
+/**
+ * LOCKSS customized {@link ResponseErrorHandler} for use with {@link RestTemplate} REST clients.
+ */
 public class LockssResponseErrorHandler extends DefaultResponseErrorHandler {
   private static L4JLogger log = L4JLogger.getLogger();
 
+  /**
+   * {@link List} of {@link HttpMessageConverter} used to deserialize error responses from Spring Boot applications.
+   */
   private final List<HttpMessageConverter<?>> messageConverters;
 
-  public LockssResponseErrorHandler(List<HttpMessageConverter<?>>
-                                        messageConverters) {
+  /**
+   * Constructor.
+   *
+   * @param messageConverters A {@link List<HttpMessageConverter>} containing the list of HTTP message converters
+   *                          this {@link LockssResponseErrorHandler} should use to deserialize error responses.
+   */
+  public LockssResponseErrorHandler(List<HttpMessageConverter<?>> messageConverters) {
     this.messageConverters = messageConverters;
   }
 
+  /**
+   * Overrides {@link DefaultResponseErrorHandler#handleError(ClientHttpResponse)} to intercept 5xx server errors
+   * and determine the type of error the LOCKSS Spring Boot application is experiencing.
+   * <p>
+   * Use a provided list of {@link HttpMessageConverter}s to deserialize the error responses from LOCKSS Spring Boot
+   * applications into {@link RestResponseErrorBody.RestResponseError} objects, which are then used to populate the
+   * {@link LockssRestHttpException} that's wrapped and thrown within a {@link WrappedLockssRestHttpException} to
+   * the client call.
+   *
+   * @param response A {@link ClientHttpResponse} representing the HTTP error response from the Spring Boot application.
+   * @throws IOException
+   */
   @Override
   public void handleError(ClientHttpResponse response) throws IOException {
-    HttpStatus statusCode = getHttpStatusCode(response);
-    HttpHeaders responseHeaders = response.getHeaders();
+    try {
+      // We could process the ClientHttpResponse directly but the RestClientResponseException thrown
+      // by the super class method has a convenient access to the error response body byte array, which
+      // in-turn is useful for avoiding successive HttpMessageConverters from using an exhausted InputStream
+      // from the ClientHttpResponse. See below and ByteArrayHttpInputMessage.
+      super.handleError(response);
 
-    LockssRestHttpException lrhe = new LockssRestHttpException();
+    } catch (RestClientResponseException e1) {
+      //// Intercept RestClientResponseException and translate to LockssRestHttpException
 
-    boolean handled = false;
-
-    // Convert the response body to e Map if possible (presumably because
-    // the response is json)
-    for (HttpMessageConverter converter : messageConverters) {
-      if (converter.canRead(Map.class, responseHeaders.getContentType())) {
-        try {
-          Map mmm = (Map) converter.read(Map.class, response);
-          log.debug2("Server error map: {}", mmm);
-          lrhe.setServerErrorMap(mmm);
-          if (mmm.containsKey("message")) {
-            Object msg = mmm.get("message");
-            if (msg instanceof String) {
-              lrhe.setServerErrorMessage((String) msg);
-            }
-          }
-          handled = true;
-          break;
-        } catch (Exception e) {
-          log.debug2("Failed to convert body of {} response to Map", statusCode, e);
-        }
-      }
+      // Wrap and throw the LockssRestHttpException in an unchecked WrappedLockssRestHttpException
+      throw new WrappedLockssRestHttpException(
+          LockssRestHttpException.fromRestClientResponseException(e1, messageConverters)
+      );
     }
-
-    if (!handled) {
-      // Convert the response body to e String if possible (presumably because
-      // the response is text/*)
-      for (HttpMessageConverter converter : messageConverters) {
-        if (converter.canRead(String.class, responseHeaders.getContentType())) {
-          try {
-            String sss = (String) converter.read(String.class, response);
-            log.debug2("Server error message: {}", sss);
-            lrhe.setServerErrorMessage(sss);
-            handled = true;
-            break;
-          } catch (Exception e) {
-            log.debug2("Failed to convert body of {} response to String", statusCode, e);
-          }
-        }
-      }
-    }
-
-    if (!handled) {
-      log.debug("Error body not handled: {}", responseHeaders.getContentType());
-    }
-
-    lrhe.setHttpStatus(statusCode);
-    lrhe.setHttpResponseHeaders(responseHeaders);
-    lrhe.setMessage("FIXME");
-
-    throw new WrappedLockssRestHttpException(lrhe);
   }
 
   /**

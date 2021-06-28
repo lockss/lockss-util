@@ -13,3 +13,9 @@ logs/
 
 /TAGS
 /lockss-util-*/TAGS
+
+/pom.xml.bak
+/*/pom.xml.bak
+/.surefire-*
+/*/.surefire-*
+

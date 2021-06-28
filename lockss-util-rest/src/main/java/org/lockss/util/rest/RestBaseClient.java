@@ -28,17 +28,15 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- */
+*/
+
 package org.lockss.util.rest;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Map;
+import java.util.*;
 import javax.mail.MessagingException;
 import org.lockss.log.L4JLogger;
 import org.lockss.util.Constants;
@@ -52,81 +50,58 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 /**
- * A base client of a REST service.
+ * Base class for clients of REST services.
  * 
+ * The generics magic in this class and subclasses allows subclass methods
+ * to be chained from base class methods.  E.g.,<code>
+ * new RestPollerClient().setTimeouts(t1, t2).callPoll(...);</code>
+ *
  * @author Fernando García-Loygorri
  */
-public class RestBaseClient {
+public class RestBaseClient<C extends RestBaseClient<?>> {
   private static L4JLogger log = L4JLogger.getLogger();
 
   // Default timeouts.
   private static long defaultConnectTimeout = 10 * Constants.SECOND;
   private static long defaultReadTimeout = 30 * Constants.SECOND;
 
+  protected final C self;
+
   // The URL of the REST web service.
   private String serviceUrl;
 
-  // The Authorization header value to be used to access the REST web service.
-  private String authHeaderValue;
+  // Additional headers added by calling code
+  HttpHeaders additionalReqHeaders;
 
-  // The connection timeout, in milliseconds, to access the REST web service.
-  private long connectTimeout;
+  // The connect timeout, in milliseconds, to access the REST web service.
+  private long connectTimeout = defaultConnectTimeout;
 
   // The read timeout, in milliseconds, to access the REST web service.
-  private long readTimeout;
+  private long readTimeout = defaultReadTimeout;
 
-  /**
-   * Constructor without authentication and with default timeouts.
-   * 
-   * @param serviceUrl A String with the information necessary to access the
-   *                   REST web service.
-   */
-  public RestBaseClient(String serviceUrl) {
-    this(serviceUrl, null, defaultConnectTimeout, defaultReadTimeout);
+  protected RestBaseClient(final Class<C> selfClass) {
+    this.self = selfClass.cast(this);
   }
 
-  /**
-   * Constructor with authentication and default timeouts.
-   * 
-   * @param serviceUrl      A String with the information necessary to access
-   *                        the REST web service.
-   * @param authHeaderValue A String with the Authorization header value to be
-   *                        used, if any.
-   */
-  public RestBaseClient(String serviceUrl, String authHeaderValue) {
-    this(serviceUrl, authHeaderValue, defaultConnectTimeout,
-	defaultReadTimeout);
+  public C setServiceUrl(String url) {
+    this.serviceUrl = url;
+    return self;
   }
 
-  /**
-   * Constructor without authentication and with specified timeouts.
-   * 
-   * @param serviceUrl     A String with the information necessary to access the
-   *                       REST web service.
-   * @param connectTimeout A long with the connection timeout in milliseconds.
-   * @param readTimeout    A long with the read timeout in milliseconds.
-   */
-  public RestBaseClient(String serviceUrl, long connectTimeout,
-      long readTimeout) {
-    this(serviceUrl, null, connectTimeout, readTimeout);
-  }
-
-  /**
-   * Constructor with authentication and specified timeouts.
-   * 
-   * @param serviceUrl      A String with the information necessary to access
-   *                        the REST web service.
-   * @param authHeaderValue A String with the Authorization header value to be
-   *                        used, if any.
-   * @param connectTimeout  A long with the connection timeout in milliseconds.
-   * @param readTimeout     A long with the read timeout in milliseconds.
-   */
-  public RestBaseClient(String serviceUrl, String authHeaderValue,
-      long connectTimeout, long readTimeout) {
-    this.serviceUrl = serviceUrl;
-    this.authHeaderValue = authHeaderValue;
+  /** Set the connect and read timeouts */
+  public C setTimeouts(long connectTimeout, long readTimeout) {
     this.connectTimeout = connectTimeout;
     this.readTimeout = readTimeout;
+    return self;
+  }
+
+  /** Add the headers to the request headers, replacing any that already
+   * have a value */
+  public C addRequestHeaders(HttpHeaders headers) {
+    additionalReqHeaders =
+      SpringHeaderUtil.addHeaders(headers, additionalReqHeaders, true);
+    log.debug2("Additional headers: {}", additionalReqHeaders);
+    return self;
   }
 
   /**
@@ -139,14 +114,13 @@ public class RestBaseClient {
    * @param queryParams      A Map<String, String> with any query parameters.
    * @param httpMethod       An HttpMethod with HTTP method used to make the
    *                         call to the REST service.
-   * @param requestHeaders   An HttpHeaders with any request headers (other than
-   *                         the Authorization header) needed to make the
-   *                         request, if any.
+   * @param requestHeaders An HttpHeaders with any request headers needed
+   *                         to make the request, if any.
    * @param body             A T with the contents of the body to be included
    *                         with the request, if any.
    * @param exceptionMessage A String with the message to be returned with any
    *                         exception.
-   * @return a ResponseEntity<String> with the response from the REST service.
+   * @return a ResponseEntity<U> with the response from the REST service.
    * @throws LockssRestException if any problems arise in the call to the REST
    *                             service.
    */
@@ -163,12 +137,15 @@ public class RestBaseClient {
     log.debug2("body = {}", body);
     log.debug2("responseType = {}", responseType);
     log.debug2("exceptionMessage = {}", exceptionMessage);
+    log.debug2("connectTimeout = {}", connectTimeout);
+    log.debug2("readTimeout = {}", readTimeout);
 
     URI uri =
 	RestUtil.getRestUri(serviceUrl + pathQuery, uriVariables, queryParams);
     log.trace("uri = {}", uri);
 
-    HttpHeaders fullRequestHeaders = addAuthorizationHeader(requestHeaders);
+    HttpHeaders fullRequestHeaders =
+      SpringHeaderUtil.addHeaders(requestHeaders, additionalReqHeaders);
     log.trace("fullRequestHeaders = {}", fullRequestHeaders);
 
     // Make the REST call.
@@ -226,62 +203,13 @@ public class RestBaseClient {
     requestHeaders.setAccept(Arrays.asList(MediaType.MULTIPART_FORM_DATA,
 	MediaType.APPLICATION_JSON));
 
-    HttpHeaders fullRequestHeaders = addAuthorizationHeader(requestHeaders);
+    HttpHeaders fullRequestHeaders =
+      SpringHeaderUtil.addHeaders(requestHeaders, additionalReqHeaders);
     log.trace("fullRequestHeaders = {}", fullRequestHeaders);
 
     // Make the REST call.
     log.trace("Calling MultipartConnector.requestGet");
     return new MultipartConnector(uri, fullRequestHeaders).request(httpMethod,
 	body, (int)connectTimeout, (int)readTimeout);
-  }
-
-  /**
-   * Adds the Authorization header to a set of HTTP headers, if necessary.
-   * 
-   * @param requestHeaders An HttpHeaders with the original HTTP headers.
-   * @return an HttpHeaders with the Authorization header added, if necessary.
-   */
-  private HttpHeaders addAuthorizationHeader(HttpHeaders requestHeaders) {
-    log.debug2("requestHeaders = {}", requestHeaders);
-    HttpHeaders fullRequestHeaders = requestHeaders;
-
-    // Check whether there are credentials to be sent.
-    if (authHeaderValue != null && !authHeaderValue.isEmpty()) {
-      // Yes: Check whether no HTTP request headers were passed.
-      if (fullRequestHeaders == null) {
-	// Yes: Initialize the HTTP request headers.
-	fullRequestHeaders = new HttpHeaders();
-      }
-
-      // Add the credentials to the request.
-      fullRequestHeaders.set("Authorization", authHeaderValue);
-    }
-
-    log.debug2("fullRequestHeaders = {}", fullRequestHeaders);
-    return fullRequestHeaders;
-  }
-
-  /**
-   * Provides the authentication header value for a set of credentials.
-   * 
-   * @param serviceUser     A String with the user name of the service.
-   * @param servicePassword A String with the password of the service user.
-   * @return a String with the authentication header value.
-   */
-  public static String getAuthHeaderValue(String serviceUser,
-      String servicePassword) {
-    log.debug2("serviceUser = {}", serviceUser);
-    log.debug2("servicePassword = {}", servicePassword);
-
-    String authHeaderValue = null;
-
-    if (serviceUser != null && servicePassword != null) {
-      String credentials = serviceUser + ":" + servicePassword;
-      authHeaderValue = "Basic " + Base64.getEncoder()
-      .encodeToString(credentials.getBytes(StandardCharsets.US_ASCII));
-    }
-
-    log.debug2("authHeaderValue = {}", authHeaderValue);
-    return authHeaderValue;
   }
 }

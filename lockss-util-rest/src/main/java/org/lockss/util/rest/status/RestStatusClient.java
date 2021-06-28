@@ -36,30 +36,18 @@ import org.lockss.util.rest.status.ApiStatus;
 /**
  * A client of the status endpoint of a REST service.
  */
-public class RestStatusClient extends RestBaseClient {
+public class RestStatusClient extends RestBaseClient<RestStatusClient> {
   private static L4JLogger log = L4JLogger.getLogger();
 
   /**
-   * Constructor without authentication and with default timeouts.
+   * Constructor
    * 
    * @param serviceUrl A String with the information necessary to access the
    *                   REST Poller web service.
    */
   public RestStatusClient(String serviceUrl) {
-    super(serviceUrl);
-  }
-
-  /**
-   * Constructor without authentication and with specified timeouts.
-   * 
-   * @param serviceUrl     A String with the information necessary to access the
-   *                       REST Poller web service.
-   * @param connectTimeout A long with the connection timeout in milliseconds.
-   * @param readTimeout    A long with the read timeout in milliseconds.
-   */
-  public RestStatusClient(String serviceUrl,
-			  long connectTimeout, long readTimeout) {
-    super(serviceUrl, connectTimeout, readTimeout);
+    super(RestStatusClient.class);
+    setServiceUrl(serviceUrl);
   }
 
   /**

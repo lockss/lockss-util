@@ -1,8 +1,18 @@
-# Release Notes
+# `lockss-util-entities` Release Notes
 
-## Major Changes Since 1.0.0
+## Changes Since 1.1.0
 
-*   (highlights go here)
+*   ...
+
+## 1.1.0
+
+### Features
+
+*   ...
+
+### Fixes
+
+*   ...
 
 ## 1.0.0
 

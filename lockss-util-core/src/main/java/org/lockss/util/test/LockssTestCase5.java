@@ -49,7 +49,6 @@ import org.hamcrest.collection.IsArray;
 import org.hamcrest.core.AnyOf;
 import org.hamcrest.core.CombinableMatcher.*;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.*;
 import org.lockss.util.io.FileUtil;
 import org.lockss.util.os.PlatformUtil;
@@ -391,6 +390,15 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     return Boolean.getBoolean(SYSPROP_KEEP_TEMP_FILES);
   }
 
+  /*
+   * BEGIN JUnit 5 Assertions non-static copycat
+   */
+
+  public <V> V fail() {
+
+    return Assertions.fail();
+  }
+
   public <V> V fail(String message) {
 
     return Assertions.fail(message);
@@ -436,8 +444,7 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertTrue(condition, message);
   }
 
-  public void assertTrue(BooleanSupplier booleanSupplier,
-                         Supplier<String> messageSupplier) {
+  public void assertTrue(BooleanSupplier booleanSupplier, Supplier<String> messageSupplier) {
 
     Assertions.assertTrue(booleanSupplier, messageSupplier);
   }
@@ -467,8 +474,7 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertFalse(booleanSupplier, message);
   }
 
-  public void assertFalse(BooleanSupplier booleanSupplier,
-                          Supplier<String> messageSupplier) {
+  public void assertFalse(BooleanSupplier booleanSupplier, Supplier<String> messageSupplier) {
 
     Assertions.assertFalse(booleanSupplier, messageSupplier);
   }
@@ -508,13 +514,57 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertEquals(expected, actual);
   }
 
+  public void assertEquals(short expected, Short actual) {
+
+    Assertions.assertEquals(expected, actual);
+  }
+
+  public void assertEquals(Short expected, short actual) {
+
+    Assertions.assertEquals(expected, actual);
+  }
+
+  public void assertEquals(Short expected, Short actual) {
+
+    Assertions.assertEquals(expected, actual);
+  }
+
   public void assertEquals(short expected, short actual, String message) {
 
     Assertions.assertEquals(expected, actual, message);
   }
 
-  public void assertEquals(short expected, short actual,
-                           Supplier<String> messageSupplier) {
+  public void assertEquals(short expected, Short actual, String message) {
+
+    Assertions.assertEquals(expected, actual, message);
+  }
+
+  public void assertEquals(Short expected, short actual, String message) {
+
+    Assertions.assertEquals(expected, actual, message);
+  }
+
+  public void assertEquals(Short expected, Short actual, String message) {
+
+    Assertions.assertEquals(expected, actual, message);
+  }
+
+  public void assertEquals(short expected, short actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertEquals(expected, actual, messageSupplier);
+  }
+
+  public void assertEquals(short expected, Short actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertEquals(expected, actual, messageSupplier);
+  }
+
+  public void assertEquals(Short expected, short actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertEquals(expected, actual, messageSupplier);
+  }
+
+  public void assertEquals(Short expected, Short actual, Supplier<String> messageSupplier) {
 
     Assertions.assertEquals(expected, actual, messageSupplier);
   }
@@ -524,13 +574,57 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertEquals(expected, actual);
   }
 
+  public void assertEquals(byte expected, Byte actual) {
+
+    Assertions.assertEquals(expected, actual);
+  }
+
+  public void assertEquals(Byte expected, byte actual) {
+
+    Assertions.assertEquals(expected, actual);
+  }
+
+  public void assertEquals(Byte expected, Byte actual) {
+
+    Assertions.assertEquals(expected, actual);
+  }
+
   public void assertEquals(byte expected, byte actual, String message) {
 
     Assertions.assertEquals(expected, actual, message);
   }
 
-  public void assertEquals(byte expected, byte actual,
-                           Supplier<String> messageSupplier) {
+  public void assertEquals(byte expected, Byte actual, String message) {
+
+    Assertions.assertEquals(expected, actual, message);
+  }
+
+  public void assertEquals(Byte expected, byte actual, String message) {
+
+    Assertions.assertEquals(expected, actual, message);
+  }
+
+  public void assertEquals(Byte expected, Byte actual, String message) {
+
+    Assertions.assertEquals(expected, actual, message);
+  }
+
+  public void assertEquals(byte expected, byte actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertEquals(expected, actual, messageSupplier);
+  }
+
+  public void assertEquals(byte expected, Byte actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertEquals(expected, actual, messageSupplier);
+  }
+
+  public void assertEquals(Byte expected, byte actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertEquals(expected, actual, messageSupplier);
+  }
+
+  public void assertEquals(Byte expected, Byte actual, Supplier<String> messageSupplier) {
 
     Assertions.assertEquals(expected, actual, messageSupplier);
   }
@@ -540,13 +634,57 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertEquals(expected, actual);
   }
 
+  public void assertEquals(int expected, Integer actual) {
+
+    Assertions.assertEquals(expected, actual);
+  }
+
+  public void assertEquals(Integer expected, int actual) {
+
+    Assertions.assertEquals(expected, actual);
+  }
+
+  public void assertEquals(Integer expected, Integer actual) {
+
+    Assertions.assertEquals(expected, actual);
+  }
+
   public void assertEquals(int expected, int actual, String message) {
 
     Assertions.assertEquals(expected, actual, message);
   }
 
-  public void assertEquals(int expected, int actual,
-                           Supplier<String> messageSupplier) {
+  public void assertEquals(int expected, Integer actual, String message) {
+
+    Assertions.assertEquals(expected, actual, message);
+  }
+
+  public void assertEquals(Integer expected, int actual, String message) {
+
+    Assertions.assertEquals(expected, actual, message);
+  }
+
+  public void assertEquals(Integer expected, Integer actual, String message) {
+
+    Assertions.assertEquals(expected, actual, message);
+  }
+
+  public void assertEquals(int expected, int actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertEquals(expected, actual, messageSupplier);
+  }
+
+  public void assertEquals(int expected, Integer actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertEquals(expected, actual, messageSupplier);
+  }
+
+  public void assertEquals(Integer expected, int actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertEquals(expected, actual, messageSupplier);
+  }
+
+  public void assertEquals(Integer expected, Integer actual, Supplier<String> messageSupplier) {
 
     Assertions.assertEquals(expected, actual, messageSupplier);
   }
@@ -556,29 +694,57 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertEquals(expected, actual);
   }
 
+  public void assertEquals(long expected, Long actual) {
+
+    Assertions.assertEquals(expected, actual);
+  }
+
+  public void assertEquals(Long expected, long actual) {
+
+    Assertions.assertEquals(expected, actual);
+  }
+
+  public void assertEquals(Long expected, Long actual) {
+
+    Assertions.assertEquals(expected, actual);
+  }
+
   public void assertEquals(long expected, long actual, String message) {
 
     Assertions.assertEquals(expected, actual, message);
   }
 
-  public void assertEquals(long expected, long actual,
-                           Supplier<String> messageSupplier) {
-
-    Assertions.assertEquals(expected, actual, messageSupplier);
-  }
-
-  public void assertEquals(char expected, char actual) {
-
-    Assertions.assertEquals(expected, actual);
-  }
-
-  public void assertEquals(char expected, char actual, String message) {
+  public void assertEquals(long expected, Long actual, String message) {
 
     Assertions.assertEquals(expected, actual, message);
   }
 
-  public void assertEquals(char expected, char actual,
-                           Supplier<String> messageSupplier) {
+  public void assertEquals(Long expected, long actual, String message) {
+
+    Assertions.assertEquals(expected, actual, message);
+  }
+
+  public void assertEquals(Long expected, Long actual, String message) {
+
+    Assertions.assertEquals(expected, actual, message);
+  }
+
+  public void assertEquals(long expected, long actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertEquals(expected, actual, messageSupplier);
+  }
+
+  public void assertEquals(long expected, Long actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertEquals(expected, actual, messageSupplier);
+  }
+
+  public void assertEquals(Long expected, long actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertEquals(expected, actual, messageSupplier);
+  }
+
+  public void assertEquals(Long expected, Long actual, Supplier<String> messageSupplier) {
 
     Assertions.assertEquals(expected, actual, messageSupplier);
   }
@@ -588,13 +754,57 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertEquals(expected, actual);
   }
 
+  public void assertEquals(float expected, Float actual) {
+
+    Assertions.assertEquals(expected, actual);
+  }
+
+  public void assertEquals(Float expected, float actual) {
+
+    Assertions.assertEquals(expected, actual);
+  }
+
+  public void assertEquals(Float expected, Float actual) {
+
+    Assertions.assertEquals(expected, actual);
+  }
+
   public void assertEquals(float expected, float actual, String message) {
 
     Assertions.assertEquals(expected, actual, message);
   }
 
-  public void assertEquals(float expected, float actual,
-                           Supplier<String> messageSupplier) {
+  public void assertEquals(float expected, Float actual, String message) {
+
+    Assertions.assertEquals(expected, actual, message);
+  }
+
+  public void assertEquals(Float expected, float actual, String message) {
+
+    Assertions.assertEquals(expected, actual, message);
+  }
+
+  public void assertEquals(Float expected, Float actual, String message) {
+
+    Assertions.assertEquals(expected, actual, message);
+  }
+
+  public void assertEquals(float expected, float actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertEquals(expected, actual, messageSupplier);
+  }
+
+  public void assertEquals(float expected, Float actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertEquals(expected, actual, messageSupplier);
+  }
+
+  public void assertEquals(Float expected, float actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertEquals(expected, actual, messageSupplier);
+  }
+
+  public void assertEquals(Float expected, Float actual, Supplier<String> messageSupplier) {
 
     Assertions.assertEquals(expected, actual, messageSupplier);
   }
@@ -604,14 +814,12 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertEquals(expected, actual, delta);
   }
 
-  public void assertEquals(float expected, float actual, float delta,
-                           String message) {
+  public void assertEquals(float expected, float actual, float delta, String message) {
 
     Assertions.assertEquals(expected, actual, delta, message);
   }
 
-  public void assertEquals(float expected, float actual, float delta,
-                           Supplier<String> messageSupplier) {
+  public void assertEquals(float expected, float actual, float delta, Supplier<String> messageSupplier) {
 
     Assertions.assertEquals(expected, actual, delta, messageSupplier);
   }
@@ -621,13 +829,57 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertEquals(expected, actual);
   }
 
+  public void assertEquals(double expected, Double actual) {
+
+    Assertions.assertEquals(expected, actual);
+  }
+
+  public void assertEquals(Double expected, double actual) {
+
+    Assertions.assertEquals(expected, actual);
+  }
+
+  public void assertEquals(Double expected, Double actual) {
+
+    Assertions.assertEquals(expected, actual);
+  }
+
   public void assertEquals(double expected, double actual, String message) {
 
     Assertions.assertEquals(expected, actual, message);
   }
 
-  public void assertEquals(double expected, double actual,
-                           Supplier<String> messageSupplier) {
+  public void assertEquals(double expected, Double actual, String message) {
+
+    Assertions.assertEquals(expected, actual, message);
+  }
+
+  public void assertEquals(Double expected, double actual, String message) {
+
+    Assertions.assertEquals(expected, actual, message);
+  }
+
+  public void assertEquals(Double expected, Double actual, String message) {
+
+    Assertions.assertEquals(expected, actual, message);
+  }
+
+  public void assertEquals(double expected, double actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertEquals(expected, actual, messageSupplier);
+  }
+
+  public void assertEquals(double expected, Double actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertEquals(expected, actual, messageSupplier);
+  }
+
+  public void assertEquals(Double expected, double actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertEquals(expected, actual, messageSupplier);
+  }
+
+  public void assertEquals(Double expected, Double actual, Supplier<String> messageSupplier) {
 
     Assertions.assertEquals(expected, actual, messageSupplier);
   }
@@ -637,16 +889,74 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertEquals(expected, actual, delta);
   }
 
-  public void assertEquals(double expected, double actual, double delta,
-                           String message) {
+  public void assertEquals(double expected, double actual, double delta, String message) {
 
     Assertions.assertEquals(expected, actual, delta, message);
   }
 
-  public void assertEquals(double expected, double actual, double delta,
-                           Supplier<String> messageSupplier) {
+  public void assertEquals(double expected, double actual, double delta, Supplier<String> messageSupplier) {
 
     Assertions.assertEquals(expected, actual, delta, messageSupplier);
+  }
+
+  public void assertEquals(char expected, char actual) {
+
+    Assertions.assertEquals(expected, actual);
+  }
+
+  public void assertEquals(char expected, Character actual) {
+
+    Assertions.assertEquals(expected, actual);
+  }
+
+  public void assertEquals(Character expected, char actual) {
+
+    Assertions.assertEquals(expected, actual);
+  }
+
+  public void assertEquals(Character expected, Character actual) {
+
+    Assertions.assertEquals(expected, actual);
+  }
+
+  public void assertEquals(char expected, char actual, String message) {
+
+    Assertions.assertEquals(expected, actual, message);
+  }
+
+  public void assertEquals(char expected, Character actual, String message) {
+
+    Assertions.assertEquals(expected, actual, message);
+  }
+
+  public void assertEquals(Character expected, char actual, String message) {
+
+    Assertions.assertEquals(expected, actual, message);
+  }
+
+  public void assertEquals(Character expected, Character actual, String message) {
+
+    Assertions.assertEquals(expected, actual, message);
+  }
+
+  public void assertEquals(char expected, char actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertEquals(expected, actual, messageSupplier);
+  }
+
+  public void assertEquals(char expected, Character actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertEquals(expected, actual, messageSupplier);
+  }
+
+  public void assertEquals(Character expected, char actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertEquals(expected, actual, messageSupplier);
+  }
+
+  public void assertEquals(Character expected, Character actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertEquals(expected, actual, messageSupplier);
   }
 
   public void assertEquals(Object expected, Object actual) {
@@ -659,8 +969,7 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertEquals(expected, actual, message);
   }
 
-  public void assertEquals(Object expected, Object actual,
-                           Supplier<String> messageSupplier) {
+  public void assertEquals(Object expected, Object actual, Supplier<String> messageSupplier) {
 
     Assertions.assertEquals(expected, actual, messageSupplier);
   }
@@ -670,14 +979,12 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertArrayEquals(expected, actual);
   }
 
-  public void assertArrayEquals(boolean[] expected, boolean[] actual,
-                                String message) {
+  public void assertArrayEquals(boolean[] expected, boolean[] actual, String message) {
 
     Assertions.assertArrayEquals(expected, actual, message);
   }
 
-  public void assertArrayEquals(boolean[] expected, boolean[] actual,
-                                Supplier<String> messageSupplier) {
+  public void assertArrayEquals(boolean[] expected, boolean[] actual, Supplier<String> messageSupplier) {
 
     Assertions.assertArrayEquals(expected, actual, messageSupplier);
   }
@@ -687,14 +994,12 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertArrayEquals(expected, actual);
   }
 
-  public void assertArrayEquals(char[] expected, char[] actual,
-                                String message) {
+  public void assertArrayEquals(char[] expected, char[] actual, String message) {
 
     Assertions.assertArrayEquals(expected, actual, message);
   }
 
-  public void assertArrayEquals(char[] expected, char[] actual,
-                                Supplier<String> messageSupplier) {
+  public void assertArrayEquals(char[] expected, char[] actual, Supplier<String> messageSupplier) {
 
     Assertions.assertArrayEquals(expected, actual, messageSupplier);
   }
@@ -704,14 +1009,12 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertArrayEquals(expected, actual);
   }
 
-  public void assertArrayEquals(byte[] expected, byte[] actual,
-                                String message) {
+  public void assertArrayEquals(byte[] expected, byte[] actual, String message) {
 
     Assertions.assertArrayEquals(expected, actual, message);
   }
 
-  public void assertArrayEquals(byte[] expected, byte[] actual,
-                                Supplier<String> messageSupplier) {
+  public void assertArrayEquals(byte[] expected, byte[] actual, Supplier<String> messageSupplier) {
 
     Assertions.assertArrayEquals(expected, actual, messageSupplier);
   }
@@ -721,14 +1024,12 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertArrayEquals(expected, actual);
   }
 
-  public void assertArrayEquals(short[] expected, short[] actual,
-                                String message) {
+  public void assertArrayEquals(short[] expected, short[] actual, String message) {
 
     Assertions.assertArrayEquals(expected, actual, message);
   }
 
-  public void assertArrayEquals(short[] expected, short[] actual,
-                                Supplier<String> messageSupplier) {
+  public void assertArrayEquals(short[] expected, short[] actual, Supplier<String> messageSupplier) {
 
     Assertions.assertArrayEquals(expected, actual, messageSupplier);
   }
@@ -743,8 +1044,7 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertArrayEquals(expected, actual, message);
   }
 
-  public void assertArrayEquals(int[] expected, int[] actual,
-                                Supplier<String> messageSupplier) {
+  public void assertArrayEquals(int[] expected, int[] actual, Supplier<String> messageSupplier) {
 
     Assertions.assertArrayEquals(expected, actual, messageSupplier);
   }
@@ -754,14 +1054,12 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertArrayEquals(expected, actual);
   }
 
-  public void assertArrayEquals(long[] expected, long[] actual,
-                                String message) {
+  public void assertArrayEquals(long[] expected, long[] actual, String message) {
 
     Assertions.assertArrayEquals(expected, actual, message);
   }
 
-  public void assertArrayEquals(long[] expected, long[] actual,
-                                Supplier<String> messageSupplier) {
+  public void assertArrayEquals(long[] expected, long[] actual, Supplier<String> messageSupplier) {
 
     Assertions.assertArrayEquals(expected, actual, messageSupplier);
   }
@@ -771,14 +1069,12 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertArrayEquals(expected, actual);
   }
 
-  public void assertArrayEquals(float[] expected, float[] actual,
-                                String message) {
+  public void assertArrayEquals(float[] expected, float[] actual, String message) {
 
     Assertions.assertArrayEquals(expected, actual, message);
   }
 
-  public void assertArrayEquals(float[] expected, float[] actual,
-                                Supplier<String> messageSupplier) {
+  public void assertArrayEquals(float[] expected, float[] actual, Supplier<String> messageSupplier) {
 
     Assertions.assertArrayEquals(expected, actual, messageSupplier);
   }
@@ -788,14 +1084,12 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertArrayEquals(expected, actual, delta);
   }
 
-  public void assertArrayEquals(float[] expected, float[] actual, float delta,
-                                String message) {
+  public void assertArrayEquals(float[] expected, float[] actual, float delta, String message) {
 
     Assertions.assertArrayEquals(expected, actual, delta, message);
   }
 
-  public void assertArrayEquals(float[] expected, float[] actual, float delta,
-                                Supplier<String> messageSupplier) {
+  public void assertArrayEquals(float[] expected, float[] actual, float delta, Supplier<String> messageSupplier) {
 
     Assertions.assertArrayEquals(expected, actual, delta, messageSupplier);
   }
@@ -805,33 +1099,27 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertArrayEquals(expected, actual);
   }
 
-  public void assertArrayEquals(double[] expected, double[] actual,
-                                String message) {
+  public void assertArrayEquals(double[] expected, double[] actual, String message) {
 
     Assertions.assertArrayEquals(expected, actual, message);
   }
 
-  public void assertArrayEquals(double[] expected, double[] actual,
-                                Supplier<String> messageSupplier) {
+  public void assertArrayEquals(double[] expected, double[] actual, Supplier<String> messageSupplier) {
 
     Assertions.assertArrayEquals(expected, actual, messageSupplier);
   }
 
-  public void assertArrayEquals(double[] expected, double[] actual,
-                                double delta) {
+  public void assertArrayEquals(double[] expected, double[] actual, double delta) {
 
     Assertions.assertArrayEquals(expected, actual, delta);
   }
 
-  public void assertArrayEquals(double[] expected, double[] actual,
-                                double delta, String message) {
+  public void assertArrayEquals(double[] expected, double[] actual, double delta, String message) {
 
     Assertions.assertArrayEquals(expected, actual, delta, message);
   }
 
-  public void assertArrayEquals(double[] expected, double[] actual,
-                                double delta,
-                                Supplier<String> messageSupplier) {
+  public void assertArrayEquals(double[] expected, double[] actual, double delta, Supplier<String> messageSupplier) {
 
     Assertions.assertArrayEquals(expected, actual, delta, messageSupplier);
   }
@@ -841,14 +1129,12 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertArrayEquals(expected, actual);
   }
 
-  public void assertArrayEquals(Object[] expected, Object[] actual,
-                                String message) {
+  public void assertArrayEquals(Object[] expected, Object[] actual, String message) {
 
     Assertions.assertArrayEquals(expected, actual, message);
   }
 
-  public void assertArrayEquals(Object[] expected, Object[] actual,
-                                Supplier<String> messageSupplier) {
+  public void assertArrayEquals(Object[] expected, Object[] actual, Supplier<String> messageSupplier) {
 
     Assertions.assertArrayEquals(expected, actual, messageSupplier);
   }
@@ -858,22 +1144,495 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertIterableEquals(expected, actual);
   }
 
-  public void assertIterableEquals(Iterable<?> expected, Iterable<?> actual,
-                                   String message) {
+  public void assertIterableEquals(Iterable<?> expected, Iterable<?> actual, String message) {
 
     Assertions.assertIterableEquals(expected, actual, message);
   }
 
-  public void assertIterableEquals(Iterable<?> expected, Iterable<?> actual,
-                                   Supplier<String> messageSupplier) {
+  public void assertIterableEquals(Iterable<?> expected, Iterable<?> actual, Supplier<String> messageSupplier) {
 
     Assertions.assertIterableEquals(expected, actual, messageSupplier);
   }
 
-  public void assertLinesMatch(List<String> expectedLines,
-                               List<String> actualLines) {
+  public void assertLinesMatch(List<String> expectedLines, List<String> actualLines) {
 
     Assertions.assertLinesMatch(expectedLines, actualLines);
+  }
+
+  public void assertLinesMatch(List<String> expectedLines, List<String> actualLines, String message) {
+
+    Assertions.assertLinesMatch(expectedLines, actualLines, message);
+  }
+
+  public void assertLinesMatch(List<String> expectedLines, List<String> actualLines, Supplier<String> messageSupplier) {
+
+    Assertions.assertLinesMatch(expectedLines, actualLines, messageSupplier);
+  }
+
+  public void assertLinesMatch(Stream<String> expectedLines, Stream<String> actualLines) {
+
+    Assertions.assertLinesMatch(expectedLines, actualLines);
+  }
+
+  public void assertLinesMatch(Stream<String> expectedLines, Stream<String> actualLines, String message) {
+
+    Assertions.assertLinesMatch(expectedLines, actualLines, message);
+  }
+
+  public void assertLinesMatch(Stream<String> expectedLines, Stream<String> actualLines,
+      Supplier<String> messageSupplier) {
+
+    Assertions.assertLinesMatch(expectedLines, actualLines, messageSupplier);
+  }
+
+  public void assertNotEquals(byte unexpected, byte actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(byte unexpected, Byte actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(Byte unexpected, byte actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(Byte unexpected, Byte actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(byte unexpected, byte actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(byte unexpected, Byte actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(Byte unexpected, byte actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(Byte unexpected, Byte actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(byte unexpected, byte actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(byte unexpected, Byte actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(Byte unexpected, byte actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(Byte unexpected, Byte actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(short unexpected, short actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(short unexpected, Short actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(Short unexpected, short actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(Short unexpected, Short actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(short unexpected, short actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(short unexpected, Short actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(Short unexpected, short actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(Short unexpected, Short actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(short unexpected, short actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(short unexpected, Short actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(Short unexpected, short actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(Short unexpected, Short actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(int unexpected, int actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(int unexpected, Integer actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(Integer unexpected, int actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(Integer unexpected, Integer actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(int unexpected, int actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(int unexpected, Integer actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(Integer unexpected, int actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(Integer unexpected, Integer actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(int unexpected, int actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(int unexpected, Integer actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(Integer unexpected, int actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(Integer unexpected, Integer actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(long unexpected, long actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(long unexpected, Long actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(Long unexpected, long actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(Long unexpected, Long actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(long unexpected, long actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(long unexpected, Long actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(Long unexpected, long actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(Long unexpected, Long actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(long unexpected, long actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(long unexpected, Long actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(Long unexpected, long actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(Long unexpected, Long actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(float unexpected, float actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(float unexpected, Float actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(Float unexpected, float actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(Float unexpected, Float actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(float unexpected, float actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(float unexpected, Float actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(Float unexpected, float actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(Float unexpected, Float actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(float unexpected, float actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(float unexpected, Float actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(Float unexpected, float actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(Float unexpected, Float actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(float unexpected, float actual, float delta) {
+
+    Assertions.assertNotEquals(unexpected, actual, delta);
+  }
+
+  public void assertNotEquals(float unexpected, float actual, float delta, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, delta, message);
+  }
+
+  public void assertNotEquals(float unexpected, float actual, float delta, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, delta, messageSupplier);
+  }
+
+  public void assertNotEquals(double unexpected, double actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(double unexpected, Double actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(Double unexpected, double actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(Double unexpected, Double actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(double unexpected, double actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(double unexpected, Double actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(Double unexpected, double actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(Double unexpected, Double actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(double unexpected, double actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(double unexpected, Double actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(Double unexpected, double actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(Double unexpected, Double actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(double unexpected, double actual, double delta) {
+
+    Assertions.assertNotEquals(unexpected, actual, delta);
+  }
+
+  public void assertNotEquals(double unexpected, double actual, double delta, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, delta, message);
+  }
+
+  public void assertNotEquals(double unexpected, double actual, double delta, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, delta, messageSupplier);
+  }
+
+  public void assertNotEquals(char unexpected, char actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(char unexpected, Character actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(Character unexpected, char actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(Character unexpected, Character actual) {
+
+    Assertions.assertNotEquals(unexpected, actual);
+  }
+
+  public void assertNotEquals(char unexpected, char actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(char unexpected, Character actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(Character unexpected, char actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(Character unexpected, Character actual, String message) {
+
+    Assertions.assertNotEquals(unexpected, actual, message);
+  }
+
+  public void assertNotEquals(char unexpected, char actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(char unexpected, Character actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(Character unexpected, char actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
+  }
+
+  public void assertNotEquals(Character unexpected, Character actual, Supplier<String> messageSupplier) {
+
+    Assertions.assertNotEquals(unexpected, actual, messageSupplier);
   }
 
   public void assertNotEquals(Object unexpected, Object actual) {
@@ -881,14 +1640,12 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertNotEquals(unexpected, actual);
   }
 
-  public void assertNotEquals(Object unexpected, Object actual,
-                              String message) {
+  public void assertNotEquals(Object unexpected, Object actual, String message) {
 
     Assertions.assertNotEquals(unexpected, actual, message);
   }
 
-  public void assertNotEquals(Object unexpected, Object actual,
-                              Supplier<String> messageSupplier) {
+  public void assertNotEquals(Object unexpected, Object actual, Supplier<String> messageSupplier) {
 
     Assertions.assertNotEquals(unexpected, actual, messageSupplier);
   }
@@ -903,8 +1660,7 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertSame(expected, actual, message);
   }
 
-  public void assertSame(Object expected, Object actual,
-                         Supplier<String> messageSupplier) {
+  public void assertSame(Object expected, Object actual, Supplier<String> messageSupplier) {
 
     Assertions.assertSame(expected, actual, messageSupplier);
   }
@@ -919,54 +1675,85 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertNotSame(unexpected, actual, message);
   }
 
-  public void assertNotSame(Object unexpected, Object actual,
-                            Supplier<String> messageSupplier) {
+  public void assertNotSame(Object unexpected, Object actual, Supplier<String> messageSupplier) {
 
     Assertions.assertNotSame(unexpected, actual, messageSupplier);
   }
 
-  public void assertAll(Executable... executables)
-      throws MultipleFailuresError {
+  public void assertAll(Executable... executables) throws MultipleFailuresError {
 
     Assertions.assertAll(executables);
   }
 
-  public void assertAll(Stream<Executable> executables)
-      throws MultipleFailuresError {
+  public void assertAll(String heading, Executable... executables) throws MultipleFailuresError {
+
+    Assertions.assertAll(heading, executables);
+  }
+
+  public void assertAll(Collection<Executable> executables) throws MultipleFailuresError {
 
     Assertions.assertAll(executables);
   }
 
-  public void assertAll(String heading, Executable... executables)
-      throws MultipleFailuresError {
+  public void assertAll(String heading, Collection<Executable> executables) throws MultipleFailuresError {
 
     Assertions.assertAll(heading, executables);
   }
 
-  public void assertAll(String heading, Stream<Executable> executables)
-      throws MultipleFailuresError {
+  public void assertAll(Stream<Executable> executables) throws MultipleFailuresError {
+
+    Assertions.assertAll(executables);
+  }
+
+  public void assertAll(String heading, Stream<Executable> executables) throws MultipleFailuresError {
 
     Assertions.assertAll(heading, executables);
   }
 
-  public <T extends Throwable> T assertThrows(Class<T> expectedType,
-                                              Executable executable) {
+  public <T extends Throwable> T assertThrows(Class<T> expectedType, Executable executable) {
 
     return Assertions.assertThrows(expectedType, executable);
   }
 
-  public <T extends Throwable> T assertThrows(Class<T> expectedType,
-                                              Executable executable,
-                                              String message) {
+  public <T extends Throwable> T assertThrows(Class<T> expectedType, Executable executable, String message) {
 
     return Assertions.assertThrows(expectedType, executable, message);
   }
 
-  public <T extends Throwable> T assertThrows(Class<T> expectedType,
-                                              Executable executable,
-                                              Supplier<String> messageSupplier) {
+  public <T extends Throwable> T assertThrows(Class<T> expectedType, Executable executable,
+      Supplier<String> messageSupplier) {
 
     return Assertions.assertThrows(expectedType, executable, messageSupplier);
+  }
+
+  public void assertDoesNotThrow(Executable executable) {
+
+    Assertions.assertDoesNotThrow(executable);
+  }
+
+  public void assertDoesNotThrow(Executable executable, String message) {
+
+    Assertions.assertDoesNotThrow(executable, message);
+  }
+
+  public void assertDoesNotThrow(Executable executable, Supplier<String> messageSupplier) {
+
+    Assertions.assertDoesNotThrow(executable, messageSupplier);
+  }
+
+  public <T> T assertDoesNotThrow(ThrowingSupplier<T> supplier) {
+
+    return Assertions.assertDoesNotThrow(supplier);
+  }
+
+  public <T> T assertDoesNotThrow(ThrowingSupplier<T> supplier, String message) {
+
+    return Assertions.assertDoesNotThrow(supplier, message);
+  }
+
+  public <T> T assertDoesNotThrow(ThrowingSupplier<T> supplier, Supplier<String> messageSupplier) {
+
+    return Assertions.assertDoesNotThrow(supplier, messageSupplier);
   }
 
   public void assertTimeout(Duration timeout, Executable executable) {
@@ -974,14 +1761,12 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     Assertions.assertTimeout(timeout, executable);
   }
 
-  public void assertTimeout(Duration timeout, Executable executable,
-                            String message) {
+  public void assertTimeout(Duration timeout, Executable executable, String message) {
 
     Assertions.assertTimeout(timeout, executable, message);
   }
 
-  public void assertTimeout(Duration timeout, Executable executable,
-                            Supplier<String> messageSupplier) {
+  public void assertTimeout(Duration timeout, Executable executable, Supplier<String> messageSupplier) {
 
     Assertions.assertTimeout(timeout, executable, messageSupplier);
   }
@@ -991,57 +1776,51 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     return Assertions.assertTimeout(timeout, supplier);
   }
 
-  public <T> T assertTimeout(Duration timeout, ThrowingSupplier<T> supplier,
-                             String message) {
+  public <T> T assertTimeout(Duration timeout, ThrowingSupplier<T> supplier, String message) {
 
     return Assertions.assertTimeout(timeout, supplier, message);
   }
 
-  public <T> T assertTimeout(Duration timeout, ThrowingSupplier<T> supplier,
-                             Supplier<String> messageSupplier) {
+  public <T> T assertTimeout(Duration timeout, ThrowingSupplier<T> supplier, Supplier<String> messageSupplier) {
 
     return Assertions.assertTimeout(timeout, supplier, messageSupplier);
   }
 
-  public void assertTimeoutPreemptively(Duration timeout,
-                                        Executable executable) {
+  public void assertTimeoutPreemptively(Duration timeout, Executable executable) {
 
     Assertions.assertTimeoutPreemptively(timeout, executable);
   }
 
-  public void assertTimeoutPreemptively(Duration timeout, Executable executable,
-                                        String message) {
+  public void assertTimeoutPreemptively(Duration timeout, Executable executable, String message) {
 
     Assertions.assertTimeoutPreemptively(timeout, executable, message);
   }
 
-  public void assertTimeoutPreemptively(Duration timeout, Executable executable,
-                                        Supplier<String> messageSupplier) {
+  public void assertTimeoutPreemptively(Duration timeout, Executable executable, Supplier<String> messageSupplier) {
 
     Assertions.assertTimeoutPreemptively(timeout, executable, messageSupplier);
   }
 
-  public <T> T assertTimeoutPreemptively(Duration timeout,
-                                         ThrowingSupplier<T> supplier) {
+  public <T> T assertTimeoutPreemptively(Duration timeout, ThrowingSupplier<T> supplier) {
 
     return Assertions.assertTimeoutPreemptively(timeout, supplier);
   }
 
-  public <T> T assertTimeoutPreemptively(Duration timeout,
-                                         ThrowingSupplier<T> supplier,
-                                         String message) {
+  public <T> T assertTimeoutPreemptively(Duration timeout, ThrowingSupplier<T> supplier, String message) {
 
     return Assertions.assertTimeoutPreemptively(timeout, supplier, message);
   }
 
-  public <T> T assertTimeoutPreemptively(Duration timeout,
-                                         ThrowingSupplier<T> supplier,
-                                         Supplier<String> messageSupplier) {
+  public <T> T assertTimeoutPreemptively(Duration timeout, ThrowingSupplier<T> supplier,
+      Supplier<String> messageSupplier) {
 
-    return Assertions.assertTimeoutPreemptively(timeout, supplier,
-                                                messageSupplier);
+    return Assertions.assertTimeoutPreemptively(timeout, supplier, messageSupplier);
   }
 
+  /*
+   * END JUnit 5 Assertions non-static copycat
+   */
+  
   
   public <T> void assertThat(T actual, Matcher<? super T> matcher) {
 

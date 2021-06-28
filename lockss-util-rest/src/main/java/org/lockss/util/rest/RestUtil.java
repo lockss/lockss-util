@@ -51,7 +51,7 @@ public class RestUtil {
 
   /**
    * Performs a call to a REST service.
-   * 
+   *
    * @param restTemplate
    *          A RestTemplate with the REST template to be used to access the
    *          REST service.
@@ -64,7 +64,7 @@ public class RestUtil {
    * @param responseType
    *          A {@code Class<T>} with the expected type of the response to the
    *          request to the REST service.
-   * @param exceptionMessage
+   * @param clientExceptionMessage
    *          A String with the message to be returned if there are errors.
    * @return a {@code ResponseEntity<T>} with the response to the request to the
    *         REST service.
@@ -73,30 +73,33 @@ public class RestUtil {
    */
   public static <T> ResponseEntity<T> callRestService(RestTemplate restTemplate,
       URI uri, HttpMethod method, HttpEntity<?> requestEntity,
-      Class<T> responseType, String exceptionMessage)
+      Class<T> responseType, String clientExceptionMessage)
 	  throws LockssRestException {
+
     log.debug2("uri = {}", uri);
     log.debug2("method = {}", method);
     log.debug2("requestEntity = {}", requestEntity);
     log.debug2("responseType = {}", responseType);
-    log.debug2("exceptionMessage = {}", exceptionMessage);
+    log.debug2("clientExceptionMessage = {}", clientExceptionMessage);
 
     try {
       // Make the call to the REST service and get the response.
-      ResponseEntity<T> response =
-          restTemplate.exchange(uri, method, requestEntity, responseType);
+      ResponseEntity<T> response = restTemplate.exchange(uri, method, requestEntity, responseType);
 
       // Get the response status.
       HttpStatus statusCode = response.getStatusCode();
+
       log.trace("statusCode = {}", statusCode);
 
       // Check whether the call status code indicated failure.
+      // Q: It's possible that this is never taken because 1xx and 3xx series of errors also cause
+      //  RestTemplate#exchange(...) to throw
       if (!isSuccess(statusCode)) {
         // Yes: Report it back to the caller.
-        LockssRestHttpException lrhe =
-            new LockssRestHttpException(exceptionMessage);
+        LockssRestHttpException lrhe = new LockssRestHttpException(clientExceptionMessage);
         lrhe.setHttpStatus(statusCode);
         lrhe.setHttpResponseHeaders(response.getHeaders());
+
         log.trace("lrhe = {}", lrhe, (Exception) null);
 
         throw lrhe;
@@ -106,29 +109,32 @@ public class RestUtil {
       return response;
 
     } catch (LockssResponseErrorHandler.WrappedLockssRestHttpException e) {
-
-      // Catch exception thrown by LockssResponseErrorHandler
-
-      // This is here because {@link RestTemplate#doExecute(URI, HttpMethod, RequestCallback, ResponseExtractor)} catches
-      // IOException which is extended by {@link LockssRestException} and {@link LockssRestHttpException}.
+      // Thrown by LockssResponseErrorHandler. This workaround is needed because RestTemplate#doExecute(...) catches
+      // IOException which is subclassed by LockssRestHttpException.
 
       LockssRestHttpException lrhe = e.getLRHE();
-      lrhe.setMessage(exceptionMessage);
+      lrhe.setClientErrorMessage(clientExceptionMessage);
       throw lrhe;
 
-    } catch (RestClientException rce) {
-      log.trace("rce", rce);
+    } catch (RestClientResponseException e) {
+      // Since this method takes a RestTemplate as an argument, we need to be prepared for the possibility that it
+      // was not configured with our LockssResponseErrorHandler. Handle default RestClientResponseException and its
+      // subclasses here.
+
+      throw LockssRestHttpException.fromRestClientResponseException(e, restTemplate.getMessageConverters());
+
+    } catch (ResourceAccessException e) {
       // Get the cause, or this exception if there is no cause.
-      Throwable cause = rce.getCause();
+      Throwable cause = e.getCause();
 
       if (cause == null) {
-	cause = rce;
+        cause = e;
       }
 
       // Report the problem back to the caller.
       LockssRestNetworkException lrne =
-	new LockssRestNetworkException(exceptionMessage + ": " +
-	    ExceptionUtils.getRootCauseMessage(cause), cause);
+          new LockssRestNetworkException(clientExceptionMessage + ": " + ExceptionUtils.getRootCauseMessage(cause), cause);
+
       log.trace("lrne = {}", lrne);
 
       throw lrne;
@@ -139,7 +145,7 @@ public class RestUtil {
    * Provides the REST template to be used to make the call to a REST service
    * using the HttpComponentsClientHttpRequestFactory, default timeouts and not
    * throwing exceptions.
-   * 
+   *
    * @return a RestTemplate with the REST template.
    */
   public static RestTemplate getRestTemplate() {
@@ -150,16 +156,23 @@ public class RestUtil {
    * Provides the REST template to be used to make the call to a REST service
    * using the HttpComponentsClientHttpRequestFactory and not throwing
    * exceptions.
-   * 
+   *
    * @param connectTimeout A long with the connection timeout in milliseconds.
    * @param readTimeout    A long with the read timeout in milliseconds.
-   * 
+   *
    * @return a RestTemplate with the REST template.
    */
   public static RestTemplate getRestTemplate(long connectTimeout,
       long readTimeout) {
     log.debug2("connectTimeout = {}", connectTimeout);
     log.debug2("readTimeout = {}", readTimeout);
+
+    if (connectTimeout > 0 && connectTimeout < 1000) {
+      log.warn("connectTimeout < 1 sec: {}", connectTimeout);
+    }
+    if (readTimeout > 0 && readTimeout < 1000) {
+      log.warn("readTimeout < 1 sec: {}", readTimeout);
+    }
 
     // It's necessary to specify this factory to get Spring support for PATCH
     // operations.
@@ -178,6 +191,7 @@ public class RestUtil {
     // Get the template.
     RestTemplate restTemplate =	new RestTemplate(requestFactory);
 
+    // Set a default LockssResponseErrorHandler from the default set of message converters
     restTemplate.setErrorHandler(new LockssResponseErrorHandler(restTemplate.getMessageConverters()));
 
     log.debug2("restTemplate = {}", restTemplate);
@@ -186,12 +200,12 @@ public class RestUtil {
 
   /**
    * Provides the URI to be used to make the call to a REST service.
-   * 
+   *
    * @param uriString    A String with the REST Service URI.
    * @param uriVariables A Map<String, String> with any URI variables to be
    *                     interpolated..
    * @param queryParams  A Map<String, String> with any query parameters.
-   * 
+   *
    * @return a URI with the REST service URI.
    */
   public static URI getRestUri(String uriString,
@@ -214,7 +228,7 @@ public class RestUtil {
 
     UriComponentsBuilder ucb =
 	UriComponentsBuilder.newInstance().uriComponents(uriComponents);
-  
+
     // Add any query parameters.
     if (queryParams != null && !queryParams.isEmpty()) {
       for (String key : queryParams.keySet()) {
@@ -233,7 +247,7 @@ public class RestUtil {
 
   /**
    * Provides an indication of whether a successful response has been obtained.
-   * 
+   *
    * @param statusCode
    *          An HttpStatus with the response status code.
    * @return a boolean with <code>true</code> if a successful response has been

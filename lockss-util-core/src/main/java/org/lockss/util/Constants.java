@@ -201,6 +201,9 @@ public interface Constants {
   /** Exit code - invalid time zone data */
   public static int EXIT_INVALID_TIME_ZONE_DATA = 107;
 
+  /** Exit code - invalid command line */
+  public static int EXIT_INVALID_COMMAND_LINE = 108;
+
   /** Regexp contexts.  Depending on the type of string a regexp will be
    * used to match against, printf arguments substituted into a pattern
    * template may need custom escaping.

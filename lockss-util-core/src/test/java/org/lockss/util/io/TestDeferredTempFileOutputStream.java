@@ -48,13 +48,14 @@ in this Software without prior written authorization from Stanford University.
 
 package org.lockss.util.io;
 
-import java.io.*;
-import org.junit.jupiter.api.*;
-import org.lockss.util.test.*;
-import org.lockss.util.test.matcher.*;
-import org.apache.commons.io.output.*;
-import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.apache.commons.io.IOUtils;
+import org.junit.jupiter.api.Test;
+import org.lockss.util.test.LockssTestCase5;
+import org.lockss.util.test.matcher.FindPattern;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class TestDeferredTempFileOutputStream extends LockssTestCase5 {
 

@@ -457,4 +457,38 @@ public class TestFileUtil extends LockssTestCase5 {
     assertEquals("xyz.abc", FileUtil.listDirFilesWithExtension(
 	new File(dir, "abc2.xyz"), "abc").get(0));
   }
+
+  /**
+   * Tests for readPasswdFile().
+   *
+   * @throws IOException if there are problems running the tests.
+   */
+  @Test
+  public void testReadPasswdFile() throws Exception {
+    try {
+      FileUtil.readPasswdFile(null);
+      fail("FileUtil.testReadPasswdFile(null) should throw");
+    } catch (IOException e) {
+      assertEquals("Null password file", e.getMessage());
+    }
+
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < 100; i++) {
+      sb.append("13 characters");
+    }
+
+    try {
+      FileUtil.readPasswdFile(createFile(tempDirPath + "tooLong", sb.toString())
+	  .getAbsolutePath());
+      fail("FileUtil.testReadPasswdFile(null) should throw");
+    } catch (IOException e) {
+      assertEquals("Unreasonably large password file: "
+	  + sb.toString().length(), e.getMessage());
+    }
+
+    String password = "supersecret";
+
+    assertEquals(password, FileUtil.readPasswdFile(
+	createFile(tempDirPath + "supsec", password).getAbsolutePath()));
+  }
 }
