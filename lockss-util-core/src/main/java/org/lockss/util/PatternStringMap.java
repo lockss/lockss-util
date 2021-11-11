@@ -32,7 +32,7 @@ import java.util.*;
 import java.text.*;
 import java.util.regex.*;
 import org.lockss.log.*;
-import org.apache.commons.collections.map.*;
+import org.apache.commons.collections4.map.*;
 
 /** "Map" strings to string, where the keys are patterns against which
  * the strings are matched.  The patterns are ordered; the value associated
