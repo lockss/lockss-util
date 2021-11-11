@@ -121,7 +121,6 @@ POSSIBILITY OF SUCH DAMAGE.
       <!-- not in scope 'test' here: LockssTestCase5 is defined in the main tree -->
     </dependency>
 
-    <!-- Apache Commons Collections needed by ListUtil -->
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
@@ -150,12 +149,6 @@ POSSIBILITY OF SUCH DAMAGE.
       <groupId>javax.jms</groupId>
       <artifactId>javax.jms-api</artifactId>
       <version>2.0.1</version>
-    </dependency>
-
-    <dependency>
-      <groupId>commons-collections</groupId>
-      <artifactId>commons-collections</artifactId>
-      <version>${version.dependency.commons-collections}</version>
     </dependency>
 
   </dependencies>
