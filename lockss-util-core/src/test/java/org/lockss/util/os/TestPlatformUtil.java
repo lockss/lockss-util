@@ -139,10 +139,10 @@ public class TestPlatformUtil extends LockssTestCase5 {
   public void testNonexistentPathNullDF() throws Exception {
     String javatmp = System.getProperty("java.io.tmpdir");
     PlatformUtil.DF df =
-      info.getDF(javatmp);
+      info.getPlatformDF(javatmp);
     assertNotNull(df, javatmp + " is null");
     javatmp = "/very_unlik_elyd_irect_oryname/4x3";
-    df = info.getDF(javatmp);
+    df = info.getPlatformDF(javatmp);
     assertNull(df, javatmp);
   }
 
@@ -161,13 +161,15 @@ public class TestPlatformUtil extends LockssTestCase5 {
     try {
       setUpSuccessRate(repetitionInfo);
       String javatmp = System.getProperty(PlatformUtil.SYSPROP_JAVA_IO_TMPDIR);
-      PlatformUtil.DF df = info.getDF(javatmp);
+      PlatformUtil.DF df = info.getPlatformDF(javatmp);
       PlatformUtil.DF jdf = info.getJavaDF(javatmp);  
       assertEquals(df.getAvail(), jdf.getAvail());
       assertEquals(df.getSize(), jdf.getSize());
       assertEquals(df.getUsed(), jdf.getUsed());
       assertEquals(df.getPercent(), jdf.getPercent(), 1.0);
       assertEquals(df.getPath(), jdf.getPath());
+      assertEquals(PlatformUtil.DiskSpaceSource.DF, df.getSource());
+      assertEquals(PlatformUtil.DiskSpaceSource.Java, jdf.getSource());
     }
     catch (Throwable thr) {
       signalFailure(repetitionInfo);
@@ -175,6 +177,16 @@ public class TestPlatformUtil extends LockssTestCase5 {
     finally {
       assertSuccessRate(repetitionInfo, 0.1f);
     }
+  }
+
+  @Test
+  public void testGetDFSource() throws Exception {
+    String javatmp = System.getProperty("java.io.tmpdir");
+    assertEquals(PlatformUtil.DiskSpaceSource.Java,
+                 info.getDF(javatmp).getSource());
+    System.setProperty(PlatformUtil.SYSPROP_DISK_SPACE_SOURCE, "DF");
+    assertEquals(PlatformUtil.DiskSpaceSource.DF,
+                 info.getDF(javatmp).getSource());
   }
 
   @Test
