@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
+/*
 
 Copyright (c) 2000-2021, Board of Trustees of Leland Stanford Jr. University
 All rights reserved.
@@ -30,30 +29,53 @@ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 
--->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+*/
+
+package org.lockss.util.lang;
+
+import java.io.IOException;
+import java.util.Arrays;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.junit.jupiter.api.Test;
+import org.lockss.util.test.LockssTestCase5;
+
+/**
+ * <p>
+ * Unit tests related to {@link ExceptionUtil}.
+ * </p>
+ *
+ * @since 1.75.8
+ * @see ExceptionUtil
+ */
+public class TestExceptionUtil extends LockssTestCase5 {
+
+  /**
+   * <p>
+   * Tests {@link ExceptionUtil#initCause(Throwable, Throwable)}.
+   * </p>
+   * 
+   * @throws Exception
+   *           if an exception occurs
+   * @since 1.75.8
+   */
+  @Test
+  public void testInitCause() throws Exception {
+    class ExceptionWithoutCause extends Exception {
+      ExceptionWithoutCause() { 
+        super();
+      }
+      ExceptionWithoutCause(String message) {
+        super(message);
+      }
+    }
+    for (ExceptionWithoutCause e : Arrays.asList(new ExceptionWithoutCause(), new ExceptionWithoutCause("MESSAGESTRING"))) {
+      for (IOException c : Arrays.asList((IOException)null, new IOException("CAUSESTRING"))) {
+        ExceptionWithoutCause r = ExceptionUtil.initCause(e, c);
+        assertSame(e, r);
+        assertSame(c, r.getCause());
+      }
+    }
+  }
   
-  <groupId>org.lockss</groupId>
-  <artifactId>lockss-util</artifactId>
-  <version>1.12.0</version>
-  <packaging>pom</packaging>
-
-  <name>lockss-util</name>
-  <description>Aggregator to build LOCKSS utility libraries</description>
-
-  <modules>
-    <module>lockss-util-core</module>
-    <module>lockss-util-rest</module>
-    <module>lockss-util-entities</module>
-  </modules>
-
-  <!-- Not itself a real artifact, do not install or deploy -->
-  <properties>
-    <maven.install.skip>true</maven.install.skip>
-    <maven.deploy.skip>true</maven.deploy.skip>
-  </properties>
-  
-</project>
+}

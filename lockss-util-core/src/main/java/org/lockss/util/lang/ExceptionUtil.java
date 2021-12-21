@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
+/*
 
 Copyright (c) 2000-2021, Board of Trustees of Leland Stanford Jr. University
 All rights reserved.
@@ -30,30 +29,66 @@ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 
--->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+*/
+
+package org.lockss.util.lang;
+
+/**
+ * <p>
+ * Utilities related to {@link Exception} and {@link Throwable}.
+ * </p>
+ * 
+ * @since 1.75.8
+ */
+public class ExceptionUtil {
+
+  /**
+   * <p>
+   * Initializes the cause of a {@Throwable} instance and returns it, for
+   * one-step creation and initialization when a {@Throwable) subclass does not
+   * have a constructor that accepts a cause.
+   * </p>
+   * <p>
+   * Before:
+   * </p>
+   * 
+   * <pre>
+     }
+     catch (Exception1 c) {
+       Exception2 e = new Exception(); // assume no constructor with cause
+       e.initCause(c);
+       throw e;
+     }
+   * </pre>
+   * <p>
+   * After:
+   * </p>
+   * 
+   * <pre>
+     }
+     catch (Exception1 c) {
+       throw ExceptionUtil.initCause(new Exception2(), c);
+     }
+   * </pre>
+   * 
+   * @param <T>
+   *          A {@link Throwable} type.
+   * @param throwable
+   *          A {@link Throwable} instance.
+   * @param cause
+   *          A {@link Throwable} cause (can be null).
+   * @return The throwable instance with {@link Throwable#initCause(Throwable)}
+   *         called with the given cause. If the given cause is null, returns
+   *         the throwable instance unchanged.
+   * @since 1.75.8
+   * @see Throwable#initCause(Throwable)
+   */
+  public static <T extends Throwable> T initCause(T throwable,
+                                                  Throwable cause) {
+    if (cause != null) {
+      throwable.initCause(cause);
+    }
+    return throwable;
+  }
   
-  <groupId>org.lockss</groupId>
-  <artifactId>lockss-util</artifactId>
-  <version>1.12.0</version>
-  <packaging>pom</packaging>
-
-  <name>lockss-util</name>
-  <description>Aggregator to build LOCKSS utility libraries</description>
-
-  <modules>
-    <module>lockss-util-core</module>
-    <module>lockss-util-rest</module>
-    <module>lockss-util-entities</module>
-  </modules>
-
-  <!-- Not itself a real artifact, do not install or deploy -->
-  <properties>
-    <maven.install.skip>true</maven.install.skip>
-    <maven.deploy.skip>true</maven.deploy.skip>
-  </properties>
-  
-</project>
+}

@@ -561,7 +561,7 @@ public class FileUtil {
    * 
    * @param dir
    *          A File with the directory where the files are to be found.
-   * @param extension
+   * @param requiredExtension
    *          A String with the extension of the files to be returned.
    * @return a List<String> with the names of the files requested.
    */

@@ -32,6 +32,7 @@ import org.apache.commons.lang3.*;
 import java.util.*;
 import java.util.zip.*;
 import java.io.*;
+import org.lockss.util.*;
 import org.lockss.log.*;
 
 /**
@@ -136,7 +137,18 @@ public class ZipUtil {
     }
   }
 
-  public static void addFileToZip(ZipOutputStream z,
+  public static void addStringToZip(ZipOutputStream z,
+                                    String str,
+                                    String entryName) throws IOException {
+    try {
+      z.putNextEntry(new ZipEntry(entryName));
+      IOUtils.write(str, z, Constants.ENCODING_UTF_8);
+    } finally {
+      z.closeEntry();
+    }
+  }
+
+ public static void addFileToZip(ZipOutputStream z,
 				  File file) throws IOException {
     addFileToZip(z, file, null);
   }

@@ -45,15 +45,14 @@ import org.lockss.util.lang.EncodingUtil;
 import org.lockss.util.net.IPAddr;
 import org.lockss.util.storage.StorageInfo;
 import org.lockss.util.time.TimeUtil;
-//import org.lockss.config.*;
 import org.slf4j.*;
 
 /** Utilities to communicate with platform to get info or take action not
  * possible from Java */
 public class PlatformUtil {
   
-  /** Should be set to allowed TCP ports, based on platform- (and group-)
-   * dependent packet filters */
+  /** Should be set to the list of allowed TCP ports, based on
+   * platform- (and group-) dependent packet filters */
   public static final String SYSPROP_UNFILTERED_TCP_PORTS = "org.lockss.platform.unfilteredTcpPorts";
   public static final String SYSPROP_UNFILTERED_UDP_PORTS = "org.lockss.platform.unfilteredUdpPorts";
 
@@ -66,6 +65,22 @@ public class PlatformUtil {
 
   private static final Logger log = LoggerFactory.getLogger(PlatformUtil.class);
   
+  public enum DiskSpaceSource { Java, DF };
+
+  /** Determines how disk space statistics (total, free, available)
+   * are obtained.  If <tt>Java</tt>, the builtin Java library methods
+   * are used, if <tt>DF</tt>, the <tt>df</tt> utility is run in a sub
+   * process.  The former is normally preferred but returns incorrect
+   * results on filesystems larger than 8192PB.  The latter currently
+   * works on filesystems up to 8192EB, but is slower and could
+   * conceivably fail.  If running with lockss-core, this System
+   * property is set from the config param of the same name. */
+  public static final String SYSPROP_DISK_SPACE_SOURCE =
+    "org.lockss.platform." + "diskSpaceSource";
+
+  public static final DiskSpaceSource DEFAULT_DISK_SPACE_SOURCE =
+    DiskSpaceSource.Java;
+
   private static final DecimalFormat percentFmt = new DecimalFormat("0%");
 
   public static final File[] FILE_ROOTS = File.listRoots();
@@ -333,18 +348,19 @@ public class PlatformUtil {
     }
   }
 
-  public DF getJavaDF(String path)
-  {
+  /** Get disk usage info from Java.  This fails on filesystems that
+   * are 8192PB or larger, because Java returns the size, in bytes, in
+   * a long.
+   */
+  public DF getJavaDF(String path) {
     File f = null;
     try {
       f = new File(path).getCanonicalFile();
-    }
-    catch (IOException e) {
+    } catch (IOException e) {
       f = new File(path).getAbsoluteFile();
     }
     // mirror the df behaviour of returning null if path doesn't exist
-    if(!f.exists())
-    {
+    if (!f.exists()) {
       return null;
     }
     DF df = new DF();
@@ -357,6 +373,7 @@ public class PlatformUtil {
     df.percent /= 100.00;
     df.fs = null;
     df.mnt = longestRootFile(f);
+    df.source = DiskSpaceSource.Java;
     if (log.isTraceEnabled()) log.trace(df.toString());
     return df;
   }
@@ -381,11 +398,37 @@ public class PlatformUtil {
     return longestRoot;
   }
 
-  public DF getDF(String path) throws UnsupportedException {
-    return getDF(path, "-k -P");
+  /** Get disk space statistics for the filesystem containing the
+   * path, either directly from Java or by invoking 'df', according to
+   * {@value PARAM_} */
+
+  public DF getDF(String path) {
+    DiskSpaceSource source = DEFAULT_DISK_SPACE_SOURCE;
+    String propval = System.getProperty(SYSPROP_DISK_SPACE_SOURCE);
+    if (!StringUtils.isEmpty(propval)) {
+      try {
+        source = Enum.valueOf(DiskSpaceSource.class, propval);
+      } catch (IllegalArgumentException e) {
+        log.warn("Illegal value for System property {}: {}",
+                 SYSPROP_DISK_SPACE_SOURCE, propval);
+      }
+    }
+    switch (source) {
+    case Java:
+    default:
+      return getJavaDF(path);
+    case DF:
+      return getPlatformDF(path);
+    }
   }
 
-  public DF getDF(String path, String dfArgs) throws UnsupportedException {
+
+  /** Get disk usage info by running 'df' */
+  public DF getPlatformDF(String path) {
+    return getPlatformDF(path, "-k -P");
+  }
+
+  public DF getPlatformDF(String path, String dfArgs) {
     String cmd = "df " + dfArgs + " " + path;
     if (log.isTraceEnabled()) log.trace("cmd: " + cmd);
     try {
@@ -444,6 +487,7 @@ public class PlatformUtil {
     df.avail = getLong(tokens[3]);
     df.percentString = tokens[4];
     df.mnt = tokens[5];
+    df.source = DiskSpaceSource.DF;
     try {
       df.percent = percentFmt.parse(df.percentString).doubleValue();
     } catch (ParseException e) {
@@ -687,8 +731,8 @@ public class PlatformUtil {
   public static class Solaris extends PlatformUtil {
     public String dfArgs = "-k";
 
-    public DF getDF(String path) throws UnsupportedException {
-      return (super.getDF(path, dfArgs));
+    public DF getPlatformDF(String path) {
+      return (super.getPlatformDF(path, dfArgs));
     }
 
     public int getPid() throws UnsupportedException {
@@ -723,8 +767,8 @@ public class PlatformUtil {
       return 1016;
     }
 
-    public DF getDF(String path) throws UnsupportedException {
-      return (super.getDF(path, dfArgs));
+    public DF getPlatformDF(String path) {
+      return (super.getPlatformDF(path, dfArgs));
     }
 
     public int getPid() throws UnsupportedException {
@@ -776,7 +820,7 @@ public class PlatformUtil {
 
   public static class Windows extends PlatformUtil {
     
-    public DF getDF(String path, String dfArgs) throws UnsupportedException {
+    public DF getPlatformDF(String path, String dfArgs) {
       String cmd = "df " + dfArgs + " " + path;
       if (log.isTraceEnabled()) log.trace("cmd: " + cmd);
       	try {
@@ -895,6 +939,7 @@ public class PlatformUtil {
     protected String percentString;
     protected double percent = -1.0;
     protected String mnt;
+    protected DiskSpaceSource source;
 
     public static DF makeThreshold(long minFreeMB, double minFreePercent) {
       DF df = new DF();
@@ -950,6 +995,9 @@ public class PlatformUtil {
     }
     public String getMnt() {
       return mnt;
+    }
+    public DiskSpaceSource getSource() {
+      return source;
     }
     public String toString() {
       StringBuilder sb = new StringBuilder();
