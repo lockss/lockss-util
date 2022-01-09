@@ -75,7 +75,8 @@ public class TestDirArchiver extends LockssTestCase5 {
       .setOutFile(tgtfile);
     da.build();
     ZipUtil.unzip(tgtfile, tgtdir);
-    assertTrue(FileUtil.equalTrees(srcdir, tgtdir));
+    assertTrue(FileUtil.equalTrees(srcdir, tgtdir),
+               "Comparing " + srcdir + " with " + tgtdir);
   }
 
   @Test
@@ -94,7 +95,8 @@ public class TestDirArchiver extends LockssTestCase5 {
     ZipUtil.unzip(tgtfile, tgtdir);
     File tgtsub = tgtdir.toPath().resolve(TEST_PREFIX).toFile();
     assertTrue(tgtsub.toString().endsWith(TEST_PREFIX.toString()));
-    assertTrue(FileUtil.equalTrees(srcdir, tgtsub));
+    assertTrue(FileUtil.equalTrees(srcdir, tgtsub),
+               "Comparing " + srcdir + " with " + tgtsub);
   }
 
   @Test
@@ -105,7 +107,8 @@ public class TestDirArchiver extends LockssTestCase5 {
       .setOutFile(tgtfile);
     da.build();
     TarUtil.untar(tgtfile, tgtdir, true);
-    assertTrue(FileUtil.equalTrees(srcdir, tgtdir));
+    assertTrue(FileUtil.equalTrees(srcdir, tgtdir),
+               "Comparing " + srcdir + " with " + tgtdir);
   }
 
   @Test
@@ -124,7 +127,8 @@ public class TestDirArchiver extends LockssTestCase5 {
     TarUtil.untar(tgtfile, tgtdir, true);
     File tgtsub = tgtdir.toPath().resolve(TEST_PREFIX).toFile();
     assertTrue(tgtsub.toString().endsWith(TEST_PREFIX.toString()));
-    assertTrue(FileUtil.equalTrees(srcdir, tgtsub));
+    assertTrue(FileUtil.equalTrees(srcdir, tgtsub),
+               "Comparing " + srcdir + " with " + tgtsub);
   }
 
 }

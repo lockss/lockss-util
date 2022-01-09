@@ -56,7 +56,18 @@ public class PlatformUtil {
   public static final String SYSPROP_UNFILTERED_TCP_PORTS = "org.lockss.platform.unfilteredTcpPorts";
   public static final String SYSPROP_UNFILTERED_UDP_PORTS = "org.lockss.platform.unfilteredUdpPorts";
 
+  /** Java tmpdir system property.  Java caches this the first time
+   * File.createTempFile() is called, so changes to the system
+   * property at runtime may not take effect.  Moreover, it should
+   * <b>never</b> be set to a dir that may be deleted during that JVM
+   * invocation, as even if it's reset when that dir is deleted,
+   * createTempFile() may still try to create files there and will
+   * fail */
   public static final String SYSPROP_JAVA_IO_TMPDIR = "java.io.tmpdir";
+
+  /** Alternate system property used within LOCKSS code to avoid
+   * problems with {@link #SYSPROP_JAVA_IO_TMPDIR} */
+  public static final String SYSPROP_LOCKSS_TMPDIR = "org.lockss.tmpdir";
 
   public static final String SYSPROP_LOCKSS_OS_NAME = "lockss.os.name";
   public static final String SYSPROP_OS_NAME = "os.name";
@@ -136,9 +147,12 @@ public class PlatformUtil {
    * </p>
    * 
    * @see #SYSPROP_JAVA_IO_TMPDIR
+   * @see #SYSPROP_LOCKSS_TMPDIR
    */
   public static String getSystemTempDir() {
-    return System.getProperty(SYSPROP_JAVA_IO_TMPDIR);
+    String lockssTmpDir = System.getProperty(SYSPROP_LOCKSS_TMPDIR);
+    return lockssTmpDir != null ? lockssTmpDir
+      : System.getProperty(SYSPROP_JAVA_IO_TMPDIR);
   }
 
   /** Return the current working dir name */

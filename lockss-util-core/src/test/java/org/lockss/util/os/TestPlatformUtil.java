@@ -88,13 +88,21 @@ public class TestPlatformUtil extends LockssTestCase5 {
     }
   }
 
+  // This test can't set either SYSPROP_JAVA_IO_TMPDIR (see the
+  // comments in PlatformUtil) or SYSPROP_LOCKSS_TMPDIR (because that
+  // would interfere with LockssTestCase5's use of that property).
+  // The best it can do, which isn't much, is test that
+  // SYSPROP_LOCKSS_TMPDIR (if set) takes precedence of
+  // SYSPROP_JAVA_IO_TMPDIR.
   public void testGetSystemTempDir() throws IOException {
-    String javatmp = System.getProperty(PlatformUtil.SYSPROP_JAVA_IO_TMPDIR);
-    assertEquals(javatmp, PlatformUtil.getSystemTempDir());
-    String parmtmp = new File(getTempDir(), "another/tmp/dir").toString();
-    System.setProperty(PlatformUtil.SYSPROP_JAVA_IO_TMPDIR, parmtmp);
-    assertEquals(new File(parmtmp, "dtmp").toString(),
-		 PlatformUtil.getSystemTempDir());
+    String platTmpDir = PlatformUtil.getSystemTempDir();
+    if (System.getProperty(PlatformUtil.SYSPROP_LOCKSS_TMPDIR) != null) {
+      assertEquals(platTmpDir,
+                   System.getProperty(PlatformUtil.SYSPROP_LOCKSS_TMPDIR));
+    } else {
+      assertEquals(platTmpDir,
+                   System.getProperty(PlatformUtil.SYSPROP_JAVA_IO_TMPDIR));
+    }
   }
 
   @Test
