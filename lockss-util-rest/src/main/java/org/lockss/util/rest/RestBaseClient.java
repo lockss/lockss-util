@@ -48,6 +48,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * Base class for clients of REST services.
@@ -78,6 +79,7 @@ public class RestBaseClient<C extends RestBaseClient<?>> {
 
   // The read timeout, in milliseconds, to access the REST web service.
   private long readTimeout = defaultReadTimeout;
+  private RestTemplate restTemplate;
 
   protected RestBaseClient(final Class<C> selfClass) {
     this.self = selfClass.cast(this);
@@ -93,6 +95,16 @@ public class RestBaseClient<C extends RestBaseClient<?>> {
     this.connectTimeout = connectTimeout;
     this.readTimeout = readTimeout;
     return self;
+  }
+
+  public C setRestTemplate(RestTemplate restTemplate) {
+    this.restTemplate = restTemplate;
+    return self;
+  }
+
+  private RestTemplate getRestTemplate() {
+    return this.restTemplate == null ?
+        RestUtil.getRestTemplate(connectTimeout, readTimeout) : this.restTemplate;
   }
 
   /** Add the headers to the request headers, replacing any that already
@@ -150,8 +162,7 @@ public class RestBaseClient<C extends RestBaseClient<?>> {
 
     // Make the REST call.
     log.trace("Calling RestUtil.callRestService");
-    return RestUtil.callRestService(RestUtil.getRestTemplate(connectTimeout,
-	readTimeout), uri, httpMethod,
+    return RestUtil.callRestService(getRestTemplate(), uri, httpMethod,
 	new HttpEntity<T>(body, fullRequestHeaders), responseType,
 	exceptionMessage);
   }
@@ -209,7 +220,7 @@ public class RestBaseClient<C extends RestBaseClient<?>> {
 
     // Make the REST call.
     log.trace("Calling MultipartConnector.requestGet");
-    return new MultipartConnector(uri, fullRequestHeaders).request(httpMethod,
+    return new MultipartConnector(uri, fullRequestHeaders).request(getRestTemplate(), httpMethod,
 	body, (int)connectTimeout, (int)readTimeout);
   }
 }

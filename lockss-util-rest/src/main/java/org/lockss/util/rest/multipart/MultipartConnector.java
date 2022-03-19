@@ -248,6 +248,25 @@ public class MultipartConnector {
   /**
    * Performs a request that results in a multi-part response.
    *
+   * @param restTemplate The {@link RestTemplate} client to use for REST calls.
+   * @param method
+   *          An HttpMethod with the method of the request to the REST service.
+   * @param body
+   *          A T with the body of the request, if any.
+   * @return a MultipartResponse with the response.
+   * @throws IOException
+   *           if there are problems getting a part payload.
+   * @throws MessagingException
+   *           if there are other problems.
+   */
+  public <T> MultipartResponse request(RestTemplate restTemplate, HttpMethod method, T body)
+      throws IOException, MessagingException {
+    return request(restTemplate, method, body, DEFAULT_TIMEOUT, DEFAULT_TIMEOUT);
+  }
+
+  /**
+   * Performs a request that results in a multi-part response.
+   *
    * @param httpMethod
    *          An HttpMethod with the method of the request to the REST service.
    * @param body
@@ -264,14 +283,39 @@ public class MultipartConnector {
    */
   public <T> MultipartResponse request(HttpMethod httpMethod, T body,
       long connectTimeout, long readTimeout)
+      throws IOException, MessagingException {
+
+    // Initialize the request to the REST service.
+    RestTemplate restTemplate = createRestTemplate(connectTimeout, readTimeout);
+
+    return request(restTemplate, httpMethod, body, connectTimeout, readTimeout);
+  }
+
+  /**
+   * Performs a request that results in a multi-part response.
+   *
+   * @param restTemplate The {@link RestTemplate} client to use for REST calls.
+   * @param httpMethod
+   *          An HttpMethod with the method of the request to the REST service.
+   * @param body
+   *          A T with the body of the request, if any.
+   * @param connectTimeout
+   *          A long with the connection timeout in ms.
+   * @param readTimeout
+   *          A long with the read timeout in ms.
+   * @return a MultipartResponse with the response.
+   * @throws IOException
+   *           if there are problems getting a part payload.
+   * @throws MessagingException
+   *           if there are other problems.
+   */
+  public <T> MultipartResponse request(RestTemplate restTemplate, HttpMethod httpMethod, T body,
+                                       long connectTimeout, long readTimeout)
 	  throws IOException, MessagingException {
     log.debug2("httpMethod = {}", httpMethod);
     log.debug2("body = {}", body);
     log.debug2("connectTimeout = {}", connectTimeout);
     log.debug2("readTimeout = {}", readTimeout);
-
-    // Initialize the request to the REST service.
-    RestTemplate restTemplate = createRestTemplate(connectTimeout, readTimeout);
 
     log.trace("requestHeaders = {}", requestHeaders.toSingleValueMap());
     log.trace("Making {} request to '{}'...", httpMethod, uri);
