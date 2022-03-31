@@ -344,8 +344,13 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
     log.debug2("wsParams = {}", wsParams);
 
     try {
+      // Prepare the query parameter variables.
+      Map<String, String> queryParams = new HashMap<>();
+      queryParams.put("isAsynchronous", "true");
+      log.trace("queryParams = {}", queryParams);
+
       // Make the REST call.
-      MultipartResponse response = getMultipartResponse("/hashes", null, null,
+      MultipartResponse response = getMultipartResponse("/hashes", null, queryParams,
 	  new HttpHeaders(), HttpMethod.PUT, wsParams);
 
       // Get the single hash result from the response.
