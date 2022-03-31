@@ -481,7 +481,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
     } else {
       // No: report the problem.
       String message = "REST service returned " + wsResults.size()
-      + "hash results instead of a single hash result";
+      + " hash results instead of a single hash result";
       log.error(message);
       throw new RuntimeException(message);
     }
