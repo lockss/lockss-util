@@ -31,36 +31,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.lockss.util.rest.poller;
 
-import static org.lockss.ws.entities.HasherWsResult.BLOCK_FILE_TYPE;
-import static org.lockss.ws.entities.HasherWsResult.RECORD_FILE_TYPE;
 import com.fasterxml.jackson.core.type.TypeReference;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
-import javax.activation.DataHandler;
 import org.apache.cxf.attachment.AttachmentDataSource;
 import org.lockss.log.L4JLogger;
 import org.lockss.util.rest.RestBaseClient;
 import org.lockss.util.rest.exception.LockssRestException;
+import org.lockss.util.rest.exception.LockssRestHttpException;
 import org.lockss.util.rest.multipart.MultipartResponse;
 import org.lockss.util.rest.multipart.MultipartResponse.Part;
-import org.lockss.ws.entities.HasherWsAsynchronousResult;
-import org.lockss.ws.entities.HasherWsParams;
-import org.lockss.ws.entities.HasherWsResult;
-import org.lockss.ws.entities.PeerWsResult;
-import org.lockss.ws.entities.PollWsResult;
-import org.lockss.ws.entities.RepositorySpaceWsResult;
-import org.lockss.ws.entities.RepositoryWsResult;
-import org.lockss.ws.entities.VoteWsResult;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.lockss.ws.entities.*;
+import org.springframework.http.*;
+
+import javax.activation.DataHandler;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+
+import static org.lockss.ws.entities.HasherWsResult.BLOCK_FILE_TYPE;
+import static org.lockss.ws.entities.HasherWsResult.RECORD_FILE_TYPE;
 
 /**
  * A client of the Poller REST service.
@@ -435,6 +423,10 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
       requestId) throws LockssRestException {
     log.debug2("requestId = {}", requestId);
 
+    // Populate the result.
+    HasherWsAsynchronousResult result = new HasherWsAsynchronousResult();
+    result.setRequestId(requestId);
+
     try {
       // Prepare the URI path variables.
       Map<String, String> uriVariables = new HashMap<>();
@@ -450,15 +442,25 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
       String responseBody = response.getBody();
       log.trace("responseBody = {}", responseBody);
 
-      // Populate the result.
-      HasherWsAsynchronousResult result = new HasherWsAsynchronousResult();
-      result.setRequestId(requestId);
       result.setStatus(responseBody);
       log.debug2("result = {}", result);
-      return result;
+    } catch (LockssRestHttpException e) {
+      switch (e.getHttpStatus()) {
+        case BAD_REQUEST:
+        case NOT_FOUND:
+          // Pass-through error message in response body
+          result.setStatus("RequestError"); // HasherStatus.RequestError.toString()
+          result.setErrorMessage(e.getServerErrorMessage());
+          break;
+
+        default:
+          throw new LockssRestException(e);
+      }
     } catch (Exception e) {
       throw new LockssRestException(e);
     }
+
+    return result;
   }
 
   /**
