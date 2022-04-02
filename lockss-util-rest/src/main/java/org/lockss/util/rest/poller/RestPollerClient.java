@@ -448,6 +448,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
       switch (e.getHttpStatus()) {
         case BAD_REQUEST:
         case NOT_FOUND:
+        case INTERNAL_SERVER_ERROR:
           // Pass-through error message in response body
           result.setStatus("RequestError"); // HasherStatus.RequestError.toString()
           result.setErrorMessage(e.getServerErrorMessage());
