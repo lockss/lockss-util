@@ -57,6 +57,7 @@ public class MultipartConnector {
   private URI uri;
   private HttpHeaders requestHeaders;
   private MultiValueMap<String, Object> parts;
+  private RestTemplate restTemplate;
 
   /**
    * Constructor for GET operations.
@@ -121,7 +122,9 @@ public class MultipartConnector {
     log.debug2("readTimeout = {}", readTimeout);
 
     // Initialize the request to the REST service.
-    RestTemplate restTemplate = createRestTemplate(connectTimeout, readTimeout);
+    RestTemplate restTemplate =
+        this.restTemplate == null ?
+            createRestTemplate(connectTimeout, readTimeout) : this.restTemplate;
 
     log.trace("requestHeaders = {}", requestHeaders.toSingleValueMap());
     log.trace("Making GET request to '{}'...", uri);
@@ -203,7 +206,9 @@ public class MultipartConnector {
     log.debug2("readTimeout = {}", readTimeout);
 
     // Initialize the request to the REST service.
-    RestTemplate restTemplate = createRestTemplate(connectTimeout, readTimeout);
+    RestTemplate restTemplate =
+        this.restTemplate == null ?
+            createRestTemplate(connectTimeout, readTimeout) : this.restTemplate;
 
     log.trace("requestHeaders = {}", requestHeaders.toSingleValueMap());
     log.trace("Making PUT request to '{}'...", uri);
@@ -286,7 +291,9 @@ public class MultipartConnector {
       throws IOException, MessagingException {
 
     // Initialize the request to the REST service.
-    RestTemplate restTemplate = createRestTemplate(connectTimeout, readTimeout);
+    RestTemplate restTemplate =
+        this.restTemplate == null ?
+            createRestTemplate(connectTimeout, readTimeout) : this.restTemplate;
 
     return request(restTemplate, httpMethod, body, connectTimeout, readTimeout);
   }
@@ -341,5 +348,14 @@ public class MultipartConnector {
       log.error("requestHeaders = {}", requestHeaders.toSingleValueMap());
       throw e;
     }
+  }
+
+  public MultipartConnector setRestTemplate(RestTemplate restTemplate) {
+    this.restTemplate = restTemplate;
+    return this;
+  }
+
+  public RestTemplate getRestTemplate() {
+    return restTemplate;
   }
 }
