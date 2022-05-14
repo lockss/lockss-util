@@ -170,6 +170,7 @@ public class BuildInfo {
 	case BUILD_ARTIFACT:
 	case BUILD_VERSION:
 	case BUILD_RELEASENAME:
+	case BUILD_GIT_BRANCH:
 	  String val1 = getBuildPropertyInst(field);
 	  if (val1 != null) {
 	    sb.append(val1);
