@@ -42,6 +42,7 @@ import java.util.regex.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.*;
 import org.lockss.util.lang.EncodingUtil;
+import org.lockss.log.L4JLogger;
 import org.lockss.util.net.IPAddr;
 import org.lockss.util.storage.StorageInfo;
 import org.lockss.util.time.TimeUtil;
@@ -74,7 +75,7 @@ public class PlatformUtil {
 
   public static final String SYSPROP_PLATFORM_HOSTNAME = "org.lockss.platformHostname";
 
-  private static final Logger log = LoggerFactory.getLogger(PlatformUtil.class);
+  private static final L4JLogger log = L4JLogger.getLogger();
   
   public enum DiskSpaceSource { Java, DF };
 
@@ -90,7 +91,7 @@ public class PlatformUtil {
     "org.lockss.platform." + "diskSpaceSource";
 
   public static final DiskSpaceSource DEFAULT_DISK_SPACE_SOURCE =
-    DiskSpaceSource.Java;
+    DiskSpaceSource.DF;
 
   private static final DecimalFormat percentFmt = new DecimalFormat("0%");
 
@@ -392,17 +393,14 @@ public class PlatformUtil {
     return df;
   }
 
-  public static String longestRootFile(File file)
-  {
+  public static String longestRootFile(File file) {
     String longestRoot = null;
-
-    for (File root : FILE_ROOTS)
-    {
+    for (File root : FILE_ROOTS) {
       File parent = file.getParentFile();
       while(parent != null) {
         if(root.equals(parent)) {
           if(longestRoot == null ||
-              longestRoot.length() < root.getPath().length())   {
+             longestRoot.length() < root.getPath().length())   {
             longestRoot = root.getPath();
           }
         }
