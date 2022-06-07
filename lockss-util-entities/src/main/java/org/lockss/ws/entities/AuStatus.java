@@ -27,6 +27,8 @@
  */
 package org.lockss.ws.entities;
 
+import java.util.Objects;
+
 /**
  * The status information of an Archival Unit.
  */
@@ -579,5 +581,54 @@ public class AuStatus {
     builder.append(provider);
     builder.append("]");
     return builder.toString();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    AuStatus auStatus = (AuStatus) o;
+    return lastCompletedDeepCrawlDepth == auStatus.lastCompletedDeepCrawlDepth &&
+        Objects.equals(volume, auStatus.volume) &&
+        Objects.equals(journalTitle, auStatus.journalTitle) &&
+        Objects.equals(pluginName, auStatus.pluginName) &&
+        Objects.equals(year, auStatus.year) &&
+        Objects.equals(accessType, auStatus.accessType) &&
+        Objects.equals(contentSize, auStatus.contentSize) &&
+        Objects.equals(diskUsage, auStatus.diskUsage) &&
+        Objects.equals(repository, auStatus.repository) &&
+        Objects.equals(status, auStatus.status) &&
+        Objects.equals(recentPollAgreement, auStatus.recentPollAgreement) &&
+        Objects.equals(publishingPlatform, auStatus.publishingPlatform) &&
+        Objects.equals(publisher, auStatus.publisher) &&
+        Objects.equals(availableFromPublisher, auStatus.availableFromPublisher) &&
+        Objects.equals(substanceState, auStatus.substanceState) &&
+        Objects.equals(creationTime, auStatus.creationTime) &&
+        Objects.equals(crawlProxy, auStatus.crawlProxy) &&
+        Objects.equals(crawlWindow, auStatus.crawlWindow) &&
+        Objects.equals(crawlPool, auStatus.crawlPool) &&
+        Objects.equals(lastCompletedCrawl, auStatus.lastCompletedCrawl) &&
+        Objects.equals(lastCrawl, auStatus.lastCrawl) &&
+        Objects.equals(lastCrawlResult, auStatus.lastCrawlResult) &&
+        Objects.equals(lastCompletedDeepCrawl, auStatus.lastCompletedDeepCrawl) &&
+        Objects.equals(lastDeepCrawl, auStatus.lastDeepCrawl) &&
+        Objects.equals(lastDeepCrawlResult, auStatus.lastDeepCrawlResult) &&
+        Objects.equals(lastMetadataIndex, auStatus.lastMetadataIndex) &&
+        Objects.equals(lastCompletedPoll, auStatus.lastCompletedPoll) &&
+        Objects.equals(lastPoll, auStatus.lastPoll) &&
+        Objects.equals(lastPollResult, auStatus.lastPollResult) &&
+        Objects.equals(currentlyCrawling, auStatus.currentlyCrawling) &&
+        Objects.equals(currentlyPolling, auStatus.currentlyPolling) &&
+        Objects.equals(subscriptionStatus, auStatus.subscriptionStatus) &&
+        Objects.equals(provider, auStatus.provider);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(volume, journalTitle, pluginName, year, accessType, contentSize, diskUsage, repository, status,
+        recentPollAgreement, publishingPlatform, publisher, availableFromPublisher, substanceState, creationTime,
+        crawlProxy, crawlWindow, crawlPool, lastCompletedCrawl, lastCrawl, lastCrawlResult, lastCompletedDeepCrawl,
+        lastDeepCrawl, lastDeepCrawlResult, lastCompletedDeepCrawlDepth, lastMetadataIndex, lastCompletedPoll, lastPoll,
+        lastPollResult, currentlyCrawling, currentlyPolling, subscriptionStatus, provider);
   }
 }

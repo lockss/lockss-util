@@ -28,6 +28,7 @@
 package org.lockss.ws.entities;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Container for the information related to an archival unit that is the result
@@ -637,5 +638,66 @@ public class AuWsResult {
 	+ urls + ", substanceUrls=" + substanceUrls + ", articleUrls="
 	+ articleUrls + ", journalTitle=" + journalTitle + ", tdbProvider="
 	+ tdbProvider + "]";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    AuWsResult that = (AuWsResult) o;
+    return Objects.equals(auId, that.auId) &&
+        Objects.equals(name, that.name) &&
+        Objects.equals(volume, that.volume) &&
+        Objects.equals(pluginName, that.pluginName) &&
+        Objects.equals(tdbYear, that.tdbYear) &&
+        Objects.equals(accessType, that.accessType) &&
+        Objects.equals(contentSize, that.contentSize) &&
+        Objects.equals(diskUsage, that.diskUsage) &&
+        Objects.equals(repositoryPath, that.repositoryPath) &&
+        Objects.equals(recentPollAgreement, that.recentPollAgreement) &&
+        Objects.equals(highestPollAgreement, that.highestPollAgreement) &&
+        Objects.equals(publishingPlatform, that.publishingPlatform) &&
+        Objects.equals(tdbPublisher, that.tdbPublisher) &&
+        Objects.equals(availableFromPublisher, that.availableFromPublisher) &&
+        Objects.equals(substanceState, that.substanceState) &&
+        Objects.equals(creationTime, that.creationTime) &&
+        Objects.equals(crawlProxy, that.crawlProxy) &&
+        Objects.equals(crawlWindow, that.crawlWindow) &&
+        Objects.equals(crawlPool, that.crawlPool) &&
+        Objects.equals(lastCompletedCrawl, that.lastCompletedCrawl) &&
+        Objects.equals(lastCrawl, that.lastCrawl) &&
+        Objects.equals(lastCrawlResult, that.lastCrawlResult) &&
+        Objects.equals(lastCompletedDeepCrawl, that.lastCompletedDeepCrawl) &&
+        Objects.equals(lastDeepCrawl, that.lastDeepCrawl) &&
+        Objects.equals(lastDeepCrawlResult, that.lastDeepCrawlResult) &&
+        Objects.equals(lastCompletedDeepCrawlDepth, that.lastCompletedDeepCrawlDepth) &&
+        Objects.equals(lastMetadataIndex, that.lastMetadataIndex) &&
+        Objects.equals(lastCompletedPoll, that.lastCompletedPoll) &&
+        Objects.equals(lastPoll, that.lastPoll) &&
+        Objects.equals(lastPollResult, that.lastPollResult) &&
+        Objects.equals(currentlyCrawling, that.currentlyCrawling) &&
+        Objects.equals(currentlyPolling, that.currentlyPolling) &&
+        Objects.equals(subscriptionStatus, that.subscriptionStatus) &&
+        Objects.equals(auConfiguration, that.auConfiguration) &&
+        Objects.equals(newContentCrawlUrls, that.newContentCrawlUrls) &&
+        Objects.equals(urlStems, that.urlStems) &&
+        Objects.equals(isBulkContent, that.isBulkContent) &&
+        Objects.equals(peerAgreements, that.peerAgreements) &&
+        Objects.equals(urls, that.urls) &&
+        Objects.equals(substanceUrls, that.substanceUrls) &&
+        Objects.equals(articleUrls, that.articleUrls) &&
+        Objects.equals(journalTitle, that.journalTitle) &&
+        Objects.equals(tdbProvider, that.tdbProvider);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(auId, name, volume, pluginName, tdbYear, accessType, contentSize, diskUsage, repositoryPath,
+        recentPollAgreement, highestPollAgreement, publishingPlatform, tdbPublisher, availableFromPublisher,
+        substanceState, creationTime, crawlProxy, crawlWindow, crawlPool, lastCompletedCrawl, lastCrawl,
+        lastCrawlResult, lastCompletedDeepCrawl, lastDeepCrawl, lastDeepCrawlResult, lastCompletedDeepCrawlDepth,
+        lastMetadataIndex, lastCompletedPoll, lastPoll, lastPollResult, currentlyCrawling, currentlyPolling,
+        subscriptionStatus, auConfiguration, newContentCrawlUrls, urlStems, isBulkContent, peerAgreements, urls,
+        substanceUrls, articleUrls, journalTitle, tdbProvider);
   }
 }

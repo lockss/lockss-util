@@ -31,6 +31,8 @@
  */
 package org.lockss.ws.entities;
 
+import java.util.Objects;
+
 /**
  * The daemon platform information.
  */
@@ -79,5 +81,20 @@ public class PlatformWsResult {
   public String toString() {
     return "PlatformWsResult [name=" + name + ", version=" + version
 	+ ", suffix=" + suffix + "]";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    PlatformWsResult that = (PlatformWsResult) o;
+    return Objects.equals(name, that.name) &&
+        Objects.equals(version, that.version) &&
+        Objects.equals(suffix, that.suffix);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(name, version, suffix);
   }
 }

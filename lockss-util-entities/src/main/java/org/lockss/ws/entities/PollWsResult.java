@@ -33,6 +33,7 @@ package org.lockss.ws.entities;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -522,5 +523,56 @@ public class PollWsResult {
 	+ activeRepairs + ", bytesHashedCount=" + bytesHashedCount
 	+ ", bytesReadCount=" + bytesReadCount + ", quorum=" + quorum
 	+ ", participants=" + participants + "]";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    PollWsResult that = (PollWsResult) o;
+    return Objects.equals(auId, that.auId) &&
+        Objects.equals(auName, that.auName) &&
+        Objects.equals(participantCount, that.participantCount) &&
+        Objects.equals(pollStatus, that.pollStatus) &&
+        Objects.equals(talliedUrlCount, that.talliedUrlCount) &&
+        Objects.equals(talliedUrls, that.talliedUrls) &&
+        Objects.equals(hashErrorCount, that.hashErrorCount) &&
+        Objects.equals(errorUrls, that.errorUrls) &&
+        Objects.equals(completedRepairCount, that.completedRepairCount) &&
+        Objects.equals(completedRepairs, that.completedRepairs) &&
+        Objects.equals(percentAgreement, that.percentAgreement) &&
+        Objects.equals(startTime, that.startTime) &&
+        Objects.equals(deadline, that.deadline) &&
+        Objects.equals(pollKey, that.pollKey) &&
+        Objects.equals(pollVariant, that.pollVariant) &&
+        Objects.equals(errorDetail, that.errorDetail) &&
+        Objects.equals(additionalInfo, that.additionalInfo) &&
+        Objects.equals(voteDeadline, that.voteDeadline) &&
+        Objects.equals(duration, that.duration) &&
+        Objects.equals(remainingTime, that.remainingTime) &&
+        Objects.equals(endTime, that.endTime) &&
+        Objects.equals(agreedUrlCount, that.agreedUrlCount) &&
+        Objects.equals(agreedUrls, that.agreedUrls) &&
+        Objects.equals(disagreedUrlCount, that.disagreedUrlCount) &&
+        Objects.equals(disagreedUrls, that.disagreedUrls) &&
+        Objects.equals(noQuorumUrlCount, that.noQuorumUrlCount) &&
+        Objects.equals(noQuorumUrls, that.noQuorumUrls) &&
+        Objects.equals(tooCloseUrlCount, that.tooCloseUrlCount) &&
+        Objects.equals(tooCloseUrls, that.tooCloseUrls) &&
+        Objects.equals(activeRepairCount, that.activeRepairCount) &&
+        Objects.equals(activeRepairs, that.activeRepairs) &&
+        Objects.equals(bytesHashedCount, that.bytesHashedCount) &&
+        Objects.equals(bytesReadCount, that.bytesReadCount) &&
+        Objects.equals(quorum, that.quorum) &&
+        Objects.equals(participants, that.participants);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(auId, auName, participantCount, pollStatus, talliedUrlCount, talliedUrls, hashErrorCount,
+        errorUrls, completedRepairCount, completedRepairs, percentAgreement, startTime, deadline, pollKey, pollVariant,
+        errorDetail, additionalInfo, voteDeadline, duration, remainingTime, endTime, agreedUrlCount, agreedUrls,
+        disagreedUrlCount, disagreedUrls, noQuorumUrlCount, noQuorumUrls, tooCloseUrlCount, tooCloseUrls,
+        activeRepairCount, activeRepairs, bytesHashedCount, bytesReadCount, quorum, participants);
   }
 }

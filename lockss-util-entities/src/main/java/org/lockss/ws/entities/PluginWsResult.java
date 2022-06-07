@@ -32,6 +32,7 @@
 package org.lockss.ws.entities;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Container for the information related to a plugin that is the result of a
@@ -162,5 +163,26 @@ public class PluginWsResult {
 	+ ", version=" + version + ", type=" + type + ", definition="
 	+ definition + ", registry=" + registry + ", url=" + url + ", auCount="
 	+ auCount + ", publishingPlatform=" + publishingPlatform + "]";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    PluginWsResult that = (PluginWsResult) o;
+    return Objects.equals(pluginId, that.pluginId) &&
+        Objects.equals(name, that.name) &&
+        Objects.equals(version, that.version) &&
+        Objects.equals(type, that.type) &&
+        Objects.equals(definition, that.definition) &&
+        Objects.equals(registry, that.registry) &&
+        Objects.equals(url, that.url) &&
+        Objects.equals(auCount, that.auCount) &&
+        Objects.equals(publishingPlatform, that.publishingPlatform);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(pluginId, name, version, type, definition, registry, url, auCount, publishingPlatform);
   }
 }

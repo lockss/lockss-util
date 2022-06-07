@@ -31,6 +31,8 @@
  */
 package org.lockss.ws.entities;
 
+import java.util.Objects;
+
 /**
  * Container for the information related to an archival unit poll agreement
  * that is the result of a query.
@@ -128,5 +130,22 @@ public class PeerAgreementWsResult {
 	+ ", highestPercentAgreement=" + highestPercentAgreement
 	+ ", highestPercentAgreementTimestamp="
 	+ highestPercentAgreementTimestamp + "]";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    PeerAgreementWsResult that = (PeerAgreementWsResult) o;
+    return Objects.equals(percentAgreement, that.percentAgreement) &&
+        Objects.equals(percentAgreementTimestamp, that.percentAgreementTimestamp) &&
+        Objects.equals(highestPercentAgreement, that.highestPercentAgreement) &&
+        Objects.equals(highestPercentAgreementTimestamp, that.highestPercentAgreementTimestamp);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(percentAgreement, percentAgreementTimestamp,
+        highestPercentAgreement, highestPercentAgreementTimestamp);
   }
 }

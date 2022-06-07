@@ -31,6 +31,8 @@
  */
 package org.lockss.ws.entities;
 
+import java.util.Objects;
+
 /**
  * The version information of the Java platform
  */
@@ -98,5 +100,21 @@ public class JavaVersionWsResult {
       + ", specificationVersion=" + specificationVersion
       + ", runtimeVersion=" + runtimeVersion
       + ", runtimeName=" + runtimeName + "]";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    JavaVersionWsResult that = (JavaVersionWsResult) o;
+    return Objects.equals(version, that.version) &&
+        Objects.equals(specificationVersion, that.specificationVersion) &&
+        Objects.equals(runtimeVersion, that.runtimeVersion) &&
+        Objects.equals(runtimeName, that.runtimeName);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(version, specificationVersion, runtimeVersion, runtimeName);
   }
 }
