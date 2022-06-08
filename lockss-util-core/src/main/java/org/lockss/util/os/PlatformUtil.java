@@ -38,6 +38,7 @@ import java.net.*;
 import java.text.*;
 import java.util.*;
 import java.util.regex.*;
+import java.math.BigInteger;
 import java.nio.file.Path;
 import java.nio.file.Files;
 import java.nio.file.FileStore;
@@ -977,9 +978,9 @@ public class PlatformUtil {
 
       if (storageInfo != null) {
         df.mnt = storageInfo.getName();
-        df.size = storageInfo.getSize() / 1024; // From bytes to KB.
-        df.used = storageInfo.getUsed() / 1024; // From bytes to KB.
-        df.avail = storageInfo.getAvail() / 1024; // From bytes to KB.
+        df.size = biDivToLong(storageInfo.getSize(), 1024); // From bytes to KB.
+        df.used = storageInfo.getUsed().divide(BigInteger.valueOf(1024)).longValue(); // From bytes to KB.
+        df.avail = storageInfo.getAvail().divide(BigInteger.valueOf(1024)).longValue(); // From bytes to KB.
         df.percentString = storageInfo.getPercentUsedString();
         df.percent = storageInfo.getPercentUsed();
       } else {
@@ -988,6 +989,14 @@ public class PlatformUtil {
       }
 
       return df;
+    }
+
+    static BigInteger bi(long val) {
+      return BigInteger.valueOf(val);
+    }
+
+    static long biDivToLong(BigInteger numer, long denom) {
+      return numer.divide(bi(denom)).longValue();
     }
 
     public String getFs() {

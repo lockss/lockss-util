@@ -29,7 +29,10 @@
 package org.lockss.util.storage;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.List;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.lockss.util.os.PlatformUtil;
 
 /**
@@ -40,9 +43,9 @@ public class StorageInfo implements Serializable {
   private String type;   // Currently just informative: "disk", "memory", etc.
   private String name;   // Indentifying name such as mount point
   private String path;   // Path, if applicable
-  private long size = -1; // Size in bytes of the storage area.
-  private long used = -1; // Size in bytes of the used storage area.
-  private long avail = -1; // Size in bytes of the available storage area
+  private BigInteger size = BigInteger.valueOf(-1); // Size in bytes of the storage area.
+  private BigInteger used = BigInteger.valueOf(-1); // Size in bytes of the used storage area.
+  private BigInteger avail = BigInteger.valueOf(-1); // Size in bytes of the available storage area
   private String percentUsedString;
   private double percentUsed = -1.0;
   private List<StorageInfo> components;	// Storage areas that comprise this one
@@ -71,11 +74,15 @@ public class StorageInfo implements Serializable {
     Runtime rt = Runtime.getRuntime();
     StorageInfo si = new StorageInfo("memory")
       .setAvail(rt.freeMemory())
-      .setSize(rt.maxMemory())
+      .setSize(bi(rt.maxMemory()))
       .setUsed(rt.totalMemory());
-    si.setPercentUsed((double)si.getUsed() / (double)si.getSize());
+    si.setPercentUsed(divide(si.getUsed(), si.getSize()));
     si.setPercentUsedString(Math.round(100 * si.getPercentUsed()) + "%");
     return si;
+  }
+
+  static double divide(BigInteger numer, BigInteger denom) {
+    return numer.doubleValue() / denom.doubleValue();
   }
 
   /** Create a StorageInfo representing the disk usage information in the
@@ -88,13 +95,18 @@ public class StorageInfo implements Serializable {
     StorageInfo res = new StorageInfo(type);
     if (df != null) {
       res.name = df.getMnt();
-      res.size = df.getSize() * 1024; // From DF in KB, here in bytes.
-      res.used = df.getUsed() * 1024; // From DF in KB, here in bytes.
-      res.avail = df.getAvail() * 1024; // From DF in KB, here in bytes.
+      BigInteger k = bi(1024);
+      res.size = bi(df.getSize()).multiply(k); // From DF in KB, here in bytes.
+      res.used = bi(df.getUsed()).multiply(k); // From DF in KB, here in bytes.
+      res.avail = bi(df.getAvail()).multiply(k); // From DF in KB, here in bytes.
       res.percentUsedString = df.getPercentString();
       res.percentUsed = df.getPercent();
     }
     return res;
+  }
+
+  static BigInteger bi(long val) {
+    return BigInteger.valueOf(val);
   }
 
   /** Create a StorageInfo containing only a type string
@@ -136,31 +148,43 @@ public class StorageInfo implements Serializable {
   }
 
   /** Return total size in bytes */
-  public long getSize() {
+  public BigInteger getSize() {
     return size;
   }
 
   public StorageInfo setSize(long size) {
+    return setSize(BigInteger.valueOf(size));
+  }
+
+  public StorageInfo setSize(BigInteger size) {
     this.size = size;
     return this;
   }
 
   /** Return used size in bytes */
-  public long getUsed() {
+  public BigInteger getUsed() {
     return used;
   }
 
   public StorageInfo setUsed(long used) {
+    return setUsed(BigInteger.valueOf(used));
+  }
+
+  public StorageInfo setUsed(BigInteger used) {
     this.used = used;
     return this;
   }
 
   /** Return available size in bytes */
-  public long getAvail() {
+  public BigInteger getAvail() {
     return avail;
   }
 
   public StorageInfo setAvail(long avail) {
+    return setAvail(BigInteger.valueOf(avail));
+  }
+
+  public StorageInfo setAvail(BigInteger avail) {
     this.avail = avail;
     return this;
   }
@@ -205,6 +229,36 @@ public class StorageInfo implements Serializable {
   }
 
   @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    StorageInfo other = (StorageInfo)o;
+
+    return new EqualsBuilder()
+      .append(name, other.name)
+      .append(type, other.type)
+      .append(path, other.path)
+      .append(size, other.size)
+      .append(used, other.used)
+      .append(avail, other.avail)
+      .append(percentUsedString, other.percentUsedString)
+      .append(percentUsed, other.percentUsed)
+      .append(components, other.components)
+      .isEquals();
+  }
+
+//   @Override
+//   public int hashCode() {
+//     return new HashCodeBuilder(17, 37).append(auid).append(suspectVersions).toHashCode();
+//   }
+
+  @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("[StorageInfo");
@@ -219,8 +273,8 @@ public class StorageInfo implements Serializable {
     return sb.toString();
   }
 
-  private static void addIf(StringBuilder sb, String label, long val) {
-    if (val >= 0) {
+  private static void addIf(StringBuilder sb, String label, BigInteger val) {
+    if (val.compareTo(bi(0)) > 0) {
       sb.append(" ");
       sb.append(label);
       sb.append(": ");
