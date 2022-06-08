@@ -977,9 +977,9 @@ public class PlatformUtil {
 
       if (storageInfo != null) {
         df.mnt = storageInfo.getName();
-        df.size = storageInfo.getSize() / 1024; // From bytes to KB.
-        df.used = storageInfo.getUsed() / 1024; // From bytes to KB.
-        df.avail = storageInfo.getAvail() / 1024; // From bytes to KB.
+        df.size = storageInfo.getSizeKB();
+        df.used = storageInfo.getUsedKB();
+        df.avail = storageInfo.getAvailKB();
         df.percentString = storageInfo.getPercentUsedString();
         df.percent = storageInfo.getPercentUsed();
       } else {

@@ -40,9 +40,9 @@ public class StorageInfo implements Serializable {
   private String type;   // Currently just informative: "disk", "memory", etc.
   private String name;   // Indentifying name such as mount point
   private String path;   // Path, if applicable
-  private long size = -1; // Size in bytes of the storage area.
-  private long used = -1; // Size in bytes of the used storage area.
-  private long avail = -1; // Size in bytes of the available storage area
+  private long sizeKB = -1; // Size in KB of the storage area.
+  private long usedKB = -1; // Size in KB of the used storage area.
+  private long availKB = -1; // Size in KB of the available storage area
   private String percentUsedString;
   private double percentUsed = -1.0;
   private List<StorageInfo> components;	// Storage areas that comprise this one
@@ -62,6 +62,11 @@ public class StorageInfo implements Serializable {
     return fromDF("disk", df);
   }
 
+  /** Return bytes as KB, rounded */
+  public static long toKBRounded(long bytes) {
+    return (bytes + 512) / 1024;
+  }
+
   /** Create a StorageInfo representing the JVM memory.  Not particularly
    * meaningful, provided so in-memory implementations have something easy
    * to return
@@ -70,10 +75,10 @@ public class StorageInfo implements Serializable {
   public static StorageInfo fromRuntime() {
     Runtime rt = Runtime.getRuntime();
     StorageInfo si = new StorageInfo("memory")
-      .setAvail(rt.freeMemory())
-      .setSize(rt.maxMemory())
-      .setUsed(rt.totalMemory());
-    si.setPercentUsed((double)si.getUsed() / (double)si.getSize());
+      .setAvailKB(toKBRounded(rt.freeMemory()))
+      .setSizeKB(toKBRounded(rt.maxMemory()))
+      .setUsedKB(toKBRounded(rt.totalMemory()));
+    si.setPercentUsed((double)si.getUsedKB() / (double)si.getSizeKB());
     si.setPercentUsedString(Math.round(100 * si.getPercentUsed()) + "%");
     return si;
   }
@@ -88,9 +93,9 @@ public class StorageInfo implements Serializable {
     StorageInfo res = new StorageInfo(type);
     if (df != null) {
       res.name = df.getMnt();
-      res.size = df.getSize() * 1024; // From DF in KB, here in bytes.
-      res.used = df.getUsed() * 1024; // From DF in KB, here in bytes.
-      res.avail = df.getAvail() * 1024; // From DF in KB, here in bytes.
+      res.sizeKB = df.getSize();
+      res.usedKB = df.getUsed();
+      res.availKB = df.getAvail();
       res.percentUsedString = df.getPercentString();
       res.percentUsed = df.getPercent();
     }
@@ -135,33 +140,33 @@ public class StorageInfo implements Serializable {
     return this;
   }
 
-  /** Return total size in bytes */
-  public long getSize() {
-    return size;
+  /** Return total size in KB */
+  public long getSizeKB() {
+    return sizeKB;
   }
 
-  public StorageInfo setSize(long size) {
-    this.size = size;
+  public StorageInfo setSizeKB(long sizeKB) {
+    this.sizeKB = sizeKB;
     return this;
   }
 
-  /** Return used size in bytes */
-  public long getUsed() {
-    return used;
+  /** Return used size in KB */
+  public long getUsedKB() {
+    return usedKB;
   }
 
-  public StorageInfo setUsed(long used) {
-    this.used = used;
+  public StorageInfo setUsedKB(long usedKB) {
+    this.usedKB = usedKB;
     return this;
   }
 
-  /** Return available size in bytes */
-  public long getAvail() {
-    return avail;
+  /** Return available size in KB */
+  public long getAvailKB() {
+    return availKB;
   }
 
-  public StorageInfo setAvail(long avail) {
-    this.avail = avail;
+  public StorageInfo setAvailKB(long availKB) {
+    this.availKB = availKB;
     return this;
   }
 
@@ -211,29 +216,45 @@ public class StorageInfo implements Serializable {
     addIf(sb, "type", type);
     addIf(sb, "name", name);
     addIf(sb, "path", path);
-    addIf(sb, "size", size);
-    addIf(sb, "used", used);
-    addIf(sb, "avail", avail);
+    addIf(sb, "size", sizeKB, "KB");
+    addIf(sb, "used", usedKB, "KB");
+    addIf(sb, "avail", availKB, "KB");
     addIf(sb, "used %", percentUsedString);
     sb.append("]");
     return sb.toString();
   }
 
   private static void addIf(StringBuilder sb, String label, long val) {
+    addIf(sb, label, val, null);
+  }
+
+  private static void addIf(StringBuilder sb, String label, long val,
+                            String units) {
     if (val >= 0) {
       sb.append(" ");
       sb.append(label);
       sb.append(": ");
       sb.append(val);
+      if (units != null) {
+        sb.append(units);
+      }
     }
   }
 
   private static void addIf(StringBuilder sb, String label, String val) {
+    addIf(sb, label, val, null);
+  }
+
+  private static void addIf(StringBuilder sb, String label, String val,
+                            String units) {
     if (val != null) {
       sb.append(" ");
       sb.append(label);
       sb.append(": ");
       sb.append(val);
+      if (units != null) {
+        sb.append(units);
+      }
     }
   }
 }
