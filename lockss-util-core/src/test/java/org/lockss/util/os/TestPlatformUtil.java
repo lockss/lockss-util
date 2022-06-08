@@ -197,10 +197,10 @@ public class TestPlatformUtil extends LockssTestCase5 {
   @Test
   public void testGetDFSource() throws Exception {
     String javatmp = System.getProperty("java.io.tmpdir");
-    assertEquals(PlatformUtil.DiskSpaceSource.Java,
-                 info.getDF(javatmp).getSource());
-    System.setProperty(PlatformUtil.SYSPROP_DISK_SPACE_SOURCE, "DF");
     assertEquals(PlatformUtil.DiskSpaceSource.DF,
+                 info.getDF(javatmp).getSource());
+    System.setProperty(PlatformUtil.SYSPROP_DISK_SPACE_SOURCE, "Java");
+    assertEquals(PlatformUtil.DiskSpaceSource.Java,
                  info.getDF(javatmp).getSource());
   }
 
