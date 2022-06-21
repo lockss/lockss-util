@@ -63,6 +63,12 @@ POSSIBILITY OF SUCH DAMAGE.
       <version>${version.lockss.lockss-util-core}</version>
     </dependency>
 
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+      <version>${version.group.jackson}</version>
+    </dependency>
+
   </dependencies>
 
 </project>

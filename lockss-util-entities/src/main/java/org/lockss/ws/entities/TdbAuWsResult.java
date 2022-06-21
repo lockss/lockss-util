@@ -32,11 +32,13 @@
 package org.lockss.ws.entities;
 
 import java.util.Map;
+import com.fasterxml.jackson.annotation.*;
 
 /**
  * Container for the information related to a title database archival unit that
  * is the result of a query.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TdbAuWsResult {
   private String auId;
   private String name;
