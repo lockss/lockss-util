@@ -32,11 +32,13 @@
 package org.lockss.ws.entities;
 
 import java.util.*;
+import com.fasterxml.jackson.annotation.*;
 
 /**
  * Container for the information related to a poll participant that is the
  * result of a query.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ParticipantWsResult {
   private String peerId;
   private String peerStatus;

@@ -32,11 +32,13 @@
 package org.lockss.ws.entities;
 
 import java.util.Map;
+import com.fasterxml.jackson.annotation.*;
 
 /**
  * Container for the information related to the configuration of an Archival
  * Unit that is the result of a query.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AuConfigurationWsResult {
 
   private Map<String, String> defParams;

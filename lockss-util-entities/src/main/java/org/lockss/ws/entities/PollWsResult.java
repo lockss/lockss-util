@@ -34,11 +34,13 @@ package org.lockss.ws.entities;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import com.fasterxml.jackson.annotation.*;
 
 /**
  * Container for the information related to a poll that is the result of a
  * query.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PollWsResult {
   private String auId;
   private String auName;
