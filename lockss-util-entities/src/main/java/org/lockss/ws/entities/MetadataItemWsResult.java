@@ -30,10 +30,12 @@
 
  */
 package org.lockss.ws.entities;
+import com.fasterxml.jackson.annotation.*;
 
 /**
  * Container for the information related to a metadata item.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class MetadataItemWsResult {
   private String itemName;
   private String itemType;

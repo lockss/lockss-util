@@ -33,11 +33,13 @@ package org.lockss.ws.entities;
 
 import java.util.Collection;
 import java.util.List;
+import com.fasterxml.jackson.annotation.*;
 
 /**
  * Container for the information related to a crawl that is the result of a
  * query.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CrawlWsResult {
   private String auId;
   private String auName;

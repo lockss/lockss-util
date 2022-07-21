@@ -218,7 +218,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
    * @return a {@code List<RepositoryWsResult>} with the results.
    * @throws LockssRestException if there were problems making the query.
    */
-  public List<RepositoryWsResult> queryRepositories(String repositoryQuery)
+  public List<RepositoryWsResult> queryAuRepositories(String repositoryQuery)
       throws LockssRestException {
     log.debug2("repositoryQuery = {}", repositoryQuery);
 
@@ -230,7 +230,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
 
       // Make the REST call.
       log.trace("Calling RestUtil.callRestService");
-      ResponseEntity<String> response = callRestService("/repositories", null,
+      ResponseEntity<String> response = callRestService("/aurepositories", null,
 	  queryParams, HttpMethod.GET, null, null, String.class,
 	  "Can't query repositories");
       log.trace("Back from RestUtil.callRestService");
