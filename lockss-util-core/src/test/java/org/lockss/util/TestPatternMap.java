@@ -29,44 +29,42 @@ in this Software without prior written authorization from Stanford University.
 package org.lockss.util;
 
 import java.util.*;
-import java.util.stream.*;
+import java.util.function.*;
+import java.util.regex.*;
 import org.apache.commons.lang3.tuple.*;
 import org.junit.jupiter.api.Test;
 import org.lockss.util.*;
 import org.lockss.util.test.LockssTestCase5;
 
-public class TestPatternStringMap extends LockssTestCase5 {
+public class TestPatternMap extends LockssTestCase5 {
+
+  static Function ID = Function.identity();
+
+  private PatternMap makeMap() {
+    return PatternMap.fromPairs(ListUtil.list(Pair.of("a.*b", 2),
+                                              Pair.of("ccc", "foo")));
+  }
 
   @Test
   public void testToString() {
-    PatternStringMap ppm1 = new PatternStringMap("a.*b,2;ccc,foo");
+    PatternMap ppm1 = makeMap();
     assertEquals("[pm: [a.*b: 2], [ccc: foo]]", ppm1.toString());
   }
 
   @Test
   public void testGetMatch() {
-    testGetMatch(PatternStringMap.fromSpec("a.*b,foo;ccc,bar"));
-    testGetMatch(PatternStringMap.fromSpec(ListUtil.list("a.*b,foo", "ccc,bar")));
-  }
-
-  @Test
-  public void testGetMatchDeprecated() {
-    testGetMatch(new PatternStringMap("a.*b,foo;ccc,bar"));
-    testGetMatch(new PatternStringMap(ListUtil.list("a.*b,foo", "ccc,bar")));
-  }
-
-  public void testGetMatch(PatternStringMap ppm1) {
+    PatternMap ppm1 = makeMap();
     assertEquals(null, ppm1.getMatch("a123c"));
     assertEquals("df", ppm1.getMatch("a123c", "df"));
-    assertEquals("foo", ppm1.getMatch("a123b"));
-    assertEquals("foo", ppm1.getMatch("accccb"));
-    assertEquals("bar", ppm1.getMatch("bccccb"));
-    assertEquals("bar", ppm1.getMatch("bccccb", "not"));
+    assertEquals(2, ppm1.getMatch("a123b"));
+    assertEquals(2, ppm1.getMatch("accccb"));
+    assertEquals("foo", ppm1.getMatch("bccccb"));
+    assertEquals("foo", ppm1.getMatch("bccccb", "not"));
   }
 
   @Test
   public void testEmpty() {
-    PatternStringMap ppm = PatternStringMap.EMPTY;
+    PatternMap ppm = PatternMap.EMPTY;
     assertEquals(null, ppm.getMatch("a"));
     assertEquals("42", ppm.getMatch("a", "42"));
     assertEquals("[pm: EMPTY]", ppm.toString());
@@ -74,39 +72,27 @@ public class TestPatternStringMap extends LockssTestCase5 {
 
   @Test
   public void testIsEmpty() {
-    assertTrue(PatternStringMap.EMPTY.isEmpty());
-    assertTrue(PatternStringMap.fromSpec("").isEmpty());
-    assertFalse(PatternStringMap.fromSpec("a.*b,2;ccc,xxx").isEmpty());
-  }
-
-  @Test
-  public void testGetUrlMapPairs() {
-    assertEquals(ListUtil.list(Pair.of("foo.*", "bar")),
-                 PatternStringMap.fromSpec("foo.*,bar").getPairs().stream()
-                 .map(x -> Pair.of(x.getLeft().pattern(), x.getRight()))
-                 .collect(Collectors.toList()));
+    assertTrue(PatternMap.EMPTY.isEmpty());
+    assertTrue(PatternMap.fromPairs(Collections.emptyList()).isEmpty());
+    assertFalse(makeMap().isEmpty());
   }
 
   @Test
   public void testIll() {
     try {
-      PatternStringMap ppm1 = PatternStringMap.fromSpec("a[)2");
+      PatternMap ppm1 =
+        PatternMap.fromPairs(ListUtil.list(Pair.of("a[)2", "foo")));
       fail("Should throw: Malformed");
     } catch (IllegalArgumentException e) {
-      assertMatchesRE("no comma", e.getMessage());
-    }
-    try {
-      PatternStringMap ppm1 = PatternStringMap.fromSpec("a,1;bbb");
-      fail("Should throw: Malformed");
-    } catch (IllegalArgumentException e) {
-      assertMatchesRE("no comma", e.getMessage());
-    }
-    try {
-      PatternStringMap ppm1 = PatternStringMap.fromSpec("a[),2");
-      fail("Should throw: illegal regexp");
-    } catch (IllegalArgumentException e) {
-      assertMatchesRE("Illegal regexp", e.getMessage());
+      assertClass(PatternSyntaxException.class, e.getCause());
     }
   }
 
+  @Test
+  public void testListMap() {
+    PatternMap<List> plm =
+      PatternMap.fromPairs(ListUtil.list(Pair.of("a.*b", ListUtil.list(1,2)),
+                                               Pair.of("ccc", ListUtil.list(3,3))));
+    assertEquals(ListUtil.list(1,2), plm.getMatch("a123cb"));
+  }
 }

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2000-2020 Board of Trustees of Leland Stanford Jr. University,
+Copyright (c) 2000-2022 Board of Trustees of Leland Stanford Jr. University,
 all rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,25 +29,33 @@ in this Software without prior written authorization from Stanford University.
 package org.lockss.util;
 
 import java.util.*;
-import java.text.*;
-import java.util.regex.*;
-import org.lockss.log.*;
+import java.util.function.Function;
+import org.apache.commons.lang3.tuple.*;
 
-/** Base class for "maps" from regexps to values */
+/** "Map" strings to arbitrary Objects, where the keys are patterns
+ * against which the strings are matched.  The patterns are ordered;
+ * the value associated with the first one that matches is
+ * returned.  */
+public class PatternMap<T> extends AbstractPatternMap<T> {
 
-// Should genericize
+  /** An empty PatternMap, which always returns the default
+   * value. */
+  public final static PatternMap EMPTY =
+    (PatternMap)new PatternMap().compilePairs(Collections.emptyList());
 
-public abstract class PatternMap {
+  protected PatternMap() {
+    super();
+  }
 
-  L4JLogger log = L4JLogger.getLogger();
+  /** Create a PatternMap from a list of strings of the form
+   * <code><i>RE</i>,<i>string</i></code>
+   */
+  public static <T> PatternMap<T> fromPairs(List<Pair<String,T>> patternPairs)
+      throws IllegalArgumentException {
+    return (PatternMap)new PatternMap().compilePairs(patternPairs);
+  }
 
-  protected Pattern delimpat = Pattern.compile(" *; *");
-
-  protected List<String> breakAtSemi(String str) {
-    String[] res = delimpat.split(str, 0);
-    if (res.length == 1 && res[0].length() == 0) {
-      return Collections.emptyList();
-    }
-    return Arrays.asList(res);
+  protected T parseRhs(String rhs) {
+    throw new UnsupportedOperationException("Shouldn't happen");
   }
 }

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2000-2020 Board of Trustees of Leland Stanford Jr. University,
+Copyright (c) 2000-2022 Board of Trustees of Leland Stanford Jr. University,
 all rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -31,22 +31,33 @@ package org.lockss.util;
 import java.util.*;
 import org.junit.jupiter.api.Test;
 import org.lockss.util.*;
-import org.lockss.util.test.*;
+import org.lockss.util.test.LockssTestCase5;
 
 public class TestPatternFloatMap extends LockssTestCase5 {
 
   public void testToString() {
-    PatternFloatMap ppm1 = new PatternFloatMap("a.*b,2;ccc,4.3");
+    PatternFloatMap ppm1 = PatternFloatMap.fromSpec("a.*b,2;ccc,4.3");
     assertEquals("[pm: [a.*b: 2.0], [ccc: 4.3]]", ppm1.toString());
 
     PatternFloatMap ppm2 =
-      new PatternFloatMap(ListUtil.list("xx,1", "yy,2"));
+      PatternFloatMap.fromSpec(ListUtil.list("xx,1", "yy,2"));
     assertEquals("[pm: [xx: 1.0], [yy: 2.0]]", ppm2.toString());
   }
 
   @Test
   public void testGetMatch() {
-    PatternFloatMap ppm1 = new PatternFloatMap("a.*b,2.5;ccc,-4;ddd,5e2");
+    testGetMatch(PatternFloatMap.fromSpec("a.*b,2.5;ccc,-4;ddd,5e2"));
+    testGetMatch(PatternFloatMap.fromSpec(ListUtil.list("a.*b,2.5", "ccc,-4",
+                                                        "ddd,5e2")));
+  }
+
+  public void testGetMatchDeprecated() {
+    testGetMatch(new PatternFloatMap("a.*b,2.5;ccc,-4;ddd,5e2"));
+    testGetMatch(new PatternFloatMap(ListUtil.list("a.*b,2.5", "ccc,-4",
+                                                   "ddd,5e2")));
+  }
+
+  public void testGetMatch(PatternFloatMap ppm1) {
     assertEquals(0.0F, ppm1.getMatch("a123c"));
     assertEquals(123.0F, ppm1.getMatch("a123c", 123));
     assertEquals(2.5F, ppm1.getMatch("a123b"));
@@ -69,35 +80,35 @@ public class TestPatternFloatMap extends LockssTestCase5 {
   @Test
   public void testIsEmpty() {
     assertTrue(PatternFloatMap.EMPTY.isEmpty());
-    assertTrue(new PatternFloatMap("").isEmpty());
-    assertFalse(new PatternFloatMap("a.*b,2;ccc,-4").isEmpty());
+    assertTrue(PatternFloatMap.fromSpec("").isEmpty());
+    assertFalse(PatternFloatMap.fromSpec("a.*b,2;ccc,-4").isEmpty());
   }
 
   @Test
   public void testIll() {
     try {
-      PatternFloatMap ppm1 = new PatternFloatMap("([");
+      PatternFloatMap ppm1 = PatternFloatMap.fromSpec("a[)2");
       fail("Should throw: Malformed");
     } catch (IllegalArgumentException e) {
       assertMatchesRE("no comma", e.getMessage());
     }
     try {
-      PatternFloatMap ppm1 = new PatternFloatMap("a,1;bbb");
+      PatternFloatMap ppm1 = PatternFloatMap.fromSpec("a,1;bbb");
       fail("Should throw: Malformed");
     } catch (IllegalArgumentException e) {
       assertMatchesRE("no comma", e.getMessage());
     }
     try {
-      PatternFloatMap ppm1 = new PatternFloatMap("a.*b,2;ccc,xyz");
-      fail("Should throw: illegal priority");
+      PatternFloatMap ppm1 = PatternFloatMap.fromSpec("a.*b,2;ccc,xyz");
+      fail("Should throw: illegal RHS");
     } catch (IllegalArgumentException e) {
-      assertMatchesRE("Illegal priority", e.getMessage());
+      assertMatchesRE("Illegal RHS.*xyz", e.getMessage());
     }
     try {
-      PatternFloatMap ppm1 = new PatternFloatMap("a[),2");
+      PatternFloatMap ppm1 = PatternFloatMap.fromSpec("a[),2");
       fail("Should throw: illegal regexp");
     } catch (IllegalArgumentException e) {
-      assertMatchesRE("Unclosed character class", e.getMessage());
+      assertMatchesRE("Illegal regexp", e.getMessage());
     }
   }
 
