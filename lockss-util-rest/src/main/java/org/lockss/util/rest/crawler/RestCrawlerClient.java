@@ -31,9 +31,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.lockss.util.rest.crawler;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.lockss.log.L4JLogger;
 import org.lockss.util.rest.RestBaseClient;
 import org.lockss.util.rest.exception.LockssRestException;
+import org.lockss.ws.entities.CrawlWsResult;
+import org.lockss.ws.entities.PollWsResult;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 
@@ -78,6 +84,43 @@ public class RestCrawlerClient extends RestBaseClient<RestCrawlerClient> {
       log.debug2("result = {}", result);
       return result;
     } catch (RuntimeException e) {
+      throw new LockssRestException(e);
+    }
+  }
+
+  /**
+   * Provides the selected properties of selected polls in the system.
+   *
+   * @param crawlQuery A String with the
+   *                  <a href="package-summary.html#SQL-Like_Query">SQL-like
+   *                  query</a> used to specify what properties to retrieve from
+   *                  which polls.
+   * @return a {@code List<CrawlWsResult>} with the results.
+   * @throws LockssRestException if there were problems making the query.
+   */
+  public List<CrawlWsResult> queryCrawls(String crawlQuery)
+      throws LockssRestException {
+    log.debug2("crawlQuery = {}", crawlQuery);
+    try {
+      // Prepare the query parameters.
+      Map<String, String> queryParams = new HashMap<>(1);
+      queryParams.put("crawlQuery", crawlQuery);
+      log.trace("queryParams = {}", queryParams);
+
+      // Make the REST call.
+      log.trace("Calling RestUtil.callRestService");
+      ResponseEntity<String> response = callRestService("/crawls", null,
+          queryParams, HttpMethod.GET, null, null, String.class,
+          "Can't query crawls");
+      log.trace("Back from RestUtil.callRestService");
+
+      // Get the response body.
+      List<CrawlWsResult> result = getJsonMapper().readValue(response.getBody(),
+          new TypeReference<List<CrawlWsResult>>(){});
+
+      log.debug2("result = {}", result);
+      return result;
+    } catch (Exception e) {
       throw new LockssRestException(e);
     }
   }

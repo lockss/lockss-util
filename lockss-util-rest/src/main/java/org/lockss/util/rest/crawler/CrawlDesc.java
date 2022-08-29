@@ -31,73 +31,93 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.lockss.util.rest.crawler;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.springframework.validation.annotation.Validated;
+import javax.validation.Valid;
+import javax.validation.constraints.*;
 
 /**
  * A descriptor for a crawl.
  */
+@ApiModel(description = "A descriptor for a crawl.")
 @Validated
-public class CrawlDesc {
+
+
+public class CrawlDesc   {
   /**
    * The identifier of the LOCKSS crawler.
    */
   public static final String LOCKSS_CRAWLER_ID = "lockss";
 
-  /**
-   * The identifier of the wget crawler.
-   */
-  public static final String WGET_CRAWLER_ID = "wget";
-
   // The identifier of the archival unit to be crawled.
   @JsonProperty("auId")
   private String auId = null;
 
-  // The kind of crawl being performed. For now, this is either 'newContent' or
-  // 'repair'.
+  /**
+   * The kind of crawl being performed either 'newContent' or 'repair'.
+   */
+  public enum CrawlKindEnum {
+    NEWCONTENT("newContent"),
+
+    REPAIR("repair");
+
+    private String value;
+
+    CrawlKindEnum(String value) {
+      this.value = value;
+    }
+
+    @Override
+    @JsonValue
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static CrawlKindEnum fromValue(String text) {
+      for (CrawlKindEnum b : CrawlKindEnum.values()) {
+        if (String.valueOf(b.value).equals(text)) {
+          return b;
+        }
+      }
+      return null;
+    }
+  }
+
   @JsonProperty("crawlKind")
-  private CrawlKind crawlKind = null;
+  private CrawlKindEnum crawlKind = null;
 
-  // The crawler to be used for this crawl.
-  @JsonProperty("crawler")
-  private String crawler = LOCKSS_CRAWLER_ID;
+  @JsonProperty("crawlerId")
+  private String crawlerId = "lockss";
 
-  // The repair URLs in a repair crawl.
-  @JsonProperty("repairList")
-  @Valid
-  private List<String> repairList = null;
-
-  // An indication of whether the crawl is to be forced, suppressing conditions
-  // that might otherwise prevent the crawl from happening.
   @JsonProperty("forceCrawl")
   private Boolean forceCrawl = false;
 
-  // The refetch depth to use for a deep crawl.
   @JsonProperty("refetchDepth")
   private Integer refetchDepth = -1;
 
-  // The priority for the crawl.
   @JsonProperty("priority")
   private Integer priority = null;
 
-  // The list of URLs to crawl.
   @JsonProperty("crawlList")
   @Valid
   private List<String> crawlList = null;
 
-  // The depth of the crawl.
   @JsonProperty("crawlDepth")
   private Integer crawlDepth = null;
 
-  // A JSON object with content required by the crawler.
   @JsonProperty("extraCrawlerData")
   @Valid
-  private String extraCrawlerData = null;
+  private Map<String, Object> extraCrawlerData = null;
 
   public CrawlDesc auId(String auId) {
     this.auId = auId;
@@ -107,8 +127,11 @@ public class CrawlDesc {
   /**
    * The identifier of the archival unit to be crawled.
    * @return auId
-  **/
+   **/
+  @ApiModelProperty(required = true, value = "The identifier of the archival unit to be crawled.")
   @NotNull
+
+
   public String getAuId() {
     return auId;
   }
@@ -117,65 +140,45 @@ public class CrawlDesc {
     this.auId = auId;
   }
 
-  public CrawlDesc crawlKind(CrawlKind crawlKind) {
+  public CrawlDesc crawlKind(CrawlKindEnum crawlKind) {
     this.crawlKind = crawlKind;
     return this;
   }
 
   /**
-   * The kind of crawl being performed. For now, this is either 'newContent' or
-   * 'repair'.
+   * The kind of crawl being performed either 'newContent' or 'repair'.
    * @return crawlKind
   **/
+  @ApiModelProperty(required = true, value = "The kind of crawl being performed either 'newContent' or 'repair'.")
   @NotNull
-  public CrawlKind getCrawlKind() {
+
+
+  public CrawlKindEnum getCrawlKind() {
     return crawlKind;
   }
 
-  public void setCrawlKind(CrawlKind crawlKind) {
+  public void setCrawlKind(CrawlKindEnum crawlKind) {
     this.crawlKind = crawlKind;
   }
 
-  public CrawlDesc crawler(String crawler) {
-    this.crawler = crawler;
+  public CrawlDesc crawlerId(String crawlerId) {
+    this.crawlerId = crawlerId;
     return this;
   }
 
   /**
    * The crawler to be used for this crawl.
-   * @return crawler
-  **/
-  public String getCrawler() {
-    return crawler;
+   * @return crawlerId
+   **/
+  @ApiModelProperty(value = "The crawler to be used for this crawl.")
+
+
+  public String getCrawlerId() {
+    return crawlerId;
   }
 
-  public void setCrawler(String crawler) {
-    this.crawler = crawler;
-  }
-
-  public CrawlDesc repairList(List<String> repairList) {
-    this.repairList = repairList;
-    return this;
-  }
-
-  public CrawlDesc addRepairListItem(String repairListItem) {
-    if (this.repairList == null) {
-      this.repairList = new ArrayList<>();
-    }
-    this.repairList.add(repairListItem);
-    return this;
-  }
-
-  /**
-   * The repair URLs in a repair crawl.
-   * @return repairList
-  **/
-  public List<String> getRepairList() {
-    return repairList;
-  }
-
-  public void setRepairList(List<String> repairList) {
-    this.repairList = repairList;
+  public void setCrawlerId(String crawlerId) {
+    this.crawlerId = crawlerId;
   }
 
   public CrawlDesc forceCrawl(Boolean forceCrawl) {
@@ -184,10 +187,12 @@ public class CrawlDesc {
   }
 
   /**
-   * An indication of whether the crawl is to be forced, suppressing conditions
-   * that might otherwise prevent the crawl from happening.
+   * An indication of whether the crawl is to be forced,\\ \\ suppressing conditions that might otherwise prevent the crawl from\\ \\ happening.
    * @return forceCrawl
-  **/
+   **/
+  @ApiModelProperty(value = "An indication of whether the crawl is to be forced,\\ \\ suppressing conditions that might otherwise prevent the crawl from\\ \\ happening.")
+
+
   public Boolean isForceCrawl() {
     return forceCrawl;
   }
@@ -204,7 +209,10 @@ public class CrawlDesc {
   /**
    * The refetch depth to use for a deep crawl.
    * @return refetchDepth
-  **/
+   **/
+  @ApiModelProperty(value = "The refetch depth to use for a deep crawl.")
+
+
   public Integer getRefetchDepth() {
     return refetchDepth;
   }
@@ -221,7 +229,10 @@ public class CrawlDesc {
   /**
    * The priority for the crawl.
    * @return priority
-  **/
+   **/
+  @ApiModelProperty(value = "The priority for the crawl.")
+
+
   public Integer getPriority() {
     return priority;
   }
@@ -246,7 +257,10 @@ public class CrawlDesc {
   /**
    * The list of URLs to crawl.
    * @return crawlList
-  **/
+   **/
+  @ApiModelProperty(value = "The list of URLs to crawl.")
+
+
   public List<String> getCrawlList() {
     return crawlList;
   }
@@ -261,9 +275,12 @@ public class CrawlDesc {
   }
 
   /**
-   * The depth of the crawl.
+   * The depth to which the links should be followed. 0 means\\ \\ do not follow links.
    * @return crawlDepth
-  **/
+   **/
+  @ApiModelProperty(value = "The depth to which the links should be followed. 0 means\\ \\ do not follow links.")
+
+
   public Integer getCrawlDepth() {
     return crawlDepth;
   }
@@ -272,22 +289,34 @@ public class CrawlDesc {
     this.crawlDepth = crawlDepth;
   }
 
-  public CrawlDesc extraCrawlerData(String extraCrawlerData) {
+  public CrawlDesc extraCrawlerData(Map<String, Object> extraCrawlerData) {
     this.extraCrawlerData = extraCrawlerData;
     return this;
   }
 
+  public CrawlDesc putExtraCrawlerDataItem(String key, Object extraCrawlerDataItem) {
+    if (this.extraCrawlerData == null) {
+      this.extraCrawlerData = new HashMap<>();
+    }
+    this.extraCrawlerData.put(key, extraCrawlerDataItem);
+    return this;
+  }
+
   /**
-   * A JSON object with content required by the crawler.
+   * A map of additional properties for a crawl on a given crawler.
    * @return extraCrawlerData
-  **/
-  public String getExtraCrawlerData() {
+   **/
+  @ApiModelProperty(value = "A map of additional properties for a crawl on a given crawler.")
+
+
+  public Map<String, Object> getExtraCrawlerData() {
     return extraCrawlerData;
   }
 
-  public void setExtraCrawlerData(String extraCrawlerData) {
+  public void setExtraCrawlerData(Map<String, Object> extraCrawlerData) {
     this.extraCrawlerData = extraCrawlerData;
   }
+
 
   @Override
   public boolean equals(java.lang.Object o) {
@@ -300,8 +329,7 @@ public class CrawlDesc {
     CrawlDesc crawlDesc = (CrawlDesc) o;
     return Objects.equals(this.auId, crawlDesc.auId) &&
         Objects.equals(this.crawlKind, crawlDesc.crawlKind) &&
-        Objects.equals(this.crawler, crawlDesc.crawler) &&
-        Objects.equals(this.repairList, crawlDesc.repairList) &&
+        Objects.equals(this.crawlerId, crawlDesc.crawlerId) &&
         Objects.equals(this.forceCrawl, crawlDesc.forceCrawl) &&
         Objects.equals(this.refetchDepth, crawlDesc.refetchDepth) &&
         Objects.equals(this.priority, crawlDesc.priority) &&
@@ -312,32 +340,23 @@ public class CrawlDesc {
 
   @Override
   public int hashCode() {
-    return Objects.hash(auId, crawlKind, crawler, repairList, forceCrawl,
-	refetchDepth, priority, crawlList, crawlDepth, extraCrawlerData);
+    return Objects.hash(auId, crawlKind, crawlerId, forceCrawl, refetchDepth, priority, crawlList, crawlDepth, extraCrawlerData);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class CrawlDesc {\n");
-    
+
     sb.append("    auId: ").append(toIndentedString(auId)).append("\n");
-    sb.append("    crawlKind: ").append(toIndentedString(crawlKind))
-    .append("\n");
-    sb.append("    crawler: ").append(toIndentedString(crawler)).append("\n");
-    sb.append("    repairList: ").append(toIndentedString(repairList))
-    .append("\n");
-    sb.append("    forceCrawl: ").append(toIndentedString(forceCrawl))
-    .append("\n");
-    sb.append("    refetchDepth: ").append(toIndentedString(refetchDepth))
-    .append("\n");
+    sb.append("    crawlKind: ").append(toIndentedString(crawlKind)).append("\n");
+    sb.append("    crawlerId: ").append(toIndentedString(crawlerId)).append("\n");
+    sb.append("    forceCrawl: ").append(toIndentedString(forceCrawl)).append("\n");
+    sb.append("    refetchDepth: ").append(toIndentedString(refetchDepth)).append("\n");
     sb.append("    priority: ").append(toIndentedString(priority)).append("\n");
-    sb.append("    crawlList: ").append(toIndentedString(crawlList))
-    .append("\n");
-    sb.append("    crawlDepth: ").append(toIndentedString(crawlDepth))
-    .append("\n");
-    sb.append("    extraCrawlerData: ")
-    .append(toIndentedString(extraCrawlerData)).append("\n");
+    sb.append("    crawlList: ").append(toIndentedString(crawlList)).append("\n");
+    sb.append("    crawlDepth: ").append(toIndentedString(crawlDepth)).append("\n");
+    sb.append("    extraCrawlerData: ").append(toIndentedString(extraCrawlerData)).append("\n");
     sb.append("}");
     return sb.toString();
   }
