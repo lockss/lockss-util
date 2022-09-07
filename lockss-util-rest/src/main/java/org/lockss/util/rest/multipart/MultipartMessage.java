@@ -104,7 +104,9 @@ public class MultipartMessage {
       part.setHeaders(headers);
 
       // Read part body into FileItem's OutputStream
-      multipartStream.readBodyData(part.getOutputStream());
+      try (OutputStream output = part.getOutputStream()) {
+        multipartStream.readBodyData(output);
+      }
 
       // Add part to list of parts
       parts.add(part);
