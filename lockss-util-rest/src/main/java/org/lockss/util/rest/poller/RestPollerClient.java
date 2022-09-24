@@ -116,7 +116,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
 
       // Make the REST call.
       log.trace("Calling RestUtil.callRestService");
-      ResponseEntity<String> response = callRestService("/peers", null,
+      ResponseEntity<String> response = callRestService("/ws/peers", null,
 	  queryParams, HttpMethod.GET, null, null, String.class,
 	  "Can't query peers");
       log.trace("Back from RestUtil.callRestService");
@@ -154,7 +154,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
 
       // Make the REST call.
       log.trace("Calling RestUtil.callRestService");
-      ResponseEntity<String> response = callRestService("/polls", null,
+      ResponseEntity<String> response = callRestService("/ws/polls", null,
 	  queryParams, HttpMethod.GET, null, null, String.class,
 	  "Can't query polls");
       log.trace("Back from RestUtil.callRestService");
@@ -192,7 +192,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
 
       // Make the REST call.
       log.trace("Calling RestUtil.callRestService");
-      ResponseEntity<String> response = callRestService("/votes", null,
+      ResponseEntity<String> response = callRestService("/ws/votes", null,
 	  queryParams, HttpMethod.GET, null, null, String.class,
 	  "Can't query votes");
       log.trace("Back from RestUtil.callRestService");
@@ -230,7 +230,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
 
       // Make the REST call.
       log.trace("Calling RestUtil.callRestService");
-      ResponseEntity<String> response = callRestService("/aurepositories", null,
+      ResponseEntity<String> response = callRestService("/ws/aurepositories", null,
 	  queryParams, HttpMethod.GET, null, null, String.class,
 	  "Can't query repositories");
       log.trace("Back from RestUtil.callRestService");
@@ -270,7 +270,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
 
       // Make the REST call.
       log.trace("Calling RestUtil.callRestService");
-      ResponseEntity<String> response = callRestService("/repositoryspaces",
+      ResponseEntity<String> response = callRestService("/ws/repositoryspaces",
 	  null, queryParams, HttpMethod.GET, null, null, String.class,
 	  "Can't query repository spaces");
       log.trace("Back from RestUtil.callRestService");
@@ -306,7 +306,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
       log.trace("queryParams = {}", queryParams);
 
       // Make the REST call.
-      MultipartResponse response = getMultipartResponse("/hashes", null,
+      MultipartResponse response = getMultipartResponse("/ws/hashes", null,
 	  queryParams, new HttpHeaders(), HttpMethod.PUT, wsParams);
 
       // Get the single hash result from the response.
@@ -338,7 +338,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
       log.trace("queryParams = {}", queryParams);
 
       // Make the REST call.
-      MultipartResponse response = getMultipartResponse("/hashes", null, queryParams,
+      MultipartResponse response = getMultipartResponse("/ws/hashes", null, queryParams,
 	  new HttpHeaders(), HttpMethod.PUT, wsParams);
 
       // Get the single hash result from the response.
@@ -371,7 +371,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
 
       // Make the REST call.
       MultipartResponse response = getMultipartResponse(
-	  "/hashes/requests/{requestId}", uriVariables, null, new HttpHeaders(),
+	  "/ws/hashes/requests/{requestId}", uriVariables, null, new HttpHeaders(),
 	  HttpMethod.GET, null);
 
       // Get the single hash result from the response.
@@ -396,7 +396,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
 
     try {
       // Make the REST call.
-      MultipartResponse response = getMultipartResponse("/hashes", null, null,
+      MultipartResponse response = getMultipartResponse("/ws/hashes", null, null,
 	  new HttpHeaders(), HttpMethod.GET, null);
 
       // Get all the hash results from the response.
@@ -435,7 +435,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
 
       // Make the REST call.
       ResponseEntity<String> response = callRestService(
-	  "/hashes/requests/{requestId}", uriVariables, null, HttpMethod.DELETE,
+	  "/ws/hashes/requests/{requestId}", uriVariables, null, HttpMethod.DELETE,
 	  null, (Void)null, String.class, "Can't remove asynchronous hash");
 
       // Get the response body.
