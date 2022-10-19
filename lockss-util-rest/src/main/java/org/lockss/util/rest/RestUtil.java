@@ -215,32 +215,24 @@ public class RestUtil {
     log.debug2("queryParams = {}", queryParams);
 
     // Initialize the URI.
-    UriComponents uriComponents = UriComponentsBuilder.fromUriString(uriString)
-	.build();
-    log.trace("uriComponents = {}", uriComponents);
-
-    // Interpolate any URI variables.
-    if (uriVariables != null && !uriVariables.isEmpty()) {
-      uriComponents = uriComponents.expand(uriVariables);
-    }
-
-    log.trace("uriComponents = {}", uriComponents);
-
-    UriComponentsBuilder ucb =
-	UriComponentsBuilder.newInstance().uriComponents(uriComponents);
+    UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uriString);
+    log.trace("builder = {}", builder);
 
     // Add any query parameters.
     if (queryParams != null && !queryParams.isEmpty()) {
       for (String key : queryParams.keySet()) {
-	log.trace("key = {}", key);
-	String value = queryParams.get(key);
-	log.trace("value = {}", value);
-
-	ucb = ucb.queryParam(key, value);
+        String value = queryParams.get(key);
+        log.trace("key = {}, value = {}", key, value);
+        builder.queryParam(key, value);
       }
     }
 
-    URI uri = ucb.build().encode().toUri();
+    // Interpolate any URI variables if present and build
+    UriComponents uriComponents =
+        (uriVariables != null && !uriVariables.isEmpty()) ?
+            builder.buildAndExpand(uriVariables) : builder.build();
+
+    URI uri = uriComponents.encode().toUri();
     log.debug2("uri = {}", uri);
     return uri;
   }
