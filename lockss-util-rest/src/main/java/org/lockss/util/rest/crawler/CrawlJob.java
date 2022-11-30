@@ -1,10 +1,8 @@
 package org.lockss.util.rest.crawler;
-
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import java.time.OffsetDateTime;
 import org.springframework.validation.annotation.Validated;
 import javax.validation.Valid;
 import javax.validation.constraints.*;
@@ -20,10 +18,10 @@ public class CrawlJob   {
   // The descriptor of the crawl.
   @JsonProperty("crawlDesc")
   private CrawlDesc crawlDesc = null;
-  // The time, in ISO-8601 format, the crawl was requested.
+  // The time the crawl was requested.
 
   @JsonProperty("requestDate")
-  private OffsetDateTime requestDate = null;
+  private Long requestDate = null;
 
   // Identifier of the job performing the crawl.
   @JsonProperty("jobId")
@@ -32,13 +30,13 @@ public class CrawlJob   {
   // The status of the crawl operation.
   @JsonProperty("jobStatus")
   private JobStatus jobStatus = null;
-  // The time, in ISO-8601 format, the crawl began.
+  // The time the crawl began.
   @JsonProperty("startDate")
-  private OffsetDateTime startDate = null;
+  private Long startDate = null;
 
-  // The time, in ISO-8601 format, the crawl ended.
+  // The time the crawl ended.
   @JsonProperty("endDate")
-  private OffsetDateTime endDate = null;
+  private Long endDate = null;
 
   // A URI which can be used to retrieve the crawl data.
   @JsonProperty("result")
@@ -52,7 +50,7 @@ public class CrawlJob   {
   /**
    * The descriptor of the crawl.
    * @return crawlDesc
-  **/
+   **/
   @ApiModelProperty(required = true, value = "The descriptor of the crawl.")
   @NotNull
 
@@ -66,7 +64,7 @@ public class CrawlJob   {
     this.crawlDesc = crawlDesc;
   }
 
-  public CrawlJob requestDate(OffsetDateTime requestDate) {
+  public CrawlJob requestDate(Long requestDate) {
     this.requestDate = requestDate;
     return this;
   }
@@ -74,17 +72,16 @@ public class CrawlJob   {
   /**
    * The timestamp when the crawl was requested.
    * @return requestDate
-  **/
-  @ApiModelProperty(example = "yyyy-MM-ddTHH:mm:ss.SSSZ", required = true, value = "The timestamp when the crawl was requested.")
+   **/
+  @ApiModelProperty(required = true, value = "The timestamp when the crawl was requested.")
   @NotNull
 
-  @Valid
 
-  public OffsetDateTime getRequestDate() {
+  public Long getRequestDate() {
     return requestDate;
   }
 
-  public void setRequestDate(OffsetDateTime requestDate) {
+  public void setRequestDate(Long requestDate) {
     this.requestDate = requestDate;
   }
 
@@ -96,7 +93,7 @@ public class CrawlJob   {
   /**
    * Identifier of the crawl job.
    * @return jobId
-  **/
+   **/
   @ApiModelProperty(required = true, value = "Identifier of the crawl job.")
   @NotNull
 
@@ -117,7 +114,7 @@ public class CrawlJob   {
   /**
    * The status of the crawl operation.
    * @return jobStatus
-  **/
+   **/
   @ApiModelProperty(required = true, value = "The status of the crawl operation.")
   @NotNull
 
@@ -131,7 +128,7 @@ public class CrawlJob   {
     this.jobStatus = jobStatus;
   }
 
-  public CrawlJob startDate(OffsetDateTime startDate) {
+  public CrawlJob startDate(Long startDate) {
     this.startDate = startDate;
     return this;
   }
@@ -139,20 +136,19 @@ public class CrawlJob   {
   /**
    * The timestamp when the crawl began.
    * @return startDate
-  **/
-  @ApiModelProperty(example = "yyyy-MM-ddTHH:mm:ss.SSSZ", value = "The timestamp when the crawl began.")
+   **/
+  @ApiModelProperty(value = "The timestamp when the crawl began.")
 
-  @Valid
 
-  public OffsetDateTime getStartDate() {
+  public Long getStartDate() {
     return startDate;
   }
 
-  public void setStartDate(OffsetDateTime startDate) {
+  public void setStartDate(Long startDate) {
     this.startDate = startDate;
   }
 
-  public CrawlJob endDate(OffsetDateTime endDate) {
+  public CrawlJob endDate(Long endDate) {
     this.endDate = endDate;
     return this;
   }
@@ -160,16 +156,15 @@ public class CrawlJob   {
   /**
    * The timestamp when the crawl ended.
    * @return endDate
-  **/
-  @ApiModelProperty(example = "yyyy-MM-ddTHH:mm:ss.SSSZ", value = "The timestamp when the crawl ended.")
+   **/
+  @ApiModelProperty(value = "The timestamp when the crawl ended.")
 
-  @Valid
 
-  public OffsetDateTime getEndDate() {
+  public Long getEndDate() {
     return endDate;
   }
 
-  public void setEndDate(OffsetDateTime endDate) {
+  public void setEndDate(Long endDate) {
     this.endDate = endDate;
   }
 
@@ -181,7 +176,7 @@ public class CrawlJob   {
   /**
    * A URI which can be used to retrieve the crawl data.
    * @return result
-  **/
+   **/
   @ApiModelProperty(value = "A URI which can be used to retrieve the crawl data.")
 
 
@@ -204,12 +199,12 @@ public class CrawlJob   {
     }
     CrawlJob crawlJob = (CrawlJob) o;
     return Objects.equals(this.crawlDesc, crawlJob.crawlDesc) &&
-        Objects.equals(this.requestDate, crawlJob.requestDate) &&
-        Objects.equals(this.jobId, crawlJob.jobId) &&
-        Objects.equals(this.jobStatus, crawlJob.jobStatus) &&
-        Objects.equals(this.startDate, crawlJob.startDate) &&
-        Objects.equals(this.endDate, crawlJob.endDate) &&
-        Objects.equals(this.result, crawlJob.result);
+      Objects.equals(this.requestDate, crawlJob.requestDate) &&
+      Objects.equals(this.jobId, crawlJob.jobId) &&
+      Objects.equals(this.jobStatus, crawlJob.jobStatus) &&
+      Objects.equals(this.startDate, crawlJob.startDate) &&
+      Objects.equals(this.endDate, crawlJob.endDate) &&
+      Objects.equals(this.result, crawlJob.result);
   }
 
   @Override
