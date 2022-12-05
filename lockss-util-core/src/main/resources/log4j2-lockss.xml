@@ -47,6 +47,9 @@ POSSIBILITY OF SUCH DAMAGE.
     <!-- Minimum level to log to console -->
     <Property name="level.min.console">DEBUG3</Property>
 
+    <!-- Minimum level to log to error log -->
+    <Property name="level.min.errlog">ERROR</Property>
+
     <!-- Default log dir -->
     <Property name="log.dir">logs</Property>
 
@@ -139,6 +142,23 @@ POSSIBILITY OF SUCH DAMAGE.
       <DefaultRolloverStrategy max="${log.rollingfile.maxrollover}" />
     </RollingFile>
 
+    <RollingFile name="ErrFile.Lockss">
+      <FileName>${log.dir}/${log.file}.err</FileName>
+      <FilePattern>${log.dir}/${log.file}-%i.err.gz</FilePattern>
+<!--       <FilePattern>${log.dir}/%d{yyyy-MM-dd}-%i.err.gz</FilePattern> -->
+      <PatternLayout>
+	<Pattern>${layout.file.lockss}</Pattern>
+	<header>File started Timestamp: ${date:EEE dd MMM yyyy HH:mm:ss.SSS zzz}\n</header>
+	<footer>File ended Timestamp: ${date:EEE dd MMM yyyy HH:mm:ss.SSS zzz}\n</footer>
+      </PatternLayout>
+      <ThresholdFilter level="${level.min.errlog}" onMatch="ACCEPT" onMismatch="DENY"/>
+      <Policies>
+<!--         <TimeBasedTriggeringPolicy /> -->
+	<SizeBasedTriggeringPolicy size="${log.rollingfile.sizetrigger}"/>
+      </Policies>
+      <DefaultRolloverStrategy max="${log.rollingfile.maxrollover}" />
+    </RollingFile>
+
   </Appenders>
 
   <Loggers>
@@ -151,6 +171,7 @@ POSSIBILITY OF SUCH DAMAGE.
     <Logger name="org.lockss" additivity="false">
       <AppenderRef ref="Console.Lockss"/>
       <AppenderRef ref="File.Lockss"/>
+      <AppenderRef ref="ErrFile.Lockss"/>
     </Logger>
 
     <!-- Defaults for other components that log too much at info or debug
