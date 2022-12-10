@@ -270,6 +270,16 @@ public class LockssRestHttpException extends LockssRestException {
 
     boolean additionalDetailsAdded = false;
 
+    // Default to UNSPECIFIED_ERROR if it's a 5xx error
+    if (lrhe.getHttpStatus().is5xxServerError()) {
+      lrhe.setServerErrorType(ServerErrorType.UNSPECIFIED_ERROR);
+    }
+
+    // Do not continue to parsing the response body for additional details if it's empty
+    if (e1.getResponseBodyAsByteArray().length > 0) {
+      return lrhe;
+    }
+
     // Iterate over HTTP message converters to parse error response body (both 4xx and 5xx errors)
     for (HttpMessageConverter converter : messageConverters) {
       // Check if this HTTP message converter can deserialize to RestResponseErrorBody
@@ -312,13 +322,6 @@ public class LockssRestHttpException extends LockssRestException {
 
     if (!additionalDetailsAdded) {
       lrhe.setServerErrorMessage(e1.getResponseBodyAsString());
-    }
-
-    // If we are processing a 5xx error and the server error type was not
-    // specified (default in LRHE is NONE), set it to UNSPECIFIED_ERROR:
-    if (lrhe.getHttpStatus().is5xxServerError() &&
-        lrhe.getServerErrorType() == ServerErrorType.NONE) {
-      lrhe.setServerErrorType(ServerErrorType.UNSPECIFIED_ERROR);
     }
 
     return lrhe;
