@@ -276,7 +276,7 @@ public class LockssRestHttpException extends LockssRestException {
     }
 
     // Do not continue to parsing the response body for additional details if it's empty
-    if (e1.getResponseBodyAsByteArray().length > 0) {
+    if (e1.getResponseBodyAsByteArray().length == 0) {
       return lrhe;
     }
 
