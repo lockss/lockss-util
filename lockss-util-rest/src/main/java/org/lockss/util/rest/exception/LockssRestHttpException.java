@@ -301,7 +301,12 @@ public class LockssRestHttpException extends LockssRestException {
           // Create and populate a new LockssRestHttpException
           lrhe.setRestResponseError(responseError);
           lrhe.setServerErrorMessage(responseError.getMessage());
-          lrhe.setServerErrorType(responseError.getServerErrorType());
+
+          // Set the server error type if one was sent to us
+          ServerErrorType errorType = responseError.getServerErrorType();
+          if (errorType != ServerErrorType.NONE) {
+            lrhe.setServerErrorType(errorType);
+          }
 
           additionalDetailsAdded = true;
           break;
