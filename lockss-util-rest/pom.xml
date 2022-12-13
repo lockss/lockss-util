@@ -120,7 +120,7 @@ POSSIBILITY OF SUCH DAMAGE.
     <dependency>
       <groupId>org.apache.cxf</groupId>
       <artifactId>cxf-core</artifactId>
-      <version>3.2.7</version>
+      <version>3.4.10</version>
     </dependency>
 
     <dependency>
