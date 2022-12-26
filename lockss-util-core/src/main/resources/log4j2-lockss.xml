@@ -57,7 +57,7 @@ POSSIBILITY OF SUCH DAMAGE.
     <Property name="log.file">app</Property>
 
     <!-- Default rolling file size trigger -->
-    <Property name="log.rollingfile.sizetrigger">10 MB</Property>
+    <Property name="log.rollingfile.sizetrigger">50 MB</Property>
 
     <!-- Default rolling file max rollover -->
     <Property name="log.rollingfile.maxrollover">10</Property>
