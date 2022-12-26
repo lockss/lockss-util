@@ -98,9 +98,14 @@ POSSIBILITY OF SUCH DAMAGE.
 
     <Console name="Console" target="SYSTEM_OUT">
       <PatternLayout>
-        <LoggerNamePatternSelector defaultPattern="${layout.console}">
-          <PatternMatch key="org.lockss" pattern="${layout.console.lockss}"/>
-        </LoggerNamePatternSelector>
+	<Pattern>${layout.console}</Pattern>
+      </PatternLayout>
+      <ThresholdFilter level="${level.min.console}" onMatch="ACCEPT" onMismatch="DENY"/>
+    </Console>
+
+    <Console name="Console.Lockss" target="SYSTEM_OUT">
+      <PatternLayout>
+	<Pattern>${layout.console.lockss}</Pattern>
       </PatternLayout>
       <ThresholdFilter level="${level.min.console}" onMatch="ACCEPT" onMismatch="DENY"/>
     </Console>
@@ -108,10 +113,9 @@ POSSIBILITY OF SUCH DAMAGE.
     <RollingFile name="File">
       <FileName>${log.dir}/${log.file}.log</FileName>
       <FilePattern>${log.dir}/${log.file}-%i.log.gz</FilePattern>
+<!--       <FilePattern>${log.dir}/%d{yyyy-MM-dd}-%i.log.gz</FilePattern> -->
       <PatternLayout>
-        <LoggerNamePatternSelector defaultPattern="${layout.file}">
-          <PatternMatch key="org.lockss" pattern="${layout.file.lockss}"/>
-        </LoggerNamePatternSelector>
+	<Pattern>${layout.file}</Pattern>
 	<header>File started Timestamp: $${date:EEE dd MMM yyyy HH:mm:ss zzz}\n</header>
 	<footer>File ended Timestamp: $${date:EEE dd MMM yyyy HH:mm:ss zzz}\n</footer>
       </PatternLayout>
@@ -122,14 +126,30 @@ POSSIBILITY OF SUCH DAMAGE.
       <DefaultRolloverStrategy max="${log.rollingfile.maxrollover}" />
     </RollingFile>
 
-    <RollingFile name="ErrFile">
+    <RollingFile name="File.Lockss">
+      <FileName>${log.dir}/${log.file}.log</FileName>
+      <FilePattern>${log.dir}/${log.file}-%i.log.gz</FilePattern>
+<!--       <FilePattern>${log.dir}/%d{yyyy-MM-dd}-%i.log.gz</FilePattern> -->
+      <PatternLayout>
+	<Pattern>${layout.file.lockss}</Pattern>
+	<header>File started Timestamp: ${date:EEE dd MMM yyyy HH:mm:ss.SSS zzz}\n</header>
+	<footer>File ended Timestamp: ${date:EEE dd MMM yyyy HH:mm:ss.SSS zzz}\n</footer>
+      </PatternLayout>
+      <Policies>
+<!--         <TimeBasedTriggeringPolicy /> -->
+	<SizeBasedTriggeringPolicy size="${log.rollingfile.sizetrigger}"/>
+      </Policies>
+      <DefaultRolloverStrategy max="${log.rollingfile.maxrollover}" />
+    </RollingFile>
+
+    <RollingFile name="ErrFile.Lockss">
       <FileName>${log.dir}/${log.file}.err</FileName>
       <FilePattern>${log.dir}/${log.file}-%i.err.gz</FilePattern>
 <!--       <FilePattern>${log.dir}/%d{yyyy-MM-dd}-%i.err.gz</FilePattern> -->
       <PatternLayout>
 	<Pattern>${layout.file.lockss}</Pattern>
-	<header>File started Timestamp: $${date:EEE dd MMM yyyy HH:mm:ss.SSS zzz}\n</header>
-	<footer>File ended Timestamp: $${date:EEE dd MMM yyyy HH:mm:ss.SSS zzz}\n</footer>
+	<header>File started Timestamp: ${date:EEE dd MMM yyyy HH:mm:ss.SSS zzz}\n</header>
+	<footer>File ended Timestamp: ${date:EEE dd MMM yyyy HH:mm:ss.SSS zzz}\n</footer>
       </PatternLayout>
       <ThresholdFilter level="${level.min.errlog}" onMatch="ACCEPT" onMismatch="DENY"/>
       <Policies>
@@ -146,13 +166,12 @@ POSSIBILITY OF SUCH DAMAGE.
     <Root level="${root.level}">
       <AppenderRef ref="Console"/>
       <AppenderRef ref="File"/>
-      <AppenderRef ref="ErrFile"/>
     </Root>
 
     <Logger name="org.lockss" additivity="false">
-      <AppenderRef ref="Console"/>
-      <AppenderRef ref="File"/>
-      <AppenderRef ref="ErrFile"/>
+      <AppenderRef ref="Console.Lockss"/>
+      <AppenderRef ref="File.Lockss"/>
+      <AppenderRef ref="ErrFile.Lockss"/>
     </Logger>
 
     <!-- Defaults for other components that log too much at info or debug
