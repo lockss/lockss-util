@@ -94,6 +94,10 @@ POSSIBILITY OF SUCH DAMAGE.
     <CustomLevel name="DEBUG3" intLevel="600" />
   </CustomLevels>
 
+<!--   Multiple Rollingfile appenders write to the same file (in order to -->
+<!--   use different patterns).  According to log4j2 appenders doc, this -->
+<!--   should be ok as they're in the same config file -->
+
   <Appenders>
 
     <Console name="Console" target="SYSTEM_OUT">
@@ -119,6 +123,22 @@ POSSIBILITY OF SUCH DAMAGE.
 	<header>File started Timestamp: $${date:EEE dd MMM yyyy HH:mm:ss zzz}\n</header>
 	<footer>File ended Timestamp: $${date:EEE dd MMM yyyy HH:mm:ss zzz}\n</footer>
       </PatternLayout>
+      <Policies>
+<!--         <TimeBasedTriggeringPolicy /> -->
+	<SizeBasedTriggeringPolicy size="${log.rollingfile.sizetrigger}"/>
+      </Policies>
+      <DefaultRolloverStrategy max="${log.rollingfile.maxrollover}" />
+    </RollingFile>
+
+    <RollingFile name="ErrFile">
+      <FileName>${log.dir}/${log.file}.err</FileName>
+      <FilePattern>${log.dir}/${log.file}-%i.err.gz</FilePattern>
+      <PatternLayout>
+	<Pattern>${layout.file}</Pattern>
+	<header>File started Timestamp: $${date:EEE dd MMM yyyy HH:mm:ss zzz}\n</header>
+	<footer>File ended Timestamp: $${date:EEE dd MMM yyyy HH:mm:ss zzz}\n</footer>
+      </PatternLayout>
+      <ThresholdFilter level="${level.min.errlog}" onMatch="ACCEPT" onMismatch="DENY"/>
       <Policies>
 <!--         <TimeBasedTriggeringPolicy /> -->
 	<SizeBasedTriggeringPolicy size="${log.rollingfile.sizetrigger}"/>
@@ -166,6 +186,7 @@ POSSIBILITY OF SUCH DAMAGE.
     <Root level="${root.level}">
       <AppenderRef ref="Console"/>
       <AppenderRef ref="File"/>
+      <AppenderRef ref="ErrFile"/>
     </Root>
 
     <Logger name="org.lockss" additivity="false">
