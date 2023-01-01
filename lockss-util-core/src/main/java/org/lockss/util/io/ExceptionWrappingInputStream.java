@@ -46,11 +46,23 @@ public class ExceptionWrappingInputStream extends FilterInputStream {
     super(in);
   }
 
+  /** Wrap the exception in an InputIOException iff it isn't already
+   * so wrapped.  (Some methods in FilterInputStream call other local
+   * methods (e.g., read(byte[]) calls read(byte[], int, int)), which
+   * would cause multiple wrappings */
+  private IOException wrapped(IOException e) {
+    if (e instanceof InputIOException) {
+      return e;
+    } else {
+      return new InputIOException(e);
+    }
+  }
+
   public int read() throws IOException {
     try {
       return super.read();
     } catch (IOException e) {
-      throw new InputIOException(e);
+      throw wrapped(e);
     }
   }
 
@@ -58,7 +70,7 @@ public class ExceptionWrappingInputStream extends FilterInputStream {
     try {
       return super.read(b);
     } catch (IOException e) {
-      throw new InputIOException(e);
+      throw wrapped(e);
     }
   }
 
@@ -66,7 +78,7 @@ public class ExceptionWrappingInputStream extends FilterInputStream {
     try {
       return super.read(b, off, len);
     } catch (IOException e) {
-      throw new InputIOException(e);
+      throw wrapped(e);
     }
   }
 
@@ -74,7 +86,7 @@ public class ExceptionWrappingInputStream extends FilterInputStream {
     try {
       return super.skip(n);
     } catch (IOException e) {
-      throw new InputIOException(e);
+      throw wrapped(e);
     }
   }
 
@@ -82,7 +94,7 @@ public class ExceptionWrappingInputStream extends FilterInputStream {
     try {
       return super.available();
     } catch (IOException e) {
-      throw new InputIOException(e);
+      throw wrapped(e);
     }
   }
 
@@ -90,7 +102,7 @@ public class ExceptionWrappingInputStream extends FilterInputStream {
     try {
       super.close();
     } catch (IOException e) {
-      throw new InputIOException(e);
+      throw wrapped(e);
     }
   }
 
@@ -98,7 +110,7 @@ public class ExceptionWrappingInputStream extends FilterInputStream {
     try {
       super.reset();
     } catch (IOException e) {
-      throw new InputIOException(e);
+      throw wrapped(e);
     }
   }
 }
