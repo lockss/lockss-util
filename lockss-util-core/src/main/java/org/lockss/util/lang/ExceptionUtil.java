@@ -32,6 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 package org.lockss.util.lang;
+import org.apache.commons.lang3.exception.*;
 
 /**
  * <p>
@@ -91,4 +92,16 @@ public class ExceptionUtil {
     return throwable;
   }
   
+  /** If one of the (transitive) causes of the exception is of the
+   * given type, return it, else return null */
+  public static <T extends Throwable> T getNestedExceptionOfType(Throwable ex,
+                                                                 Class<T> type) {
+    int ix = ExceptionUtils.indexOfType(ex, type);
+    if (ix >= 0) {
+      Throwable[] throwables = ExceptionUtils.getThrowables(ex);
+      return (T)throwables[ix];
+    } else {
+      return null;
+    }
+  }
 }

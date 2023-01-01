@@ -33,7 +33,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 package org.lockss.util.lang;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.Arrays;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -78,4 +78,16 @@ public class TestExceptionUtil extends LockssTestCase5 {
     }
   }
   
+  @Test public void testGetNestedExceptionOfType() throws Exception {
+    Throwable t1, t2, t3, t4;
+    t4 = new CharConversionException("t4");
+    t3 = new IOException ("t3", t4);
+    t2 = new IOException("t2", t3);
+    t1 = new Exception("t1", t2);
+    assertClass(CharConversionException.class,
+                ExceptionUtil.getNestedExceptionOfType(t1,
+                                                       CharConversionException.class));
+    assertNull(ExceptionUtil.getNestedExceptionOfType(t1,
+                                                       FileNotFoundException.class));
+  }
 }
