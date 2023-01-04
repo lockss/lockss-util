@@ -1,32 +1,32 @@
 /*
 
-Copyright (c) 2000, Board of Trustees of Leland Stanford Jr. University
-All rights reserved.
+Copyright (c) 2000-2023, Board of Trustees of Leland Stanford Jr. University
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-1. Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer.
+1. Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
 
 2. Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation and/or
-other materials provided with the distribution.
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
 
 3. Neither the name of the copyright holder nor the names of its contributors
 may be used to endorse or promote products derived from this software without
 specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
 
 */
 
@@ -79,6 +79,163 @@ public class ListUtil {
     return CollectionUtil2.collection(ArrayList::new, elements);
   }
   
+  /* NOTE:  The following non-varargs methods cannot yet be removed, because
+   * external plugin code relies on them as of the 1.26 daemon release.
+   * Until the plugin code is audited and updated, these methods must remain.
+   */
+
+  /**
+   * Create list from arg list. */
+  private static <T> List<T> list1(T object1) {
+      List<T> l = new ArrayList<>();
+      l.add(object1);
+      return l;
+  }
+
+  /**
+   * Create list from arg list. */
+  public static <T> List<T> list(T object1) {
+      List<T> l = new ArrayList<>(1);
+      l.add(object1);
+      return l;
+  }
+
+  /**
+   * Create list from arg list. */
+  public static <T> List<T> list(T object1,
+                                 T object2) {
+      List<T> l = list1(object1);
+      l.add(object2);
+      return l;
+  }
+
+  /**
+   * Create list from arg list. */
+  public static <T> List<T> list(T object1,
+                                 T object2,
+                                 T object3) {
+      List<T> l = list(object1, object2);
+      l.add(object3);
+      return l;
+  }
+
+  /**
+   * Create list from arg list. */
+  public static <T> List<T> list(T object1,
+                                 T object2,
+                                 T object3,
+                                 T object4) {
+      List<T> l = list(object1, object2, object3);
+      l.add(object4);
+      return l;
+  }
+
+  /**
+   * Create list from arg list. */
+  public static <T> List<T> list(T object1,
+                                 T object2,
+                                 T object3,
+                                 T object4,
+                                 T object5) {
+      List<T> l = list(object1, object2, object3, object4);
+      l.add(object5);
+      return l;
+  }
+
+  /**
+   * Create list from arg list. */
+  public static <T> List<T> list(T object1,
+                                 T object2,
+                                 T object3,
+                                 T object4,
+                                 T object5,
+                                 T object6) {
+      List<T> l = list(object1, object2, object3, object4, object5);
+      l.add(object6);
+      return l;
+  }
+  /**
+   * Create list from arg list. */
+  public static <T> List<T> list(T object1,
+                                 T object2,
+                                 T object3,
+                                 T object4,
+                                 T object5,
+                                 T object6,
+                                 T object7) {
+      List<T> l = list(object1, object2, object3, object4, object5,
+                       object6);
+      l.add(object7);
+      return l;
+  }
+  /**
+   * Create list from arg list. */
+  public static <T> List<T> list(T object1,
+                                 T object2,
+                                 T object3,
+                                 T object4,
+                                 T object5,
+                                 T object6,
+                                 T object7,
+                                 T object8) {
+      List<T> l = list(object1, object2, object3, object4, object5,
+                       object6, object7);
+      l.add(object8);
+      return l;
+  }
+  /**
+   * Create list from arg list. */
+  public static <T> List<T> list(T object1,
+                                 T object2,
+                                 T object3,
+                                 T object4,
+                                 T object5,
+                                 T object6,
+                                 T object7,
+                                 T object8,
+                                 T object9) {
+      List<T> l = list(object1, object2, object3, object4, object5,
+                       object6, object7, object8);
+      l.add(object9);
+      return l;
+  }
+  /**
+   * Create list from arg list. */
+  public static <T> List<T> list(T object1,
+                                 T object2,
+                                 T object3,
+                                 T object4,
+                                 T object5,
+                                 T object6,
+                                 T object7,
+                                 T object8,
+                                 T object9,
+                                 T object10) {
+      List<T> l = list(object1, object2, object3, object4, object5,
+                       object6, object7, object8, object9);
+      l.add(object10);
+      return l;
+  }
+
+  /**
+   * Create list from arg list. */
+  public static <T> List<T> list(T object1,
+                                 T object2,
+                                 T object3,
+                                 T object4,
+                                 T object5,
+                                 T object6,
+                                 T object7,
+                                 T object8,
+                                 T object9,
+                                 T object10,
+                                 T object11) {
+      List<T> l = list(object1, object2, object3, object4, object5,
+                       object6, object7, object8, object9, object10);
+      l.add(object11);
+      return l;
+  }
+
   /**
    * <p>
    * Makes a new, single list made of the elements of all the given lists
