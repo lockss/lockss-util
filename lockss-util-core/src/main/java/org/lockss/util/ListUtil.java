@@ -79,9 +79,10 @@ public class ListUtil {
     return CollectionUtil2.collection(ArrayList::new, elements);
   }
   
-  /* NOTE:  The following non-varargs methods cannot yet be removed, because
-   * external plugin code relies on them as of the 1.26 daemon release.
-   * Until the plugin code is audited and updated, these methods must remain.
+  /* NOTE: The following non-varargs methods cannot be removed because
+   * external plugin code relies on them.  It must stay until either
+   * the plugins are modified to call something else, or binary
+   * compatibility is provided through some other mechanism.
    */
 
   /**
