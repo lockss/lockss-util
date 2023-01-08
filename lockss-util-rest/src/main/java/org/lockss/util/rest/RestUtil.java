@@ -27,11 +27,15 @@
  */
 package org.lockss.util.rest;
 
+import java.net.ConnectException;
+import java.net.UnknownHostException;
 import java.net.URI;
 import java.util.Map;
 import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.rest.exception.LockssRestHttpException;
 import org.lockss.util.rest.exception.LockssRestNetworkException;
+import org.lockss.util.lang.*;
+import org.lockss.util.time.*;
 import org.lockss.log.L4JLogger;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.http.HttpEntity;
@@ -48,6 +52,8 @@ import org.springframework.web.util.UriComponentsBuilder;
  */
 public class RestUtil {
   private static L4JLogger log = L4JLogger.getLogger();
+
+  static final long[] BACKOFFS = new long[] {1000L /*, 10000L*/};
 
   /**
    * Performs a call to a REST service.
@@ -81,6 +87,50 @@ public class RestUtil {
     log.debug2("requestEntity = {}", requestEntity);
     log.debug2("responseType = {}", responseType);
     log.debug2("clientExceptionMessage = {}", clientExceptionMessage);
+
+    LockssRestNetworkException lastLrne = null;
+    for (long backoff : BACKOFFS) {
+      try {
+        return RestUtil.callRestServiceOnce(restTemplate, uri, method,
+                                            requestEntity, responseType,
+                                            clientExceptionMessage);
+      } catch (LockssRestNetworkException lrne) {
+        lastLrne = lrne;
+        if (isRetryableException(lrne)) {
+          log.debug("Retrying {} {} after waiting {}, due to {}",
+                    method, uri, backoff, lrne.toString());
+          try {
+            TimerUtil.sleep(backoff);
+          } catch (InterruptedException ie) {
+            // If interrupted, throw the last failure exception
+            throw lrne;
+          }
+        } else {
+          throw lrne;
+        }
+      }
+    }
+    throw lastLrne;
+  }
+
+  static boolean isRetryableException(Exception e) {
+    Throwable quickFailException =
+      ExceptionUtil.getNestedExceptionOfType(e,
+                                             ConnectException.class,
+                                             UnknownHostException.class
+                                             );
+    if (quickFailException != null) {
+      return true;
+    }
+    return false;
+  }
+
+
+
+  public static <T> ResponseEntity<T> callRestServiceOnce(RestTemplate restTemplate,
+      URI uri, HttpMethod method, HttpEntity<?> requestEntity,
+      Class<T> responseType, String clientExceptionMessage)
+	  throws LockssRestException {
 
     try {
       // Make the call to the REST service and get the response.

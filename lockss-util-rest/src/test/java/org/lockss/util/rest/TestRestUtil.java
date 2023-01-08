@@ -133,6 +133,12 @@ public class TestRestUtil extends LockssTestCase5 {
     }
   }
 
+  @Test
+  public void testIsRetryableException() throws LockssRestException {
+    assertTrue(RestUtil.isRetryableException(new UnknownHostException("uncle")));
+    assertTrue(RestUtil.isRetryableException(new ConnectException("carbuncle")));
+    assertFalse(RestUtil.isRetryableException(new SocketTimeoutException("tim")));;
+  }
 
   @Test
   public void test200String() throws LockssRestException {
