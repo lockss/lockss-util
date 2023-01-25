@@ -53,10 +53,12 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class RestUtil {
   private static L4JLogger log = L4JLogger.getLogger();
 
-  static final long[] BACKOFFS = new long[] {1000L /*, 10000L*/};
+  public static final long[] DEFAULT_RETRY_BACKOFFS =
+    new long[] {1000L /*, 10000L*/};
+  public static final long[] NO_RETRY_BACKOFFS = new long[] {};
 
   /**
-   * Performs a call to a REST service.
+   * Performs a call to a REST service with the default retry backoffs
    *
    * @param restTemplate
    *          A RestTemplate with the REST template to be used to access the
@@ -81,6 +83,73 @@ public class RestUtil {
       URI uri, HttpMethod method, HttpEntity<?> requestEntity,
       Class<T> responseType, String clientExceptionMessage)
 	  throws LockssRestException {
+    return callRestService(restTemplate, uri, method, requestEntity,
+                           responseType, clientExceptionMessage,
+                           DEFAULT_RETRY_BACKOFFS);
+  }
+
+  /**
+   * Performs a call to a REST service, once with no retries.
+   *
+   * @param restTemplate
+   *          A RestTemplate with the REST template to be used to access the
+   *          REST service.
+   * @param uri
+   *          A String with the URI of the request to the REST service.
+   * @param method
+   *          An HttpMethod with the method of the request to the REST service.
+   * @param requestEntity
+   *          An HttpEntity with the entity of the request to the REST service.
+   * @param responseType
+   *          A {@code Class<T>} with the expected type of the response to the
+   *          request to the REST service.
+   * @param clientExceptionMessage
+   *          A String with the message to be returned if there are errors.
+   * @return a {@code ResponseEntity<T>} with the response to the request to the
+   *         REST service.
+   * @throws LockssRestException
+   *           if there are problems making the request to the REST service.
+   */
+  public static <T> ResponseEntity<T> callRestServiceNoRetry(
+      RestTemplate restTemplate,
+      URI uri, HttpMethod method, HttpEntity<?> requestEntity,
+      Class<T> responseType, String clientExceptionMessage)
+	  throws LockssRestException {
+    return callRestService(restTemplate, uri, method, requestEntity,
+                           responseType, clientExceptionMessage,
+                           NO_RETRY_BACKOFFS);
+  }
+
+  /**
+   * Performs a call to a REST service.
+   *
+   * @param restTemplate
+   *          A RestTemplate with the REST template to be used to access the
+   *          REST service.
+   * @param uri
+   *          A String with the URI of the request to the REST service.
+   * @param method
+   *          An HttpMethod with the method of the request to the REST service.
+   * @param requestEntity
+   *          An HttpEntity with the entity of the request to the REST service.
+   * @param responseType
+   *          A {@code Class<T>} with the expected type of the response to the
+   *          request to the REST service.
+   * @param clientExceptionMessage
+   *          A String with the message to be returned if there are errors.
+   * @param retryBackoffs
+   *          An array of longs specifying successive intervals
+   *          to wait between successive retries.  If empty, no retries.
+   * @return a {@code ResponseEntity<T>} with the response to the request to the
+   *         REST service.
+   * @throws LockssRestException
+   *           if there are problems making the request to the REST service.
+   */
+  public static <T> ResponseEntity<T> callRestService(RestTemplate restTemplate,
+      URI uri, HttpMethod method, HttpEntity<?> requestEntity,
+      Class<T> responseType, String clientExceptionMessage,
+      long[] retryBackoffs)
+          throws LockssRestException {
 
     log.debug2("uri = {}", uri);
     log.debug2("method = {}", method);
@@ -88,15 +157,19 @@ public class RestUtil {
     log.debug2("responseType = {}", responseType);
     log.debug2("clientExceptionMessage = {}", clientExceptionMessage);
 
-    LockssRestNetworkException lastLrne = null;
-    for (long backoff : BACKOFFS) {
+    if (retryBackoffs == null) {
+      throw new IllegalArgumentException("retryBackoffs is null");
+    }
+    int retryIx = 0;
+    while (true) {
       try {
         return RestUtil.callRestServiceOnce(restTemplate, uri, method,
                                             requestEntity, responseType,
                                             clientExceptionMessage);
       } catch (LockssRestNetworkException lrne) {
-        lastLrne = lrne;
-        if (isRetryableException(lrne)) {
+        if (isRetryableException(lrne) &&
+            retryIx < retryBackoffs.length) {
+          long backoff = retryBackoffs[retryIx++];
           log.debug("Retrying {} {} after waiting {}, due to {}",
                     method, uri, backoff, lrne.toString());
           try {
@@ -110,7 +183,6 @@ public class RestUtil {
         }
       }
     }
-    throw lastLrne;
   }
 
   static boolean isRetryableException(Exception e) {

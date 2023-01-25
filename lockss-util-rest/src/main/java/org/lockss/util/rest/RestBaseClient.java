@@ -141,6 +141,41 @@ public class RestBaseClient<C extends RestBaseClient<?>> {
       HttpMethod httpMethod, HttpHeaders requestHeaders, T body,
       Class<U> responseType, String exceptionMessage)
 	  throws LockssRestException {
+    return callRestService(pathQuery,
+                           uriVariables, queryParams,
+                           httpMethod, requestHeaders, body,
+                           responseType, exceptionMessage, null);
+  }
+
+  /**
+   * Makes a call to a REST service URI.
+   *
+   * @param pathQuery        A String with the path and query parts of the REST
+   *                         service endpoint.
+   * @param uriVariables     A Map<String, String> with any variables to be
+   *                         interpolated in the URI.
+   * @param queryParams      A Map<String, String> with any query parameters.
+   * @param httpMethod       An HttpMethod with HTTP method used to make the
+   *                         call to the REST service.
+   * @param requestHeaders An HttpHeaders with any request headers needed
+   *                         to make the request, if any.
+   * @param body             A T with the contents of the body to be included
+   *                         with the request, if any.
+   * @param exceptionMessage A String with the message to be returned with any
+   *                         exception.
+   * @param retryBackoffs    An array of longs specifying successive intervals
+   *                         to wait between successive retries.  If null or
+   *                         empty, no retries.
+   * @return a ResponseEntity<U> with the response from the REST service.
+   * @throws LockssRestException if any problems arise in the call to the REST
+   *                             service.
+   */
+  protected <T, U> ResponseEntity<U> callRestService(String pathQuery,
+      Map<String, String> uriVariables, Map<String, String> queryParams,
+      HttpMethod httpMethod, HttpHeaders requestHeaders, T body,
+      Class<U> responseType, String exceptionMessage,
+      long[] retryBackoffs)
+	  throws LockssRestException {
     log.debug2("pathQuery = {}", pathQuery);
     log.debug2("uriVariables = {}", uriVariables);
     log.debug2("queryParams = {}", queryParams);
@@ -164,7 +199,7 @@ public class RestBaseClient<C extends RestBaseClient<?>> {
     log.trace("Calling RestUtil.callRestService");
     return RestUtil.callRestService(getRestTemplate(), uri, httpMethod,
 	new HttpEntity<T>(body, fullRequestHeaders), responseType,
-	exceptionMessage);
+        exceptionMessage, retryBackoffs);
   }
 
   /**
