@@ -32,6 +32,7 @@
 package org.lockss.ws.entities;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Container for the information related to a peer that is the result of a
@@ -235,5 +236,32 @@ public class PeerWsResult {
 	+ votesCast + ", pollsRejected=" + pollsRejected + ", nakReason="
 	+ nakReason + ", groups=" + groups + ", platformGroupMatch="
 	+ platformGroupMatch + "]";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    PeerWsResult that = (PeerWsResult) o;
+    return Objects.equals(peerId, that.peerId) &&
+        Objects.equals(lastMessage, that.lastMessage) &&
+        Objects.equals(messageType, that.messageType) &&
+        Objects.equals(messageCount, that.messageCount) &&
+        Objects.equals(lastPoll, that.lastPoll) &&
+        Objects.equals(lastVote, that.lastVote) &&
+        Objects.equals(lastInvitation, that.lastInvitation) &&
+        Objects.equals(invitationCount, that.invitationCount) &&
+        Objects.equals(pollsCalled, that.pollsCalled) &&
+        Objects.equals(votesCast, that.votesCast) &&
+        Objects.equals(pollsRejected, that.pollsRejected) &&
+        Objects.equals(nakReason, that.nakReason) &&
+        Objects.equals(groups, that.groups) &&
+        Objects.equals(platformGroupMatch, that.platformGroupMatch);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(peerId, lastMessage, messageType, messageCount, lastPoll, lastVote, lastInvitation,
+        invitationCount, pollsCalled, votesCast, pollsRejected, nakReason, groups, platformGroupMatch);
   }
 }

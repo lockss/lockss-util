@@ -31,6 +31,8 @@
  */
 package org.lockss.ws.entities;
 
+import java.util.Objects;
+
 /**
  * Container for the information related to a repair that is the result of a
  * query.
@@ -65,5 +67,18 @@ public class RepairWsResult {
   @Override
   public String toString() {
     return "RepairWsResult [url=" + url + ", peerId=" + peerId + "]";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    RepairWsResult that = (RepairWsResult) o;
+    return Objects.equals(url, that.url) && Objects.equals(peerId, that.peerId);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(url, peerId);
   }
 }

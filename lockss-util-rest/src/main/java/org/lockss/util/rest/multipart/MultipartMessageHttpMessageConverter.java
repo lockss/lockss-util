@@ -37,6 +37,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.util.StringUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -46,6 +47,21 @@ public class MultipartMessageHttpMessageConverter implements HttpMessageConverte
 
   public static final List<MediaType> SUPPORTED_MEDIA_TYPES =
       Collections.unmodifiableList(Arrays.asList(MediaType.MULTIPART_FORM_DATA));
+
+  private final File tmpDir;
+
+  public MultipartMessageHttpMessageConverter() {
+    this(null);
+  }
+
+  /**
+   * Constructor.
+   *
+   * @param tmpDir Temporary directory in which file-backed multipart parts will be created.
+   */
+  public MultipartMessageHttpMessageConverter(File tmpDir) {
+    this.tmpDir = tmpDir;
+  }
 
   @Override
   public boolean canRead(Class<?> clazz, MediaType mediaType) {
@@ -110,7 +126,7 @@ public class MultipartMessageHttpMessageConverter implements HttpMessageConverte
         null
     );
 
-    return new MultipartMessage(multipartStream);
+    return new MultipartMessage(tmpDir, multipartStream);
   }
 
   @Override

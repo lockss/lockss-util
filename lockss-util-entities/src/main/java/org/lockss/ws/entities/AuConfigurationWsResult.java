@@ -32,11 +32,14 @@
 package org.lockss.ws.entities;
 
 import java.util.Map;
+import java.util.Objects;
+import com.fasterxml.jackson.annotation.*;
 
 /**
  * Container for the information related to the configuration of an Archival
  * Unit that is the result of a query.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AuConfigurationWsResult {
 
   private Map<String, String> defParams;
@@ -71,5 +74,18 @@ public class AuConfigurationWsResult {
   public String toString() {
     return "AuConfigurationWsResult [defParams=" + defParams + ", nonDefParams="
 	+ nonDefParams + "]";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    AuConfigurationWsResult that = (AuConfigurationWsResult) o;
+    return Objects.equals(defParams, that.defParams) && Objects.equals(nonDefParams, that.nonDefParams);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(defParams, nonDefParams);
   }
 }

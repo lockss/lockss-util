@@ -54,6 +54,9 @@ public class CloseCallbackInputStream extends ProxyInputStream {
   public void close() throws IOException {
     try {
       super.close();
+    } catch (Exception e) {
+      log.warn("Close failed" + ((cookie != null) ? (" (" + cookie + ")") : ""),
+               e);
     } finally {
       try {
 	cb.streamClosed(cookie);

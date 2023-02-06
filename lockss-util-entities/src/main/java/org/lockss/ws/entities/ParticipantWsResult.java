@@ -32,11 +32,13 @@
 package org.lockss.ws.entities;
 
 import java.util.*;
+import com.fasterxml.jackson.annotation.*;
 
 /**
  * Container for the information related to a poll participant that is the
  * result of a query.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ParticipantWsResult {
   private String peerId;
   private String peerStatus;
@@ -102,6 +104,11 @@ public class ParticipantWsResult {
   public Boolean isPostRepair() {
     return isPostRepair;
   }
+
+  public Boolean getIsPostRepair() {
+    return isPostRepair;
+  }
+
   public void setIsPostRepair(Boolean isPostRepair) {
     this.isPostRepair = isPostRepair;
   }
@@ -287,4 +294,36 @@ public class ParticipantWsResult {
 	+ currentState + ", lastStateChange=" + lastStateChange
 	+ ", isExParticipant=" + isExParticipant + "]";
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    ParticipantWsResult that = (ParticipantWsResult) o;
+    return isPostRepair == that.isPostRepair &&
+        Objects.equals(peerId, that.peerId) &&
+        Objects.equals(peerStatus, that.peerStatus) &&
+        Objects.equals(hasVoted, that.hasVoted) &&
+        Objects.equals(percentAgreement, that.percentAgreement) &&
+        Objects.equals(agreedVoteCount, that.agreedVoteCount) &&
+        Objects.equals(disagreedVoteCount, that.disagreedVoteCount) &&
+        Objects.equals(pollerOnlyVoteCount, that.pollerOnlyVoteCount) &&
+        Objects.equals(voterOnlyVotecount, that.voterOnlyVotecount) &&
+        Objects.equals(agreedUrls, that.agreedUrls) &&
+        Objects.equals(disagreedUrls, that.disagreedUrls) &&
+        Objects.equals(pollerOnlyUrls, that.pollerOnlyUrls) &&
+        Objects.equals(voterOnlyUrls, that.voterOnlyUrls) &&
+        Objects.equals(bytesHashed, that.bytesHashed) &&
+        Objects.equals(bytesRead, that.bytesRead) &&
+        Objects.equals(currentState, that.currentState) &&
+        Objects.equals(lastStateChange, that.lastStateChange) &&
+        Objects.equals(isExParticipant, that.isExParticipant);
+  }
+
+//  @Override
+//  public int hashCode() {
+//    return Objects.hash(peerId, peerStatus, hasVoted, percentAgreement, agreedVoteCount, disagreedVoteCount,
+//        pollerOnlyVoteCount, voterOnlyVotecount, isPostRepair, agreedUrls, disagreedUrls, pollerOnlyUrls, voterOnlyUrls,
+//        bytesHashed, bytesRead, currentState, lastStateChange, isExParticipant);
+//  }
 }

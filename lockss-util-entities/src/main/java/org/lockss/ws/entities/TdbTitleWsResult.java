@@ -32,11 +32,14 @@
 package org.lockss.ws.entities;
 
 import java.util.List;
+import java.util.Objects;
+import com.fasterxml.jackson.annotation.*;
 
 /**
  * Container for the information related to a title database title that is the
  * result of a query.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TdbTitleWsResult {
   private String name;
   private TdbPublisherWsResult tdbPublisher;
@@ -130,5 +133,29 @@ public class TdbTitleWsResult {
 	+ ", proprietaryIds=" + proprietaryIds + ", publicationType="
 	+ publicationType + ", issn=" + issn + ", issnL=" + issnL + ", eIssn="
 	+ eIssn + ", printIssn=" + printIssn + ", issns=" + issns + "]";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    TdbTitleWsResult that = (TdbTitleWsResult) o;
+    return Objects.equals(name, that.name) &&
+        Objects.equals(tdbPublisher, that.tdbPublisher) &&
+        Objects.equals(id, that.id) &&
+        Objects.equals(proprietaryId, that.proprietaryId) &&
+        Objects.equals(proprietaryIds, that.proprietaryIds) &&
+        Objects.equals(publicationType, that.publicationType) &&
+        Objects.equals(issn, that.issn) &&
+        Objects.equals(issnL, that.issnL) &&
+        Objects.equals(eIssn, that.eIssn) &&
+        Objects.equals(printIssn, that.printIssn) &&
+        Objects.equals(issns, that.issns);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(name, tdbPublisher, id, proprietaryId, proprietaryIds, publicationType,
+        issn, issnL, eIssn, printIssn, issns);
   }
 }

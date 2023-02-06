@@ -43,11 +43,11 @@ public class TestStorageInfo extends LockssTestCase5 {
     String tmpdir = getTempDir().toString();
     PlatformUtil.DF df = PlatformUtil.getInstance().getDF(tmpdir);
     StorageInfo si = StorageInfo.fromDF(df);
-    assertEquals(df.getSize(), si.getSize() / 1024); // From DF in KB.
+    assertEquals(df.getSize(), si.getSizeKB());
     assertEquals("disk", si.getType());
     assertEquals(df.getMnt(), si.getName());
-    assertEquals(df.getUsed(), si.getUsed() / 1024); // From DF in KB.
-    assertEquals(df.getAvail(), si.getAvail() / 1024); // From DF in KB.
+    assertEquals(df.getUsed(), si.getUsedKB());
+    assertEquals(df.getAvail(), si.getAvailKB());
     assertEquals(df.getPercentString(), si.getPercentUsedString());
 
     StorageInfo si2 = StorageInfo.fromDF("notdisk", df);
@@ -57,8 +57,8 @@ public class TestStorageInfo extends LockssTestCase5 {
   @Test
   public void testFromRuntime() throws Exception {
     StorageInfo si = StorageInfo.fromRuntime();
-    assertTrue(si.getSize() > 0);
-    assertTrue(si.getSize() > si.getAvail());
-    assertTrue(si.getSize() > si.getUsed());
+    assertTrue(si.getSizeKB() > 0);
+    assertTrue(si.getSizeKB() > si.getAvailKB());
+    assertTrue(si.getSizeKB() > si.getUsedKB());
   }
 }

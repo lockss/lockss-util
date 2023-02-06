@@ -47,6 +47,9 @@ POSSIBILITY OF SUCH DAMAGE.
     <!-- Minimum level to log to console -->
     <Property name="level.min.console">DEBUG3</Property>
 
+    <!-- Minimum level to log to error log -->
+    <Property name="level.min.errlog">ERROR</Property>
+
     <!-- Default log dir -->
     <Property name="log.dir">logs</Property>
 
@@ -54,7 +57,7 @@ POSSIBILITY OF SUCH DAMAGE.
     <Property name="log.file">app</Property>
 
     <!-- Default rolling file size trigger -->
-    <Property name="log.rollingfile.sizetrigger">10 MB</Property>
+    <Property name="log.rollingfile.sizetrigger">50 MB</Property>
 
     <!-- Default rolling file max rollover -->
     <Property name="log.rollingfile.maxrollover">10</Property>
@@ -91,6 +94,10 @@ POSSIBILITY OF SUCH DAMAGE.
     <CustomLevel name="DEBUG3" intLevel="600" />
   </CustomLevels>
 
+<!--   Multiple Rollingfile appenders write to the same file (in order to -->
+<!--   use different patterns).  According to log4j2 appenders doc, this -->
+<!--   should be ok as they're in the same config file -->
+
   <Appenders>
 
     <Console name="Console" target="SYSTEM_OUT">
@@ -123,15 +130,48 @@ POSSIBILITY OF SUCH DAMAGE.
       <DefaultRolloverStrategy max="${log.rollingfile.maxrollover}" />
     </RollingFile>
 
+    <RollingFile name="ErrFile">
+      <FileName>${log.dir}/${log.file}.err</FileName>
+      <FilePattern>${log.dir}/${log.file}-%i.err.gz</FilePattern>
+      <PatternLayout>
+	<Pattern>${layout.file}</Pattern>
+	<header>File started Timestamp: $${date:EEE dd MMM yyyy HH:mm:ss zzz}\n</header>
+	<footer>File ended Timestamp: $${date:EEE dd MMM yyyy HH:mm:ss zzz}\n</footer>
+      </PatternLayout>
+      <ThresholdFilter level="${level.min.errlog}" onMatch="ACCEPT" onMismatch="DENY"/>
+      <Policies>
+<!--         <TimeBasedTriggeringPolicy /> -->
+	<SizeBasedTriggeringPolicy size="${log.rollingfile.sizetrigger}"/>
+      </Policies>
+      <DefaultRolloverStrategy max="${log.rollingfile.maxrollover}" />
+    </RollingFile>
+
     <RollingFile name="File.Lockss">
       <FileName>${log.dir}/${log.file}.log</FileName>
       <FilePattern>${log.dir}/${log.file}-%i.log.gz</FilePattern>
 <!--       <FilePattern>${log.dir}/%d{yyyy-MM-dd}-%i.log.gz</FilePattern> -->
       <PatternLayout>
 	<Pattern>${layout.file.lockss}</Pattern>
-	<header>File started Timestamp: ${date:EEE dd MMM yyyy HH:mm:ss.SSS zzz}\n</header>
-	<footer>File ended Timestamp: ${date:EEE dd MMM yyyy HH:mm:ss.SSS zzz}\n</footer>
+	<header>File started Timestamp: $${date:EEE dd MMM yyyy HH:mm:ss.SSS zzz}\n</header>
+	<footer>File ended Timestamp: $${date:EEE dd MMM yyyy HH:mm:ss.SSS zzz}\n</footer>
       </PatternLayout>
+      <Policies>
+<!--         <TimeBasedTriggeringPolicy /> -->
+	<SizeBasedTriggeringPolicy size="${log.rollingfile.sizetrigger}"/>
+      </Policies>
+      <DefaultRolloverStrategy max="${log.rollingfile.maxrollover}" />
+    </RollingFile>
+
+    <RollingFile name="ErrFile.Lockss">
+      <FileName>${log.dir}/${log.file}.err</FileName>
+      <FilePattern>${log.dir}/${log.file}-%i.err.gz</FilePattern>
+<!--       <FilePattern>${log.dir}/%d{yyyy-MM-dd}-%i.err.gz</FilePattern> -->
+      <PatternLayout>
+	<Pattern>${layout.file.lockss}</Pattern>
+	<header>File started Timestamp: $${date:EEE dd MMM yyyy HH:mm:ss.SSS zzz}\n</header>
+	<footer>File ended Timestamp: $${date:EEE dd MMM yyyy HH:mm:ss.SSS zzz}\n</footer>
+      </PatternLayout>
+      <ThresholdFilter level="${level.min.errlog}" onMatch="ACCEPT" onMismatch="DENY"/>
       <Policies>
 <!--         <TimeBasedTriggeringPolicy /> -->
 	<SizeBasedTriggeringPolicy size="${log.rollingfile.sizetrigger}"/>
@@ -146,11 +186,13 @@ POSSIBILITY OF SUCH DAMAGE.
     <Root level="${root.level}">
       <AppenderRef ref="Console"/>
       <AppenderRef ref="File"/>
+      <AppenderRef ref="ErrFile"/>
     </Root>
 
     <Logger name="org.lockss" additivity="false">
       <AppenderRef ref="Console.Lockss"/>
       <AppenderRef ref="File.Lockss"/>
+      <AppenderRef ref="ErrFile.Lockss"/>
     </Logger>
 
     <!-- Defaults for other components that log too much at info or debug

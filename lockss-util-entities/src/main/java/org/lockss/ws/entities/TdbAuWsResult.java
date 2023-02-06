@@ -32,11 +32,14 @@
 package org.lockss.ws.entities;
 
 import java.util.Map;
+import java.util.Objects;
+import com.fasterxml.jackson.annotation.*;
 
 /**
  * Container for the information related to a title database archival unit that
  * is the result of a query.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TdbAuWsResult {
   private String auId;
   private String name;
@@ -116,5 +119,27 @@ public class TdbAuWsResult {
 	+ pluginName + ", tdbTitle=" + tdbTitle + ", tdbPublisher="
 	+ tdbPublisher + ", down=" + down + ", active=" + active + ", params="
 	+ params + ", attrs=" + attrs + ", props=" + props + "]";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    TdbAuWsResult that = (TdbAuWsResult) o;
+    return Objects.equals(auId, that.auId) &&
+        Objects.equals(name, that.name) &&
+        Objects.equals(pluginName, that.pluginName) &&
+        Objects.equals(tdbTitle, that.tdbTitle) &&
+        Objects.equals(tdbPublisher, that.tdbPublisher) &&
+        Objects.equals(down, that.down) &&
+        Objects.equals(active, that.active) &&
+        Objects.equals(params, that.params) &&
+        Objects.equals(attrs, that.attrs) &&
+        Objects.equals(props, that.props);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(auId, name, pluginName, tdbTitle, tdbPublisher, down, active, params, attrs, props);
   }
 }

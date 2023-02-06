@@ -31,36 +31,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.lockss.util.rest.poller;
 
-import static org.lockss.ws.entities.HasherWsResult.BLOCK_FILE_TYPE;
-import static org.lockss.ws.entities.HasherWsResult.RECORD_FILE_TYPE;
 import com.fasterxml.jackson.core.type.TypeReference;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
-import javax.activation.DataHandler;
 import org.apache.cxf.attachment.AttachmentDataSource;
 import org.lockss.log.L4JLogger;
 import org.lockss.util.rest.RestBaseClient;
 import org.lockss.util.rest.exception.LockssRestException;
+import org.lockss.util.rest.exception.LockssRestHttpException;
 import org.lockss.util.rest.multipart.MultipartResponse;
 import org.lockss.util.rest.multipart.MultipartResponse.Part;
-import org.lockss.ws.entities.HasherWsAsynchronousResult;
-import org.lockss.ws.entities.HasherWsParams;
-import org.lockss.ws.entities.HasherWsResult;
-import org.lockss.ws.entities.PeerWsResult;
-import org.lockss.ws.entities.PollWsResult;
-import org.lockss.ws.entities.RepositorySpaceWsResult;
-import org.lockss.ws.entities.RepositoryWsResult;
-import org.lockss.ws.entities.VoteWsResult;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.lockss.ws.entities.*;
+import org.springframework.http.*;
+
+import javax.activation.DataHandler;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+
+import static org.lockss.ws.entities.HasherWsResult.BLOCK_FILE_TYPE;
+import static org.lockss.ws.entities.HasherWsResult.RECORD_FILE_TYPE;
 
 /**
  * A client of the Poller REST service.
@@ -128,7 +116,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
 
       // Make the REST call.
       log.trace("Calling RestUtil.callRestService");
-      ResponseEntity<String> response = callRestService("/peers", null,
+      ResponseEntity<String> response = callRestService("/ws/peers", null,
 	  queryParams, HttpMethod.GET, null, null, String.class,
 	  "Can't query peers");
       log.trace("Back from RestUtil.callRestService");
@@ -166,7 +154,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
 
       // Make the REST call.
       log.trace("Calling RestUtil.callRestService");
-      ResponseEntity<String> response = callRestService("/polls", null,
+      ResponseEntity<String> response = callRestService("/ws/polls", null,
 	  queryParams, HttpMethod.GET, null, null, String.class,
 	  "Can't query polls");
       log.trace("Back from RestUtil.callRestService");
@@ -204,7 +192,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
 
       // Make the REST call.
       log.trace("Calling RestUtil.callRestService");
-      ResponseEntity<String> response = callRestService("/votes", null,
+      ResponseEntity<String> response = callRestService("/ws/votes", null,
 	  queryParams, HttpMethod.GET, null, null, String.class,
 	  "Can't query votes");
       log.trace("Back from RestUtil.callRestService");
@@ -230,7 +218,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
    * @return a {@code List<RepositoryWsResult>} with the results.
    * @throws LockssRestException if there were problems making the query.
    */
-  public List<RepositoryWsResult> queryRepositories(String repositoryQuery)
+  public List<RepositoryWsResult> queryAuRepositories(String repositoryQuery)
       throws LockssRestException {
     log.debug2("repositoryQuery = {}", repositoryQuery);
 
@@ -242,7 +230,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
 
       // Make the REST call.
       log.trace("Calling RestUtil.callRestService");
-      ResponseEntity<String> response = callRestService("/repositories", null,
+      ResponseEntity<String> response = callRestService("/ws/aurepositories", null,
 	  queryParams, HttpMethod.GET, null, null, String.class,
 	  "Can't query repositories");
       log.trace("Back from RestUtil.callRestService");
@@ -282,7 +270,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
 
       // Make the REST call.
       log.trace("Calling RestUtil.callRestService");
-      ResponseEntity<String> response = callRestService("/repositoryspaces",
+      ResponseEntity<String> response = callRestService("/ws/repositoryspaces",
 	  null, queryParams, HttpMethod.GET, null, null, String.class,
 	  "Can't query repository spaces");
       log.trace("Back from RestUtil.callRestService");
@@ -318,7 +306,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
       log.trace("queryParams = {}", queryParams);
 
       // Make the REST call.
-      MultipartResponse response = getMultipartResponse("/hashes", null,
+      MultipartResponse response = getMultipartResponse("/ws/hashes", null,
 	  queryParams, new HttpHeaders(), HttpMethod.PUT, wsParams);
 
       // Get the single hash result from the response.
@@ -344,8 +332,13 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
     log.debug2("wsParams = {}", wsParams);
 
     try {
+      // Prepare the query parameter variables.
+      Map<String, String> queryParams = new HashMap<>();
+      queryParams.put("isAsynchronous", "true");
+      log.trace("queryParams = {}", queryParams);
+
       // Make the REST call.
-      MultipartResponse response = getMultipartResponse("/hashes", null, null,
+      MultipartResponse response = getMultipartResponse("/ws/hashes", null, queryParams,
 	  new HttpHeaders(), HttpMethod.PUT, wsParams);
 
       // Get the single hash result from the response.
@@ -378,7 +371,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
 
       // Make the REST call.
       MultipartResponse response = getMultipartResponse(
-	  "/hashes/requests/{requestId}", uriVariables, null, new HttpHeaders(),
+	  "/ws/hashes/requests/{requestId}", uriVariables, null, new HttpHeaders(),
 	  HttpMethod.GET, null);
 
       // Get the single hash result from the response.
@@ -403,7 +396,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
 
     try {
       // Make the REST call.
-      MultipartResponse response = getMultipartResponse("/hashes", null, null,
+      MultipartResponse response = getMultipartResponse("/ws/hashes", null, null,
 	  new HttpHeaders(), HttpMethod.GET, null);
 
       // Get all the hash results from the response.
@@ -430,6 +423,10 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
       requestId) throws LockssRestException {
     log.debug2("requestId = {}", requestId);
 
+    // Populate the result.
+    HasherWsAsynchronousResult result = new HasherWsAsynchronousResult();
+    result.setRequestId(requestId);
+
     try {
       // Prepare the URI path variables.
       Map<String, String> uriVariables = new HashMap<>();
@@ -438,22 +435,33 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
 
       // Make the REST call.
       ResponseEntity<String> response = callRestService(
-	  "/hashes/requests/{requestId}", uriVariables, null, HttpMethod.DELETE,
+	  "/ws/hashes/requests/{requestId}", uriVariables, null, HttpMethod.DELETE,
 	  null, (Void)null, String.class, "Can't remove asynchronous hash");
 
       // Get the response body.
       String responseBody = response.getBody();
       log.trace("responseBody = {}", responseBody);
 
-      // Populate the result.
-      HasherWsAsynchronousResult result = new HasherWsAsynchronousResult();
-      result.setRequestId(requestId);
       result.setStatus(responseBody);
       log.debug2("result = {}", result);
-      return result;
+    } catch (LockssRestHttpException e) {
+      switch (e.getHttpStatus()) {
+        case BAD_REQUEST:
+        case NOT_FOUND:
+        case INTERNAL_SERVER_ERROR:
+          // Pass-through error message in response body
+          result.setStatus("RequestError"); // HasherStatus.RequestError.toString()
+          result.setErrorMessage(e.getServerErrorMessage());
+          break;
+
+        default:
+          throw new LockssRestException(e);
+      }
     } catch (Exception e) {
       throw new LockssRestException(e);
     }
+
+    return result;
   }
 
   /**
@@ -481,7 +489,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
     } else {
       // No: report the problem.
       String message = "REST service returned " + wsResults.size()
-      + "hash results instead of a single hash result";
+      + " hash results instead of a single hash result";
       log.error(message);
       throw new RuntimeException(message);
     }

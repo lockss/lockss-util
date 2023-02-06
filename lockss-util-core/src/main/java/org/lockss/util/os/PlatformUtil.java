@@ -38,10 +38,14 @@ import java.net.*;
 import java.text.*;
 import java.util.*;
 import java.util.regex.*;
+import java.nio.file.Path;
+import java.nio.file.Files;
+import java.nio.file.FileStore;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.*;
 import org.lockss.util.lang.EncodingUtil;
+import org.lockss.log.L4JLogger;
 import org.lockss.util.net.IPAddr;
 import org.lockss.util.storage.StorageInfo;
 import org.lockss.util.time.TimeUtil;
@@ -56,14 +60,25 @@ public class PlatformUtil {
   public static final String SYSPROP_UNFILTERED_TCP_PORTS = "org.lockss.platform.unfilteredTcpPorts";
   public static final String SYSPROP_UNFILTERED_UDP_PORTS = "org.lockss.platform.unfilteredUdpPorts";
 
+  /** Java tmpdir system property.  Java caches this the first time
+   * File.createTempFile() is called, so changes to the system
+   * property at runtime may not take effect.  Moreover, it should
+   * <b>never</b> be set to a dir that may be deleted during that JVM
+   * invocation, as even if it's reset when that dir is deleted,
+   * createTempFile() may still try to create files there and will
+   * fail */
   public static final String SYSPROP_JAVA_IO_TMPDIR = "java.io.tmpdir";
+
+  /** Alternate system property used within LOCKSS code to avoid
+   * problems with {@link #SYSPROP_JAVA_IO_TMPDIR} */
+  public static final String SYSPROP_LOCKSS_TMPDIR = "org.lockss.tmpdir";
 
   public static final String SYSPROP_LOCKSS_OS_NAME = "lockss.os.name";
   public static final String SYSPROP_OS_NAME = "os.name";
 
   public static final String SYSPROP_PLATFORM_HOSTNAME = "org.lockss.platformHostname";
 
-  private static final Logger log = LoggerFactory.getLogger(PlatformUtil.class);
+  private static final L4JLogger log = L4JLogger.getLogger();
   
   public enum DiskSpaceSource { Java, DF };
 
@@ -79,7 +94,7 @@ public class PlatformUtil {
     "org.lockss.platform." + "diskSpaceSource";
 
   public static final DiskSpaceSource DEFAULT_DISK_SPACE_SOURCE =
-    DiskSpaceSource.Java;
+    DiskSpaceSource.DF;
 
   private static final DecimalFormat percentFmt = new DecimalFormat("0%");
 
@@ -136,9 +151,12 @@ public class PlatformUtil {
    * </p>
    * 
    * @see #SYSPROP_JAVA_IO_TMPDIR
+   * @see #SYSPROP_LOCKSS_TMPDIR
    */
   public static String getSystemTempDir() {
-    return System.getProperty(SYSPROP_JAVA_IO_TMPDIR);
+    String lockssTmpDir = System.getProperty(SYSPROP_LOCKSS_TMPDIR);
+    return lockssTmpDir != null ? lockssTmpDir
+      : System.getProperty(SYSPROP_JAVA_IO_TMPDIR);
   }
 
   /** Return the current working dir name */
@@ -372,30 +390,30 @@ public class PlatformUtil {
     df.percentString =  String.valueOf(Math.round(df.percent)) + "%";
     df.percent /= 100.00;
     df.fs = null;
-    df.mnt = longestRootFile(f);
+    try {
+      df.mnt = mountOf(f);
+    } catch (IOException e) {
+      log.warn("Error finding mount point of: {}", path);
+      df.mnt = "Unknown";
+    }
     df.source = DiskSpaceSource.Java;
     if (log.isTraceEnabled()) log.trace(df.toString());
     return df;
   }
 
-  public static String longestRootFile(File file)
-  {
-    String longestRoot = null;
+  public static String mountOf(File f) throws IOException {
+    return mountOf(f.toPath());
+  }
 
-    for (File root : FILE_ROOTS)
-    {
-      File parent = file.getParentFile();
-      while(parent != null) {
-        if(root.equals(parent)) {
-          if(longestRoot == null ||
-              longestRoot.length() < root.getPath().length())   {
-            longestRoot = root.getPath();
-          }
-        }
-        parent = parent.getParentFile();
-      }
+  public static String mountOf(Path p) throws IOException {
+    FileStore fs = Files.getFileStore(p);
+    Path temp = p.toAbsolutePath();
+    Path mountp = temp;
+
+    while( (temp = temp.getParent()) != null && fs.equals(Files.getFileStore(temp)) ) {
+      mountp = temp;
     }
-    return longestRoot;
+    return mountp.toString();
   }
 
   /** Get disk space statistics for the filesystem containing the
@@ -959,9 +977,9 @@ public class PlatformUtil {
 
       if (storageInfo != null) {
         df.mnt = storageInfo.getName();
-        df.size = storageInfo.getSize() / 1024; // From bytes to KB.
-        df.used = storageInfo.getUsed() / 1024; // From bytes to KB.
-        df.avail = storageInfo.getAvail() / 1024; // From bytes to KB.
+        df.size = storageInfo.getSizeKB();
+        df.used = storageInfo.getUsedKB();
+        df.avail = storageInfo.getAvailKB();
         df.percentString = storageInfo.getPercentUsedString();
         df.percent = storageInfo.getPercentUsed();
       } else {

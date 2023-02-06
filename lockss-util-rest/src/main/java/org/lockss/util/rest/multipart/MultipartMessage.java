@@ -39,6 +39,7 @@ import org.apache.http.message.BasicHeader;
 import org.lockss.log.L4JLogger;
 import org.springframework.util.LinkedCaseInsensitiveMap;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -63,12 +64,14 @@ public class MultipartMessage {
   /**
    * Constructor that reads a {@link MultipartStream} and parses it into {@link FileItem} parts.
    *
+   * @param tmpDir Temporary directory in which file-backed multipart parts will be created.
    * @param multipartStream The {@link MultipartStream} to read and parse.
    * @throws IOException Thrown if an {@link IOException} occurred while reading the multipart stream.
    */
-  public MultipartMessage(MultipartStream multipartStream) throws IOException {
+  public MultipartMessage(File tmpDir, MultipartStream multipartStream) throws IOException {
     // Construct and configure a DiskFileItemFactory for FileItem parts
-    DiskFileItemFactory itemFactory = new DiskFileItemFactory();
+    DiskFileItemFactory itemFactory =
+        new DiskFileItemFactory(DiskFileItemFactory.DEFAULT_SIZE_THRESHOLD, tmpDir);
 
     // Parse multipart stream
     parseStream(multipartStream, itemFactory);
@@ -101,7 +104,9 @@ public class MultipartMessage {
       part.setHeaders(headers);
 
       // Read part body into FileItem's OutputStream
-      multipartStream.readBodyData(part.getOutputStream());
+      try (OutputStream output = part.getOutputStream()) {
+        multipartStream.readBodyData(output);
+      }
 
       // Add part to list of parts
       parts.add(part);

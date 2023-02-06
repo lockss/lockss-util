@@ -31,6 +31,8 @@
  */
 package org.lockss.ws.entities;
 
+import java.util.Objects;
+
 /**
  * Container for the information related to a vote that is the result of a
  * query.
@@ -339,5 +341,41 @@ public class VoteWsResult {
 	+ isSymmetricPoll + ", agreedUrlCount=" + agreedUrlCount
 	+ ", disagreedUrlCount=" + disagreedUrlCount + ", pollerOnlyUrlCount="
 	+ pollerOnlyUrlCount + ", voterOnlyUrlCount=" + voterOnlyUrlCount + "]";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    VoteWsResult that = (VoteWsResult) o;
+    return Objects.equals(auId, that.auId) &&
+        Objects.equals(auName, that.auName) &&
+        Objects.equals(callerId, that.callerId) &&
+        Objects.equals(voteStatus, that.voteStatus) &&
+        Objects.equals(startTime, that.startTime) &&
+        Objects.equals(deadline, that.deadline) &&
+        Objects.equals(voteKey, that.voteKey) &&
+        Objects.equals(isPollActive, that.isPollActive) &&
+        Objects.equals(currentState, that.currentState) &&
+        Objects.equals(errorDetail, that.errorDetail) &&
+        Objects.equals(voteDeadline, that.voteDeadline) &&
+        Objects.equals(duration, that.duration) &&
+        Objects.equals(remainingTime, that.remainingTime) &&
+        Objects.equals(agreementHint, that.agreementHint) &&
+        Objects.equals(pollerNonce, that.pollerNonce) &&
+        Objects.equals(voterNonce, that.voterNonce) &&
+        Objects.equals(voterNonce2, that.voterNonce2) &&
+        Objects.equals(isSymmetricPoll, that.isSymmetricPoll) &&
+        Objects.equals(agreedUrlCount, that.agreedUrlCount) &&
+        Objects.equals(disagreedUrlCount, that.disagreedUrlCount) &&
+        Objects.equals(pollerOnlyUrlCount, that.pollerOnlyUrlCount) &&
+        Objects.equals(voterOnlyUrlCount, that.voterOnlyUrlCount);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(auId, auName, callerId, voteStatus, startTime, deadline, voteKey, isPollActive, currentState,
+        errorDetail, voteDeadline, duration, remainingTime, agreementHint, pollerNonce, voterNonce, voterNonce2,
+        isSymmetricPoll, agreedUrlCount, disagreedUrlCount, pollerOnlyUrlCount, voterOnlyUrlCount);
   }
 }

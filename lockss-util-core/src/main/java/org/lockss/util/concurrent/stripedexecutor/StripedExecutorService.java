@@ -100,6 +100,13 @@ public class StripedExecutorService extends AbstractExecutorService {
 //            new IdentityHashMap<>();
 
     /**
+     * CountDownLatch for each stripe, so can client can wait for
+     * stripe to drain
+     */
+    private final Map<Object, CountDownLatch> executorLatches =
+        new HashMap<>();
+
+    /**
      * The default submit() method creates a new FutureTask and
      * wraps our StripedRunnable with it.  We thus need to
      * remember the stripe object somewhere.  In our case, we will
@@ -268,6 +275,7 @@ public class StripedExecutorService extends AbstractExecutorService {
                 if (ser_exec == null) {
                     executors.put(stripe, ser_exec =
                             new SerialExecutor(stripe));
+                    executorLatches.put(stripe, new CountDownLatch(1));
                 }
                 ser_exec.execute(command);
             } else {
@@ -401,10 +409,38 @@ public class StripedExecutorService extends AbstractExecutorService {
         assert ser_ex.isEmpty();
 
         executors.remove(stripe);
+        executorLatches.get(stripe).countDown();
+        executorLatches.remove(stripe);
         terminating.signalAll();
         if (state == State.SHUTDOWN && executors.isEmpty()) {
             executor.shutdown();
         }
+    }
+
+    /** Wait until there are no running or panding tasks for the
+     * specified stripe.  Returns immediately if that's already the
+     * case.
+     * @return true if the condition was met, false if interrupted.
+     */
+    public boolean waitForStripeToEmpty(Object stripe) {
+      CountDownLatch latch = null;
+      try {
+        lock.lock();
+        if (!executors.containsKey(stripe)) {
+          return true;
+        }
+        latch = executorLatches.get(stripe);
+      } finally {
+        lock.unlock();
+      }
+      if (latch != null) {
+        try {
+          latch.await();
+        } catch (InterruptedException e) {
+          return false;
+        }
+      }
+      return true;
     }
 
     /**

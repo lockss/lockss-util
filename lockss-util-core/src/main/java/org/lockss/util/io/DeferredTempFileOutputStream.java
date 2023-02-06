@@ -133,8 +133,9 @@ public class DeferredTempFileOutputStream extends ThresholdingOutputStream {
   protected void thresholdReached() throws IOException {
     tempFile = createTempFile(tempName);
     FileOutputStream fos = new FileOutputStream(tempFile);
-    memoryOutputStream.writeTo(fos);
-    currentOutputStream = fos;
+    BufferedOutputStream bos = new BufferedOutputStream(fos, 100 * 1024);
+    memoryOutputStream.writeTo(bos);
+    currentOutputStream = bos;
     memoryOutputStream = null;
   }
 

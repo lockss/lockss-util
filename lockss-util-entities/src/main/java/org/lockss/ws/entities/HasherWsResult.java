@@ -29,10 +29,12 @@ package org.lockss.ws.entities;
 
 import java.util.Arrays;
 import javax.activation.DataHandler;
+import com.fasterxml.jackson.annotation.*;
 
 /**
  * A wrapper for the result of a hash operation.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class HasherWsResult {
   public static final String BLOCK_FILE_TYPE = "Block";
   public static final String RECORD_FILE_TYPE = "Record";

@@ -32,6 +32,7 @@
 package org.lockss.ws.entities;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Container for the information related to an archival unit poll agreements
@@ -71,5 +72,18 @@ public class PeerAgreementsWsResult {
   public String toString() {
     return "PeerAgreementsWsResult [peerId=" + peerId + ", agreements="
 	+ agreements + "]";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    PeerAgreementsWsResult that = (PeerAgreementsWsResult) o;
+    return Objects.equals(peerId, that.peerId) && Objects.equals(agreements, that.agreements);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(peerId, agreements);
   }
 }

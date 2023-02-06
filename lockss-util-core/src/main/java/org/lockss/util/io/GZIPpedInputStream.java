@@ -26,36 +26,46 @@ in this Software without prior written authorization from Stanford University.
 
 */
 
-package org.lockss.util;
+package org.lockss.util.io;
 
-import java.util.*;
-import java.util.function.Function;
-import org.apache.commons.lang3.tuple.*;
+import java.io.*;
+import java.util.zip.*;
+import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
 
-/** "Map" strings to arbitrary Objects, where the keys are patterns
- * against which the strings are matched.  The patterns are ordered;
- * the value associated with the first one that matches is
- * returned.  */
-public class PatternMap<T> extends AbstractPatternMap<T> {
+/**
+ * InputStream that supplies a gzipped version of what it reads.  Currently
+ * source must be a string. InputStream source requires a piped copy.
+ */
+public class GZIPpedInputStream extends InputStream {
+  private InputStream is;
+  private byte[] bytes;
 
-  /** An empty PatternMap, which always returns the default
-   * value. */
-  public final static PatternMap EMPTY =
-    (PatternMap)new PatternMap().compilePairs(Collections.emptyList());
-
-  protected PatternMap() {
-    super();
+  public GZIPpedInputStream(String srcStr) throws IOException {
+    UnsynchronizedByteArrayOutputStream baos = new UnsynchronizedByteArrayOutputStream();
+    OutputStream os = baos;
+    os = new GZIPOutputStream(os);
+    os.write(srcStr.getBytes());
+    os.flush();
+    os.close();
+    is = baos.toInputStream();
   }
 
-  /** Create a PatternMap from a list of strings of the form
-   * <code><i>RE</i>,<i>string</i></code>
+  public int read() throws IOException {
+    return is.read();
+  }
+
+  /**
+   * Returns the string the stream represents.
+   * @return the source String
    */
-  public static <T> PatternMap<T> fromPairs(List<Pair<String,T>> patternPairs)
-      throws IllegalArgumentException {
-    return (PatternMap)new PatternMap().compilePairs(patternPairs);
+  public String toString() {
+    StringBuffer sb = new StringBuffer();
+    sb.append("[GZIPpedInputStream");
+    sb.append("]");
+    return sb.toString();
   }
 
-  protected T parseRhs(String rhs) {
-    throw new UnsupportedOperationException("Shouldn't happen");
+  public boolean markSupported() {
+    return false;
   }
 }

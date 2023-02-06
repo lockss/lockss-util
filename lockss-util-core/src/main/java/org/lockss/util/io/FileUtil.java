@@ -151,12 +151,8 @@ public class FileUtil {
     }
 
     // compare both streams
-    FileInputStream fis1 = null;
-    FileInputStream fis2 = null;
-    try {
-      fis1 = new FileInputStream(file1);
-      fis2 = new FileInputStream(file2);
-
+    try (InputStream fis1 = new BufferedInputStream(new FileInputStream(file1));
+         InputStream fis2 = new BufferedInputStream(new FileInputStream(file2))) {
       byte[] bytes1 = new byte[FILE_CHUNK_SIZE];
       byte[] bytes2 = new byte[FILE_CHUNK_SIZE];
       while (true) {
@@ -179,14 +175,6 @@ public class FileUtil {
     } catch (FileNotFoundException fnfe) {
       // if the file is absent, no comparison
       return false;
-    } finally {
-      // make sure to close open inputstreams
-      if (fis1!=null) {
-        fis1.close();
-      }
-      if (fis2!=null) {
-        fis2.close();
-      }
     }
   }
 

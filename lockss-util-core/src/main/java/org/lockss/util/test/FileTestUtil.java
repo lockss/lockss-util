@@ -37,11 +37,14 @@ import java.io.*;
 import java.net.*;
 import java.security.*;
 import org.lockss.util.*;
+import org.lockss.util.os.PlatformUtil;
+import org.lockss.log.*;
 import org.lockss.util.lang.EncodingUtil;
 
 /** Utilities for Files involved in the test hierarchy
  */
 public class FileTestUtil {
+  private static final L4JLogger log = L4JLogger.getLogger();
   /** Create and return the name of a temp file that will be deleted
    * when jvm terminated
    */
@@ -62,11 +65,19 @@ public class FileTestUtil {
 
   public static File tempFile(String prefix, String suffix, File dir)
       throws IOException {
-    File f = File.createTempFile(prefix, suffix, dir);
-    if (!LockssTestCase5.isKeepTempFiles()) {
-      f.deleteOnExit();
+    if (dir == null) {
+      dir = new File(PlatformUtil.getSystemTempDir());
     }
-    return f;
+    try {
+      File f = File.createTempFile(prefix, suffix, dir);
+      if (!LockssTestCase5.isKeepTempFiles()) {
+        f.deleteOnExit();
+      }
+      return f;
+    } catch (IOException e) {
+      log.error("Can't create temp file in dir: {}", dir, e);
+      throw e;
+    }
   }
 
   /** Write a temp file containing string and return its name */

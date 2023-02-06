@@ -26,36 +26,19 @@ in this Software without prior written authorization from Stanford University.
 
 */
 
-package org.lockss.util;
+package org.lockss.util.io;
 
-import java.util.*;
-import java.util.function.Function;
-import org.apache.commons.lang3.tuple.*;
+import java.io.*;
+import java.util.zip.*;
+import org.junit.jupiter.api.*;
+import org.lockss.util.test.*;
 
-/** "Map" strings to arbitrary Objects, where the keys are patterns
- * against which the strings are matched.  The patterns are ordered;
- * the value associated with the first one that matches is
- * returned.  */
-public class PatternMap<T> extends AbstractPatternMap<T> {
+public class TestGZIPpedInputStream extends LockssTestCase5 {
 
-  /** An empty PatternMap, which always returns the default
-   * value. */
-  public final static PatternMap EMPTY =
-    (PatternMap)new PatternMap().compilePairs(Collections.emptyList());
-
-  protected PatternMap() {
-    super();
-  }
-
-  /** Create a PatternMap from a list of strings of the form
-   * <code><i>RE</i>,<i>string</i></code>
-   */
-  public static <T> PatternMap<T> fromPairs(List<Pair<String,T>> patternPairs)
-      throws IllegalArgumentException {
-    return (PatternMap)new PatternMap().compilePairs(patternPairs);
-  }
-
-  protected T parseRhs(String rhs) {
-    throw new UnsupportedOperationException("Shouldn't happen");
+  @Test
+  public void testReadString() throws Exception {
+    GZIPpedInputStream gzi = new GZIPpedInputStream("test");
+    assertReaderMatchesString("test",
+			      new InputStreamReader(new GZIPInputStream(gzi)));
   }
 }

@@ -32,6 +32,7 @@
 package org.lockss.ws.entities;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * The daemon platform configuration information.
@@ -275,5 +276,35 @@ public class PlatformConfigurationWsResult {
 	+ ", currentWorkingDirectory=" + currentWorkingDirectory
 	+ ", properties=" + properties + ", buildHost=" + buildHost
 	+ ", buildTimestamp=" + buildTimestamp + "]";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    PlatformConfigurationWsResult that = (PlatformConfigurationWsResult) o;
+    return currentTime == that.currentTime &&
+        uptime == that.uptime &&
+        buildTimestamp == that.buildTimestamp &&
+        Objects.equals(hostName, that.hostName) &&
+        Objects.equals(ipAddress, that.ipAddress) &&
+        Objects.equals(groups, that.groups) &&
+        Objects.equals(project, that.project) &&
+        Objects.equals(v3Identity, that.v3Identity) &&
+        Objects.equals(mailRelay, that.mailRelay) &&
+        Objects.equals(adminEmail, that.adminEmail) &&
+        Objects.equals(disks, that.disks) &&
+        Objects.equals(daemonVersion, that.daemonVersion) &&
+        Objects.equals(javaVersion, that.javaVersion) &&
+        Objects.equals(platform, that.platform) &&
+        Objects.equals(currentWorkingDirectory, that.currentWorkingDirectory) &&
+        Objects.equals(properties, that.properties) &&
+        Objects.equals(buildHost, that.buildHost);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(hostName, ipAddress, groups, project, v3Identity, mailRelay, adminEmail, disks, currentTime,
+        uptime, daemonVersion, javaVersion, platform, currentWorkingDirectory, properties, buildHost, buildTimestamp);
   }
 }

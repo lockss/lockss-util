@@ -31,6 +31,8 @@
  */
 package org.lockss.ws.entities;
 
+import java.util.Objects;
+
 /**
  * The version information of the daemon.
  */
@@ -93,5 +95,19 @@ public class DaemonVersionWsResult {
     return "DaemonVersionWsResult [fullVersion=" + fullVersion
 	+ ", majorVersion=" + majorVersion + ", minorVersion=" + minorVersion
 	+ ", buildVersion=" + buildVersion + "]";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    DaemonVersionWsResult that = (DaemonVersionWsResult) o;
+    return majorVersion == that.majorVersion && minorVersion == that.minorVersion &&
+        buildVersion == that.buildVersion && Objects.equals(fullVersion, that.fullVersion);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(fullVersion, majorVersion, minorVersion, buildVersion);
   }
 }

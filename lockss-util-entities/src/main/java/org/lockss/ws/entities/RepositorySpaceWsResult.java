@@ -31,6 +31,8 @@
  */
 package org.lockss.ws.entities;
 
+import java.util.Objects;
+
 /**
  * Container for the information related to a repository space that is the
  * result of a query.
@@ -161,5 +163,27 @@ public class RepositorySpaceWsResult {
 	+ ", percentageFull=" + percentageFull + ", activeCount=" + activeCount
 	+ ", inactiveCount=" + inactiveCount + ", deletedCount=" + deletedCount
 	+ ", orphanedCount=" + orphanedCount + "]";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    RepositorySpaceWsResult that = (RepositorySpaceWsResult) o;
+    return Objects.equals(repositorySpaceId, that.repositorySpaceId) &&
+        Objects.equals(size, that.size) &&
+        Objects.equals(used, that.used) &&
+        Objects.equals(free, that.free) &&
+        Objects.equals(percentageFull, that.percentageFull) &&
+        Objects.equals(activeCount, that.activeCount) &&
+        Objects.equals(inactiveCount, that.inactiveCount) &&
+        Objects.equals(deletedCount, that.deletedCount) &&
+        Objects.equals(orphanedCount, that.orphanedCount);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(repositorySpaceId, size, used, free, percentageFull, activeCount,
+        inactiveCount, deletedCount, orphanedCount);
   }
 }

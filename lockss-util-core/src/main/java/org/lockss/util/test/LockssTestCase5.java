@@ -95,39 +95,11 @@ public class LockssTestCase5 {
   
   List<DoLater> doLaters;
 
-  String javaIoTmpdir;
-  
   /**
    *
    */
   private static int failures;
   
-  /**
-   * <p>
-   * Sets up {@link PlatformUtil#SYSPROP_JAVA_IO_TMPDIR} before each test.
-   * </p>
-   * 
-   * @see #afterEachJavaIoTmpdir()
-   */
-  @BeforeEach
-  public final void beforeEachJavaIoTmpdir() {
-    javaIoTmpdir = System.getProperty(PlatformUtil.SYSPROP_JAVA_IO_TMPDIR);
-  }
-  
-  /**
-   * <p>
-   * Resets {@link PlatformUtil#SYSPROP_JAVA_IO_TMPDIR} before each test.
-   * </p>
-   * 
-   * @see #afterEachJavaIoTmpdir()
-   */
-  @AfterEach
-  public final void afterEachJavaIoTmpdir() {
-    if (!StringUtils.isEmpty(javaIoTmpdir)) {
-      System.setProperty(PlatformUtil.SYSPROP_JAVA_IO_TMPDIR, javaIoTmpdir);
-    }
-  }
-
   /**
    * <p>
    * Cancels the {@link DoLater} tasks after each test.
@@ -174,21 +146,28 @@ public class LockssTestCase5 {
    *           if I/O exceptions occur in the process.
    */
   public static void deleteTempFiles(List<File> tmpList) throws Exception {
-    if (tmpList != null && !isKeepTempFiles()) {
-      for (Iterator<File> iter = tmpList.iterator() ; iter.hasNext() ; ) {
-        File dir = iter.next();
-        File idFile = new File(dir, TEST_ID_FILE_NAME);
-        String idContent = null;
-        if (idFile.exists()) {
-          idContent = IOUtils.toString(new FileReader(idFile));
-        }
-        if (FileUtil.delTree(dir)) {
-          log.trace("deltree(" + dir + ") = true");
-          iter.remove();
-        } else {
-          log.trace("deltree(" + dir + ") = false");
-          if (idContent != null) {
-            FileTestUtil.writeFile(idFile, idContent);
+    if (!isKeepTempFiles()) {
+      if (System.getProperty(PlatformUtil.SYSPROP_LOCKSS_TMPDIR) != null) {
+        System.clearProperty(PlatformUtil.SYSPROP_LOCKSS_TMPDIR);
+        log.trace("unset {}", PlatformUtil.SYSPROP_LOCKSS_TMPDIR);
+      }
+      if (tmpList != null) {
+        log.info("deleting temp files: {}", tmpList);
+        for (Iterator<File> iter = tmpList.iterator() ; iter.hasNext() ; ) {
+          File dir = iter.next();
+          File idFile = new File(dir, TEST_ID_FILE_NAME);
+          String idContent = null;
+          if (idFile.exists()) {
+            idContent = IOUtils.toString(new FileReader(idFile));
+          }
+          if (FileUtil.delTree(dir)) {
+            log.trace("deltree(" + dir + ") = true");
+            iter.remove();
+          } else {
+            log.trace("deltree(" + dir + ") = false");
+            if (idContent != null) {
+              FileTestUtil.writeFile(idFile, idContent);
+            }
           }
         }
       }
@@ -279,6 +258,15 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
       if (achieved < rate) {
         fail(String.format("Test failed %d of %d tries, not achieving a %f success rate.", failures, total, rate));
       }
+    }
+  }
+
+  /** Ensure that {@value PlatformUtil.SYSPROP_LOCKSS_TMPDIR} has been
+   * set to a temp created for tests. */
+  public void ensureTempTmpDir() throws IOException {
+    if (System.getProperty(PlatformUtil.SYSPROP_LOCKSS_TMPDIR) == null) {
+      File res = getTempDir();
+      System.setProperty(PlatformUtil.SYSPROP_LOCKSS_TMPDIR, res.toString());
     }
   }
 
@@ -2763,11 +2751,35 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     log.info("End test class: " + info.getDisplayName());
   }
 
-  /** Log each test method */
+  /** All BeforeEach operations.  junit offers no way to order their
+   * execution within a class, so we must handle ordering ourself.  */
   @BeforeEach
   public void beforeEachLog(TestInfo info) {
     LockssLogger.resetLogs();
     log.info("Testcase: " + info.getDisplayName());
+    // This cannot be done in subclasses because there's no way to
+    // ensure it happens before other @BeforeEach methods, which might
+    // use tmpdir
+    if (wantTempTmpDir()) {
+      try {
+        ensureTempTmpDir();
+      } catch (IOException e) {
+        log.warn("Couldn't create temporary system tmp dir, using " +
+                 System.getProperty(PlatformUtil.SYSPROP_JAVA_IO_TMPDIR), e);
+      }
+    }
+  }
+
+  /** Test classes should override this to return true if operations
+   * they invoke will create files or dirs using {@link
+   * org.lockss.util.io.FileUtil#createTempDir(String,String,File)} or
+   * {@link
+   * org.lockss.util.io.FileUtil#createTempFile(String,String,File)}
+   * or any of their variants.  This will cause those dirs and files
+   * to be created in a temp dir that will be deleted when the test
+   * completes, rather than be left in the system tmpdir. */
+  protected boolean wantTempTmpDir() {
+    return false;
   }
 
   /** Called by the &#64;VariantTest mechanism to set up the named

@@ -32,6 +32,7 @@
 package org.lockss.ws.entities;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Container for the information related to a repository that is the result of a
@@ -149,5 +150,25 @@ public class RepositoryWsResult {
 	+ ", directoryName=" + directoryName + ", auName=" + auName
 	+ ", internal="	+ internal + ", status=" + status + ", diskUsage="
 	+ diskUsage + ", pluginName=" + pluginName + ", params=" + params + "]";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    RepositoryWsResult that = (RepositoryWsResult) o;
+    return Objects.equals(repositorySpaceId, that.repositorySpaceId) &&
+        Objects.equals(directoryName, that.directoryName) &&
+        Objects.equals(auName, that.auName) &&
+        Objects.equals(internal, that.internal) &&
+        Objects.equals(status, that.status) &&
+        Objects.equals(diskUsage, that.diskUsage) &&
+        Objects.equals(pluginName, that.pluginName) &&
+        Objects.equals(params, that.params);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(repositorySpaceId, directoryName, auName, internal, status, diskUsage, pluginName, params);
   }
 }
