@@ -85,7 +85,7 @@ public class RestUtil {
 	  throws LockssRestException {
     return callRestService(restTemplate, uri, method, requestEntity,
                            responseType, clientExceptionMessage,
-                           DEFAULT_RETRY_BACKOFFS);
+                           null);
   }
 
   /**
@@ -158,7 +158,7 @@ public class RestUtil {
     log.debug2("clientExceptionMessage = {}", clientExceptionMessage);
 
     if (retryBackoffs == null) {
-      throw new IllegalArgumentException("retryBackoffs is null");
+      retryBackoffs = DEFAULT_RETRY_BACKOFFS;
     }
     int retryIx = 0;
     while (true) {
