@@ -220,6 +220,16 @@ public class BuildInfo {
     return FIRST;
   }
 
+  /**
+   * Returns the first {@link BuildInfo} on the classpath matching a given artifactId.
+   */
+  public static Optional<BuildInfo> getBuildInfoFor(String artifactId) {
+    return BuildInfo.getAllBuildInfo()
+        .stream()
+        .filter(buildInfo -> artifactId.equals(buildInfo.getBuildPropertyInst("build.artifactId")))
+        .findFirst();
+  }
+
   /** Return a list of all the BuildInfo found on the classpath */
   public static List<BuildInfo> getAllBuildInfo() {
     if (ALL == null) {

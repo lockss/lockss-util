@@ -27,6 +27,7 @@
  */
 package org.lockss.ws.entities;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.*;
@@ -76,6 +77,7 @@ public class AuWsResult {
   private Boolean isBulkContent;
   private List<PeerAgreementsWsResult> peerAgreements;
   private List<UrlWsResult> urls;
+  private Collection<String> accessUrls;
   private List<String> substanceUrls;
   private List<String> articleUrls;
   private String journalTitle;
@@ -560,6 +562,18 @@ public class AuWsResult {
   }
   public void setUrls(List<UrlWsResult> urls) {
     this.urls = urls;
+  }
+
+  /**
+   * Provides the Archival Unit access URLs.
+   *
+   * @return a {@code Collection<String>} with the access URLs.
+   */
+  public Collection<String> getAccessUrls() {
+    return accessUrls;
+  }
+  public void setAccessUrls(Collection<String> accessUrls) {
+    this.accessUrls = accessUrls;
   }
 
   /**
