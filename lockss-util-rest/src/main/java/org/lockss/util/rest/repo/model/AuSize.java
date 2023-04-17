@@ -1,9 +1,10 @@
 package org.lockss.util.rest.repo.model;
 
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import org.springframework.validation.annotation.Validated;
+
+import java.util.Objects;
 
 /**
  * AuSize
@@ -13,13 +14,13 @@ import org.springframework.validation.annotation.Validated;
 
 public class AuSize   {
   @JsonProperty("totalLatestVersions")
-  private Long totalLatestVersions = null;
+  private long totalLatestVersions = 0L;
 
   @JsonProperty("totalAllVersions")
-  private Long totalAllVersions = null;
+  private long totalAllVersions = 0L;
 
   @JsonProperty("totalWarcSize")
-  private Long totalWarcSize = null;
+  private long totalWarcSize = 0L;
 
   public AuSize totalLatestVersions(Long totalLatestVersions) {
     this.totalLatestVersions = totalLatestVersions;
