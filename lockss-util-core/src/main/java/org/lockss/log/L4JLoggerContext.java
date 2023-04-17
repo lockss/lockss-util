@@ -69,6 +69,8 @@ public class L4JLoggerContext extends LoggerContext {
   private static org.apache.logging.log4j.Logger log =
     StatusLogger.getLogger();
 
+  private static Marker TS_MARKER = MarkerManager.getMarker("Timestamp");
+
   // Each short name may map to more than one fq name.  <i>Eg</i>, creating
   // loggers <tt>org.lockss.log.Logger</tt> and
   // <tt>org.lockss.util.Logger</tt> results in <tt>Logger</tt> being
@@ -105,7 +107,7 @@ public class L4JLoggerContext extends LoggerContext {
       L4JLogger tslog = new L4JLogger(ctx, "Timestamp", messageFactory);
       FastDateFormat df =
 	FastDateFormat.getInstance("EEE dd MMM yyyy HH:mm:ss zzz");
-      tslog.info(df.format(TimeBase.nowDate()) + "\n");
+      tslog.info(TS_MARKER, df.format(TimeBase.nowDate()) + "\n");
 
       // Schedule a Timestamp message every midnight.
       try {
@@ -120,7 +122,7 @@ public class L4JLoggerContext extends LoggerContext {
 	scheduler.scheduleWithCron(new CronExpression("0 0 0 * * ?"),
 				   new Runnable() {
 	    public void run() {
-	      tslog.info(df.format(TimeBase.nowDate()) + "\n");
+	      tslog.info(TS_MARKER, df.format(TimeBase.nowDate()) + "\n");
 	    }});
       } catch (java.text.ParseException e) {
 	log.warn("Can't schedule midnight timestamp", e);
