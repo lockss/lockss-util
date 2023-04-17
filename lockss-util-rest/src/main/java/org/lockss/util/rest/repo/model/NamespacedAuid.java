@@ -30,31 +30,32 @@
 
 package org.lockss.util.rest.repo.model;
 
-import org.apache.commons.lang3.tuple.MutablePair;
+public class NamespacedAuid {
+  private String namespace;
+  private String auid;
 
-public class NamespacedAuid extends MutablePair<String, String> {
   public NamespacedAuid(String namespace, String auid) {
-    super(namespace, auid);
+    this.namespace = namespace;
+    this.auid = auid;
   }
 
   public String getNamespace() {
-    return getLeft();
+    return namespace;
   }
 
   public String getAuid() {
-    return getRight();
+    return auid;
   }
 
-  public void setNamespace(String namespace) {
-    setLeft(namespace);
+  public String getKey() {
+    return namespace + "|" + auid;
   }
 
-  public void setAuid(String auid) {
-    setRight(auid);
+  public static String key(String namespace, String auid) {
+    return new NamespacedAuid(namespace, auid).getKey();
   }
 
   public String toString() {
-    return "[Stripe: " + getLeft() + ", " + getRight() + "]";
+    return "[NSAuid: " + getNamespace() + ", " + getAuid() + "]";
   }
-
 }
