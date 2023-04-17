@@ -58,4 +58,22 @@ public class NamespacedAuid {
   public String toString() {
     return "[NSAuid: " + getNamespace() + ", " + getAuid() + "]";
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    NamespacedAuid that = (NamespacedAuid) o;
+
+    if (!namespace.equals(that.namespace)) return false;
+    return auid.equals(that.auid);
+  }
+
+  @Override
+  public int hashCode() {
+    int result = namespace.hashCode();
+    result = 31 * result + auid.hashCode();
+    return result;
+  }
 }
