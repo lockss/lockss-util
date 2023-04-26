@@ -109,7 +109,14 @@ public interface Constants {
    * from the orign server.  (This is unrelated to the Date: header from
    * the server.  The property name is highly misleading and inconsistent
    * but difficult to change as it already appears in many places.) */
-  public static String X_LOCKSS_FETCH_TIME = "X_Lockss-server-date";
+  public static String X_LOCKSS_FETCH_TIME_OBSOLETE = "X_Lockss-server-date";
+
+  /** X-LOCKSS value representing the local time the file was
+   * originally fetched from the orign server, represented as a long.
+   * Note this used to be {@value #X_LOCKSS_FETCH_TIME_OBSOLETE}.  The
+   * classic daemon migrator converts the old name to the new name,
+   * but the old name is still recognized. */
+  public static String X_LOCKSS_FETCH_TIME = "X-Lockss-fetch-time";
 
   /** X-LOCKSS value indicating this is a repair request */
   public static String X_LOCKSS_REPAIR = "Repair";
