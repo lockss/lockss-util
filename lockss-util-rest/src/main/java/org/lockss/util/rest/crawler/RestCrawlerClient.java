@@ -76,8 +76,8 @@ public class RestCrawlerClient extends RestBaseClient<RestCrawlerClient> {
     try {
       // Make the REST call.
       log.trace("Calling RestUtil.callRestService");
-      ResponseEntity<CrawlJob> response = callRestService("/crawls", null, null,
-	  HttpMethod.POST, null, crawlDesc, CrawlJob.class, "Can't call crawl");
+      ResponseEntity<CrawlJob> response = callRestService("/jobs", null, null,
+	    HttpMethod.POST, null, crawlDesc, CrawlJob.class, "Unable to schedule crawl");
       log.trace("Back from RestUtil.callRestService");
 
       CrawlJob result = response.getBody();
