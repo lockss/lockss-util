@@ -104,14 +104,14 @@ public class CrawlDesc   {
   private Integer refetchDepth = -1;
 
   @JsonProperty("priority")
-  private Integer priority = 0;
+  private Integer priority = null;
 
   @JsonProperty("crawlList")
   @Valid
   private List<String> crawlList = null;
 
   @JsonProperty("crawlDepth")
-  private Integer crawlDepth = 0;
+  private Integer crawlDepth = null;
 
   @JsonProperty("extraCrawlerData")
   @Valid
@@ -146,7 +146,7 @@ public class CrawlDesc   {
   /**
    * The kind of crawl being performed either 'newContent' or 'repair'.
    * @return crawlKind
-  **/
+   **/
   @ApiModelProperty(required = true, value = "The kind of crawl being performed either 'newContent' or 'repair'.")
   @NotNull
 
