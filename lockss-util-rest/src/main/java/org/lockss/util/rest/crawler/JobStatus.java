@@ -1,7 +1,8 @@
 package org.lockss.util.rest.crawler;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
+import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -23,39 +24,39 @@ public class JobStatus   {
    */
   public enum StatusCodeEnum {
     UNKNOWN("STATUS_UNKNOWN"),
-    
+
     QUEUED("STATUS_QUEUED"),
-    
+
     ACTIVE("STATUS_ACTIVE"),
-    
+
     SUCCESSFUL("STATUS_SUCCESSFUL"),
-    
+
     ERROR("STATUS_ERROR"),
-    
+
     ABORTED("STATUS_ABORTED"),
-    
+
     WINDOW_CLOSED("STATUS_WINDOW_CLOSED"),
-    
+
     FETCH_ERROR("STATUS_FETCH_ERROR"),
-    
+
     NO_PUB_PERMISSION("STATUS_NO_PUB_PERMISSION"),
-    
+
     PLUGIN_ERROR("STATUS_PLUGIN_ERROR"),
-    
+
     REPO_ERR("STATUS_REPO_ERR"),
-    
+
     RUNNING_AT_CRASH("STATUS_RUNNING_AT_CRASH"),
-    
+
     EXTRACTOR_ERROR("STATUS_EXTRACTOR_ERROR"),
-    
+
     CRAWL_TEST_SUCCESSFUL("STATUS_CRAWL_TEST_SUCCESSFUL"),
-    
+
     CRAWL_TEST_FAIL("STATUS_CRAWL_TEST_FAIL"),
-    
+
     INELIGIBLE("STATUS_INELIGIBLE"),
-    
+
     INACTIVE_REQUEST("STATUS_INACTIVE_REQUEST"),
-    
+
     INTERRUPTED("STATUS_INTERRUPTED");
 
     private String value;
@@ -151,7 +152,7 @@ public class JobStatus   {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class JobStatus {\n");
-    
+
     sb.append("    statusCode: ").append(toIndentedString(statusCode)).append("\n");
     sb.append("    msg: ").append(toIndentedString(msg)).append("\n");
     sb.append("}");

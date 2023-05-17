@@ -53,7 +53,7 @@ public class CrawlDesc   {
   /**
    * The identifier of the LOCKSS crawler.
    */
-  public static final String LOCKSS_CRAWLER_ID = "lockss";
+  public static final String CLASSIC_CRAWLER_ID = "classic";
 
   // The identifier of the archival unit to be crawled.
   @JsonProperty("auId")
@@ -94,7 +94,7 @@ public class CrawlDesc   {
   private CrawlKindEnum crawlKind = null;
 
   @JsonProperty("crawlerId")
-  private String crawlerId = "lockss";
+  private String crawlerId = "classic";
 
   @JsonProperty("forceCrawl")
   private Boolean forceCrawl = false;
