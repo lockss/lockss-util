@@ -155,4 +155,22 @@ public class RestCrawlerClient extends RestBaseClient<RestCrawlerClient> {
       throw new LockssRestException(e);
     }
   }
+  /**
+   * Provides a new set of HTTP headers including the Authorization header, if
+   * necessary.
+   *
+   * @return an HttpHeaders with the HTTP headers.
+   */
+  private HttpHeaders getInitializedHttpHeaders() {
+    HttpHeaders result = new HttpHeaders();
+
+    // Check whether the Authorization header needs to be included.
+    if (authHeaderValue != null) {
+      // Yes.
+      result.add("Authorization", authHeaderValue);
+    }
+
+    return result;
+  }
+
 }
