@@ -101,8 +101,8 @@ public class TestSemaphoreMap extends LockssTestCase5 {
     @Override
     public void run() {
       try {
-        try {
-          try (SemaphoreLock lock = locks.getLock(TEST_KEY)) {
+        try (SemaphoreLock lock = locks.getLock(TEST_KEY)) {
+          try {
             queue.offer(counter++);
             Thread.sleep(50);
           } finally {
