@@ -87,10 +87,9 @@ public class ApiStatus {
   private String reason = null;
 
   /**
-   * An indication of whether this service has made the loadable plugin
-   * registries ready to load
+   * An indication of the plugin loading/AU starting progress
    */
-  private Boolean pluginsReady = Boolean.FALSE;
+  private StartupStatus startStatus = StartupStatus.NONE;
 
   /**
    * No-argument constructor.
@@ -326,8 +325,8 @@ public class ApiStatus {
    * @return a Boolean with the indication of whether this service has made
    * the loadable plugin registries ready to load
    */
-  public boolean getPluginsReady() {
-    return pluginsReady;
+  public StartupStatus getStartupStatus() {
+    return startStatus;
   }
 
   /**
@@ -338,8 +337,8 @@ public class ApiStatus {
    *          plugin registries are ready to load
    * @return an ApiStatus with this object.
    */
-  public ApiStatus setPluginsReady(Boolean ready) {
-    this.pluginsReady = ready;
+  public ApiStatus setStartupStatus(StartupStatus startStatus) {
+    this.startStatus = startStatus;
     return this;
   }
 
@@ -376,6 +375,52 @@ public class ApiStatus {
    */
   public String toJson() throws JsonProcessingException {
     return new ObjectMapper().writeValueAsString(this);
+  }
+
+  public enum StartupStatus {
+    NONE,
+    PLUGINS_CRAWLING,
+    PLUGINS_COLLECTED,
+    PLUGINS_LOADING,
+    PLUGINS_LOADED,
+    AUS_STARTING,
+    AUS_STARTED;
+
+    public boolean arePluginsCollected() {
+      switch (this) {
+      case NONE:
+      case PLUGINS_CRAWLING:
+        return false;
+      default:
+        return true;
+      }
+    }
+
+    public boolean arePluginsStarted() {
+      switch (this) {
+      case NONE:
+      case PLUGINS_CRAWLING:
+      case PLUGINS_COLLECTED:
+      case PLUGINS_LOADING:
+        return false;
+      default:
+        return true;
+      }
+    }
+
+    public boolean areAusStarted() {
+      switch (this) {
+      case NONE:
+      case PLUGINS_CRAWLING:
+      case PLUGINS_COLLECTED:
+      case PLUGINS_LOADING:
+      case PLUGINS_LOADED:
+      case AUS_STARTING:
+        return false;
+      default:
+        return true;
+      }
+    }
   }
 
   /**
