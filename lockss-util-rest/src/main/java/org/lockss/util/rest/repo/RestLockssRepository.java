@@ -53,6 +53,7 @@ import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.rest.exception.LockssRestHttpException;
 import org.lockss.util.rest.multipart.MultipartMessage;
 import org.lockss.util.rest.multipart.MultipartMessageHttpMessageConverter;
+import org.lockss.util.storage.StorageInfo;
 import org.lockss.util.time.Deadline;
 import org.lockss.util.time.TimeUtil;
 import org.lockss.util.time.TimerUtil;
@@ -1157,6 +1158,36 @@ public class RestLockssRepository implements LockssRepository {
 
       RepositoryInfo result = new ObjectMapper().readValue(response.getBody(),
           RepositoryInfo.class);
+      log.debug2("result = {}", result);
+      return result;
+    } catch (LockssRestException e) {
+      log.error("Could not fetch repository information", e);
+      throw e;
+    }
+  }
+
+  @Override
+  public StorageInfo getStorageInfo() throws IOException {
+    log.debug2("Invoked");
+    String endpoint = String.format("%s/repoinfo/storage", repositoryUrl);
+    log.trace("endpoint = {}", endpoint);
+
+    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint);
+
+    try {
+      ResponseEntity<String> response =
+          RestUtil.callRestService(restTemplate,
+              builder.build().encode().toUri(),
+              HttpMethod.GET,
+              new HttpEntity<>(null,
+                  getInitializedHttpHeaders()),
+              String.class,
+              "repoInfo");
+
+      checkStatusOk(response);
+
+      StorageInfo result = new ObjectMapper().readValue(response.getBody(),
+          StorageInfo.class);
       log.debug2("result = {}", result);
       return result;
     } catch (LockssRestException e) {

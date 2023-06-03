@@ -34,6 +34,7 @@ import org.lockss.log.L4JLogger;
 import org.lockss.util.rest.repo.model.*;
 import org.lockss.util.rest.repo.util.ImportStatusIterable;
 import org.lockss.util.lang.Ready;
+import org.lockss.util.storage.StorageInfo;
 import org.lockss.util.time.Deadline;
 import org.springframework.http.HttpHeaders;
 
@@ -407,6 +408,8 @@ public interface LockssRepository extends Ready {
    * @throws IOException
    */
   RepositoryInfo getRepositoryInfo() throws IOException;
+
+  StorageInfo getStorageInfo() throws IOException;
 
   long DEFAULT_WAITREADY = 5000;
 
