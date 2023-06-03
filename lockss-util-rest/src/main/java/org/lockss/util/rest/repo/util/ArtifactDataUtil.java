@@ -371,10 +371,18 @@ public class ArtifactDataUtil {
       // Attempt to parse and set the Content-Type of the part using MediaType. If the Content-Type is not
       // specified (null) then omit the header. If an error occurs due to an malformed Content-Type, set
       // the X-Lockss-Content-Type to the malformed value and omit the Content-Type header.
+
+      // If artifact Content-Type specifed...
+      //     set Content-Type and X-Lockss-Content-Type to same value
+      // .. else ..
+      //     set Content-Type to application/octet (or leave null)
+
       try {
         MediaType type = artifactHeaders.getContentType();
+        partHeaders.setContentType(type);
         if (type != null) {
-          partHeaders.setContentType(type);
+          partHeaders.set(ArtifactConstants.X_LOCKSS_CONTENT_TYPE,
+              artifactHeaders.getFirst(HttpHeaders.CONTENT_TYPE));
         }
       } catch (InvalidMediaTypeException e) {
         partHeaders.set(ArtifactConstants.X_LOCKSS_CONTENT_TYPE,
@@ -671,9 +679,9 @@ public class ArtifactDataUtil {
           String contentType = partHeaders.getFirst(ArtifactConstants.X_LOCKSS_CONTENT_TYPE);
 
           // Fallback
-          if (StringUtils.isEmpty(contentType)) {
-            contentType = partHeaders.getFirst(HttpHeaders.CONTENT_TYPE);
-          }
+//          if (StringUtils.isEmpty(contentType)) {
+//            contentType = partHeaders.getFirst(HttpHeaders.CONTENT_TYPE);
+//          }
 
           if (!StringUtils.isEmpty(contentType)) {
             result.getHttpHeaders().set(HttpHeaders.CONTENT_TYPE, contentType);

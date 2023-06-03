@@ -30,6 +30,7 @@
 
 package org.lockss.util.rest.repo;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,6 +60,10 @@ import org.lockss.util.time.TimerUtil;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.ResourceHttpMessageConverter;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.support.AllEncompassingFormHttpMessageConverter;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -144,14 +149,33 @@ public class RestLockssRepository implements LockssRepository {
 
     log.trace("authHeaderValue = {}", authHeaderValue);
 
-    // Install our custom ResponseErrorHandler in the RestTemplate used by this RestLockssRepository
-    restTemplate.setErrorHandler(new LockssResponseErrorHandler(restTemplate.getMessageConverters()));
 
     File tmpDir = FileUtil.createTempDir("repo-client", null);
 
+
+//    Jackson2ObjectMapperBuilder objMapperBuilder = Jackson2ObjectMapperBuilder.json();
+//    objMapperBuilder.featuresToDisable(JsonGenerator.Feature.AUTO_CLOSE_TARGET);
+//    ObjectMapper objMapper = objMapperBuilder.build();
+//
+//    MappingJackson2HttpMessageConverter partConverter =
+//        new MappingJackson2HttpMessageConverter(objMapper);
+//
+//    ResourceHttpMessageConverter resourceConverter =
+//        new ResourceHttpMessageConverter();
+//
+//    AllEncompassingFormHttpMessageConverter formConverter = new AllEncompassingFormHttpMessageConverter();
+//    formConverter.setPartConverters(List.of(partConverter, resourceConverter));
+
     // Add the multipart/form-data converter to the RestTemplate
-    List<HttpMessageConverter<?>> messageConverters = restTemplate.getMessageConverters();
+    List<HttpMessageConverter<?>> messageConverters = new ArrayList<>();
     messageConverters.add(new MultipartMessageHttpMessageConverter(tmpDir));
+//    messageConverters.add(formConverter);
+    messageConverters.addAll(restTemplate.getMessageConverters());
+
+    restTemplate.setMessageConverters(messageConverters);
+
+    // Install our custom ResponseErrorHandler in the RestTemplate used by this RestLockssRepository
+    restTemplate.setErrorHandler(new LockssResponseErrorHandler(messageConverters));
   }
 
 
@@ -481,7 +505,7 @@ public class RestLockssRepository implements LockssRepository {
               HttpMethod.PUT,
               new HttpEntity<>(null, headers),
               String.class,
-              "commitArtifact");
+              "commitArtifact client error");
       checkStatusOk(response);
 
       ObjectMapper mapper = new ObjectMapper();

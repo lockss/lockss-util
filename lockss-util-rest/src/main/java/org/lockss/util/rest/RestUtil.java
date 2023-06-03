@@ -30,6 +30,7 @@ package org.lockss.util.rest;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.net.URI;
+import java.time.Duration;
 import java.util.Map;
 import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.rest.exception.LockssRestHttpException;
@@ -38,6 +39,7 @@ import org.lockss.util.lang.*;
 import org.lockss.util.time.*;
 import org.lockss.log.L4JLogger;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -255,7 +257,8 @@ public class RestUtil {
 
       // Report the problem back to the caller.
       LockssRestNetworkException lrne =
-          new LockssRestNetworkException(clientExceptionMessage + ": " + ExceptionUtils.getRootCauseMessage(cause), cause);
+          new LockssRestNetworkException("Client exception: " +
+              clientExceptionMessage + ": " + ExceptionUtils.getRootCauseMessage(cause), cause);
 
       log.trace("lrne = {}", lrne);
 
@@ -272,6 +275,26 @@ public class RestUtil {
    */
   public static RestTemplate getRestTemplate() {
     return getRestTemplate(0, 0);
+  }
+
+  public static RestTemplateBuilder getRestTemplateBuilder(long connectTimeout,
+                                                           long readTimeout) {
+    log.debug2("connectTimeout = {}", connectTimeout);
+    log.debug2("readTimeout = {}", readTimeout);
+
+    if (connectTimeout > 0 && connectTimeout < 1000) {
+      log.warn("connectTimeout < 1 sec: {}", connectTimeout);
+    }
+
+    if (readTimeout > 0 && readTimeout < 1000) {
+      log.warn("readTimeout < 1 sec: {}", readTimeout);
+    }
+
+    return new RestTemplateBuilder()
+        .setConnectTimeout(Duration.ofMillis(connectTimeout))
+        .setReadTimeout(Duration.ofMillis(readTimeout))
+        .setBufferRequestBody(false)
+        .errorHandler(new LockssResponseErrorHandler(new RestTemplate().getMessageConverters()));
   }
 
   /**
@@ -304,7 +327,6 @@ public class RestUtil {
     // Specify the timeouts.
     requestFactory.setConnectTimeout((int)connectTimeout);
     requestFactory.setReadTimeout((int)readTimeout);
-    requestFactory.setBufferRequestBody(false);
 
     // Do not buffer the request body internally, to avoid running out of
     // memory, or other failures, when sending large amounts of data.
