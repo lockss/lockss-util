@@ -33,6 +33,7 @@ package org.lockss.util.rest.repo.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
 import org.lockss.log.L4JLogger;
+import org.lockss.util.StringPool;
 
 import java.io.Serializable;
 import java.util.regex.Matcher;
@@ -114,13 +115,13 @@ public class Artifact implements Serializable {
           throw new IllegalArgumentException(
               "Cannot create Artifact with null or empty namespace");
         }
-        this.namespace = namespace;
+        setNamespace(namespace);
 
         if (StringUtils.isEmpty(auid)) {
           throw new IllegalArgumentException(
               "Cannot create Artifact with null or empty auid");
         }
-        this.auid = auid;
+        setAuid(auid);
 
         if (StringUtils.isEmpty(uri)) {
           throw new IllegalArgumentException(
@@ -132,7 +133,7 @@ public class Artifact implements Serializable {
           throw new IllegalArgumentException(
               "Cannot create Artifact with null version");
         }
-        this.version = version;
+        setVersion(version);
 
         if (committed == null) {
           throw new IllegalArgumentException(
@@ -164,7 +165,8 @@ public class Artifact implements Serializable {
           throw new IllegalArgumentException(
               "Cannot set null or empty namespace");
         }
-        this.namespace = namespace;
+        this.namespace = namespace == null ? null
+          : StringPool.MISCELLANEOUS.intern(namespace);
     }
 
     public String getAuid() {
@@ -175,7 +177,7 @@ public class Artifact implements Serializable {
         if (StringUtils.isEmpty(auid)) {
           throw new IllegalArgumentException("Cannot set null or empty auid");
         }
-        this.auid = auid;
+        this.auid = auid == null ? null : StringPool.AUIDS.intern(auid);
     }
 
     public String getUri() {
@@ -217,7 +219,7 @@ public class Artifact implements Serializable {
             throw new IllegalArgumentException("Cannot set null version");
         }
 
-        this.version = version;
+        this.version = Integer.valueOf(version);
     }
 
   public void setUuid(String uuid) {
