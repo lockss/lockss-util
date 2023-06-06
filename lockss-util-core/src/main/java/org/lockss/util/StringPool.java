@@ -31,7 +31,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.regex.*;
-//import org.lockss.plugin.definable.*;
+import org.lockss.log.*;
 
 /**
  * Named intern() pools for Strings.  Similer to String.intern(), but use
