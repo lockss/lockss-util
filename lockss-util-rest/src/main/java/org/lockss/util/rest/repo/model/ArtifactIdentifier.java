@@ -36,7 +36,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import java.io.Serializable;
 import java.util.Objects;
 
-import org.lockss.util.PreOrderComparator;
+import org.lockss.util.*;
 
 /**
  * Class that serves as an identifier for artifacts.
@@ -59,10 +59,10 @@ public class ArtifactIdentifier implements Serializable, Comparable<ArtifactIden
 
     public ArtifactIdentifier(String uuid, String namespace, String auid, String uri, Integer version) {
         this.uuid = uuid;
-        this.namespace = namespace;
-        this.auid = auid;
+        setNamespace(namespace);
+        setAuid(auid);
         this.uri = uri;
-        this.version = version;
+        this.version = version == null ? null : Integer.valueOf(version);
     }
 
     /**
@@ -75,11 +75,12 @@ public class ArtifactIdentifier implements Serializable, Comparable<ArtifactIden
     }
 
     public void setNamespace(String namespace) {
-        this.namespace = namespace;
+      this.namespace = namespace == null ? null
+        : StringPool.MISCELLANEOUS.intern(namespace);
     }
 
     public void setAuid(String auid) {
-        this.auid = auid;
+        this.auid = auid == null ? null :StringPool.AUIDS.intern(auid);
     }
 
     public void setUri(String uri) {
