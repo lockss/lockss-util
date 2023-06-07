@@ -31,7 +31,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.regex.*;
-//import org.lockss.plugin.definable.*;
+import org.lockss.log.*;
 
 /**
  * Named intern() pools for Strings.  Similer to String.intern(), but use
@@ -152,6 +152,10 @@ public class StringPool {
 
   /** Pool for Miscellaneous values. */
   public static StringPool MISCELLANEOUS = new StringPool("Misc");
+
+  /** Pool for Crawl Rule regexps. */
+  public static StringPool CRAWL_RULE_PATTERNS = new StringPool("Crawl rules");
+
 
   private static Map<String,StringPool> pools;
 
