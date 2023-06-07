@@ -153,6 +153,10 @@ public class StringPool {
   /** Pool for Miscellaneous values. */
   public static StringPool MISCELLANEOUS = new StringPool("Misc");
 
+  /** Pool for Crawl Rule regexps. */
+  public static StringPool CRAWL_RULE_PATTERNS = new StringPool("Crawl rules");
+
+
   private static Map<String,StringPool> pools;
 
   // These may be set before the pool exists
