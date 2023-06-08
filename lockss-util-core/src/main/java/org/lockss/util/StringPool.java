@@ -39,6 +39,7 @@ import org.lockss.log.*;
  * waste.
  */
 public class StringPool {
+//   static L4JLogger log = L4JLogger.getLogger();
 
   public static Set SPECIAL_STRINGS = SetUtil.set("true", "TRUE", "True",
                                                   "false", "FALSE", "False",
@@ -128,8 +129,7 @@ public class StringPool {
                               "volume",
                               "volume_name",
                               "rights",
-                              "au_config_user_msg",
-                              "hint_applicaton/pdf_filter_factory"));
+                              "au_config_user_msg"));
 
   /** Pool for URL stems. */
   public static StringPool URL_STEMS = new StringPool("URL stems");
