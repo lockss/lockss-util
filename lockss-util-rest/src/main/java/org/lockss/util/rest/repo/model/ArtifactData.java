@@ -34,6 +34,7 @@ package org.lockss.util.rest.repo.model;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.CountingInputStream;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.http.StatusLine;
 import org.lockss.log.L4JLogger;
 import org.lockss.util.CloseCallbackInputStream;
@@ -472,7 +473,7 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
 
   private void updateStats() {
     if (hadAnInputStream) {
-      if (origInputStream == null) {
+      if (inputStreamUsed) {
 	stats.inputUsed++;
       } else {
 	stats.inputUnused++;
@@ -490,7 +491,7 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
 
   @Override
   public void close() throws IOException {
-    if (hasContentInputStream()) {
+    if (origInputStream != null) {
       origInputStream.close();
       origInputStream = null;
     }
@@ -535,5 +536,17 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
     public long getUnreleased() {
       return unreleased;
     }
+
+    @Override
+    public String toString() {
+      return new ToStringBuilder(this)
+        .append("totalAllocated", totalAllocated)
+        .append("withContent", withContent)
+        .append("inputUsed", inputUsed)
+        .append("inputUnused", inputUnused)
+        .append("unreleased", unreleased)
+        .toString();
+    }
   }
 }
+
