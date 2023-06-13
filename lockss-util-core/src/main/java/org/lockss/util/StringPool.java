@@ -129,7 +129,9 @@ public class StringPool {
                               "volume",
                               "volume_name",
                               "rights",
-                              "au_config_user_msg"));
+                              "au_config_user_msg",
+                              "start_stem"
+                              ));
 
   /** Pool for URL stems. */
   public static StringPool URL_STEMS = new StringPool("URL stems");
