@@ -41,7 +41,7 @@ public class TestArtifact extends LockssTestCase5 {
   private final static L4JLogger log = L4JLogger.getLogger();
 
   private final static String NS1 = "ns1";
-  private final static String AUID1 = "ns1";
+  private final static String AUID1 = "auid1";
 
     @Test
     public void testConstructor() {
