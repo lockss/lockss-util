@@ -151,10 +151,8 @@ public class RestLockssRepository implements LockssRepository {
     File tmpDir = FileUtil.createTempDir("repo-client", null);
 
     // Add the multipart/form-data converter to the RestTemplate
-    List<HttpMessageConverter<?>> messageConverters = restTemplate.getMessageConverters();
-    messageConverters.add(new MultipartMessageHttpMessageConverter(tmpDir));
+    RestUtil.addMultipartConverter(restTemplate, tmpDir);
   }
-
 
   /**
    * Constructs a REST endpoint to an artifact in the repository.

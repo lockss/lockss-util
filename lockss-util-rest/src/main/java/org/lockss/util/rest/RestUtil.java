@@ -27,10 +27,12 @@
  */
 package org.lockss.util.rest;
 
+import java.io.File;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.net.URI;
-import java.util.Map;
+import java.util.*;
+import org.lockss.util.rest.multipart.*;
 import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.rest.exception.LockssRestHttpException;
 import org.lockss.util.rest.exception.LockssRestNetworkException;
@@ -43,6 +45,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.converter.*;
 import org.springframework.web.client.*;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -304,7 +307,6 @@ public class RestUtil {
     // Specify the timeouts.
     requestFactory.setConnectTimeout((int)connectTimeout);
     requestFactory.setReadTimeout((int)readTimeout);
-    requestFactory.setBufferRequestBody(false);
 
     // Do not buffer the request body internally, to avoid running out of
     // memory, or other failures, when sending large amounts of data.
@@ -317,6 +319,52 @@ public class RestUtil {
     restTemplate.setErrorHandler(new LockssResponseErrorHandler(restTemplate.getMessageConverters()));
 
     log.debug2("restTemplate = {}", restTemplate);
+    return restTemplate;
+  }
+
+  /**
+   * Add a MultipartMessageHttpMessageConverter to the RestTemplate.
+   * Temp files will be stored in the System temp dir
+   * @param restTemplate The RestTemplate to which to add the converter
+   */
+  public static RestTemplate addMultipartConverter(RestTemplate restTemplate) {
+    return addMultipartConverter(restTemplate, null);
+  }
+
+  /**
+   * Add a MultipartMessageHttpMessageConverter to the RestTemplate.
+   * Temp files will be stored in the specified dir, else  the System
+   * temp dir if null
+   * @param restTemplate The RestTemplate to which to add the converter
+   * @param tmpDir The directory into which to store temp files.  If
+   * null the System temp dir will be used
+   */
+  public static RestTemplate addMultipartConverter(RestTemplate restTemplate,
+                                                   File tmpDir) {
+    // Get the current message converters.
+    List<HttpMessageConverter<?>> messageConverters =
+      restTemplate.getMessageConverters();
+    log.trace("messageConverters = {}", messageConverters);
+
+    // Add the multipart/form-data converter.
+    messageConverters.add(new MultipartMessageHttpMessageConverter(tmpDir));
+    log.trace("messageConverters = {}", messageConverters);
+    return restTemplate;
+  }
+
+  /**
+   * Add a FormCnoverter to the RestTemplate.
+   * @param restTemplate The RestTemplate to which to add the converter
+   */
+  public static RestTemplate addFormConverter(RestTemplate restTemplate) {
+    // Get the current message converters.
+    List<HttpMessageConverter<?>> messageConverters =
+      restTemplate.getMessageConverters();
+    log.trace("messageConverters = {}", messageConverters);
+
+    // Add the form-data converter.
+    messageConverters.add(new FormHttpMessageConverter());
+    log.trace("messageConverters = {}", messageConverters);
     return restTemplate;
   }
 
