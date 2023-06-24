@@ -153,32 +153,9 @@ public class RestLockssRepository implements LockssRepository {
 
     File tmpDir = FileUtil.createTempDir("repo-client", null);
 
-
-//    Jackson2ObjectMapperBuilder objMapperBuilder = Jackson2ObjectMapperBuilder.json();
-//    objMapperBuilder.featuresToDisable(JsonGenerator.Feature.AUTO_CLOSE_TARGET);
-//    ObjectMapper objMapper = objMapperBuilder.build();
-//
-//    MappingJackson2HttpMessageConverter partConverter =
-//        new MappingJackson2HttpMessageConverter(objMapper);
-//
-//    ResourceHttpMessageConverter resourceConverter =
-//        new ResourceHttpMessageConverter();
-//
-//    AllEncompassingFormHttpMessageConverter formConverter = new AllEncompassingFormHttpMessageConverter();
-//    formConverter.setPartConverters(List.of(partConverter, resourceConverter));
-
     // Add the multipart/form-data converter to the RestTemplate
-    List<HttpMessageConverter<?>> messageConverters = new ArrayList<>();
-    messageConverters.add(new MultipartMessageHttpMessageConverter(tmpDir));
-//    messageConverters.add(formConverter);
-    messageConverters.addAll(restTemplate.getMessageConverters());
-
-    restTemplate.setMessageConverters(messageConverters);
-
-    // Install our custom ResponseErrorHandler in the RestTemplate used by this RestLockssRepository
-    restTemplate.setErrorHandler(new LockssResponseErrorHandler(messageConverters));
+    RestUtil.addMultipartConverter(restTemplate, tmpDir);
   }
-
 
   /**
    * Constructs a REST endpoint to an artifact in the repository.
