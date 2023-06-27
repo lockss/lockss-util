@@ -187,6 +187,16 @@ public class TestFileUtil extends LockssTestCase5 {
 
   }
 
+  @Test
+  public void testGetUniqueFileName() throws IOException {
+    File parentDir = FileUtil.createTempDir("testUnique", "");
+    File uniq = FileUtil.getUniqueFileName(parentDir, "uniq");
+    assertNotNull(uniq);
+    assertFalse(uniq.exists());
+    uniq.mkdirs();
+    assertTrue(uniq.exists());
+  }
+
   void writeFile(File dir, String relPath) throws IOException {
     File file = new File(dir, relPath);
     File parent = new File(file.getParent());
