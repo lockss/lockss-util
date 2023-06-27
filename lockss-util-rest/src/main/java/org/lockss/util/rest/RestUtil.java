@@ -27,29 +27,35 @@
  */
 package org.lockss.util.rest;
 
-import java.io.File;
-import java.net.ConnectException;
-import java.net.UnknownHostException;
-import java.net.URI;
-import java.util.*;
-import org.lockss.util.rest.multipart.*;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.lockss.log.L4JLogger;
+import org.lockss.util.lang.ExceptionUtil;
 import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.rest.exception.LockssRestHttpException;
 import org.lockss.util.rest.exception.LockssRestNetworkException;
-import org.lockss.util.lang.*;
-import org.lockss.util.time.*;
-import org.lockss.log.L4JLogger;
-import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.lockss.util.rest.multipart.MultipartMessageHttpMessageConverter;
+import org.lockss.util.time.TimerUtil;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.http.converter.*;
-import org.springframework.web.client.*;
+import org.springframework.http.converter.FormHttpMessageConverter;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.io.File;
+import java.net.ConnectException;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Utility methods used for invoking REST services.

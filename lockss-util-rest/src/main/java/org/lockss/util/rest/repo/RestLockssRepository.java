@@ -30,7 +30,6 @@
 
 package org.lockss.util.rest.repo;
 
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,8 +37,6 @@ import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.lockss.log.L4JLogger;
-import org.lockss.util.rest.repo.model.*;
-import org.lockss.util.rest.repo.util.*;
 import org.lockss.util.ListUtil;
 import org.lockss.util.LockssUncheckedIOException;
 import org.lockss.util.auth.AuthUtil;
@@ -53,18 +50,17 @@ import org.lockss.util.rest.RestUtil;
 import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.rest.exception.LockssRestHttpException;
 import org.lockss.util.rest.multipart.MultipartMessage;
-import org.lockss.util.rest.multipart.MultipartMessageHttpMessageConverter;
+import org.lockss.util.rest.repo.model.*;
+import org.lockss.util.rest.repo.util.ArtifactCache;
+import org.lockss.util.rest.repo.util.ArtifactDataUtil;
+import org.lockss.util.rest.repo.util.ImportStatusIterable;
+import org.lockss.util.rest.repo.util.NamedInputStreamResource;
 import org.lockss.util.storage.StorageInfo;
 import org.lockss.util.time.Deadline;
 import org.lockss.util.time.TimeUtil;
 import org.lockss.util.time.TimerUtil;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.ResourceHttpMessageConverter;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.http.converter.support.AllEncompassingFormHttpMessageConverter;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -150,6 +146,8 @@ public class RestLockssRepository implements LockssRepository {
 
     log.trace("authHeaderValue = {}", authHeaderValue);
 
+    // Install our custom ResponseErrorHandler in the RestTemplate used by this RestLockssRepository
+    restTemplate.setErrorHandler(new LockssResponseErrorHandler(restTemplate.getMessageConverters()));
 
     File tmpDir = FileUtil.createTempDir("repo-client", null);
 
