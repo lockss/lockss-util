@@ -59,4 +59,6 @@ public class ArtifactConstants {
 
     public static final String X_LOCKSS_CONTENT_TYPE = "X-Lockss-Content-Type";
     public static final String X_LOCKSS_REPOSITORY_VER = "X-LockssRepo-Version";
+    public static final String ARTIFACT_DATA_TYPE = "X-LockssRepo-ArtifactDataType";
+    public static final String INCLUDES_CONTENT = "X-LockssRepo-IncludesContent";
 }
