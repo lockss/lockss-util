@@ -474,8 +474,7 @@ public class ArtifactSpec implements Comparable<Object> {
         isCommitted(),
         getStorageUrl() == null ? null : getStorageUrl().toString(),
         getContentLength(),
-        getContentDigest()
-    );
+        getContentDigest());
 
     artifact.setCollectionDate(getCollectionDate());
 

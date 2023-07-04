@@ -41,7 +41,7 @@ import org.lockss.util.rest.repo.util.*;
 import org.lockss.util.test.LockssTestCase5;
 
 /**
- * Test class for {@code org.lockss.laaws.rs.model.ArtifactData}
+ * Test class for {@link ArtifactData}.
  */
 public class TestArtifactData extends LockssTestCase5 {
   private final static L4JLogger log = L4JLogger.getLogger();

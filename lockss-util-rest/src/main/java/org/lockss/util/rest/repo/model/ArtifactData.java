@@ -208,7 +208,7 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
    */
   public synchronized InputStream getInputStream() {
     // Comment in to log creation point of unused InputStreams
-// 	openTrace = stackTraceString(new Exception("Open"));
+    // openTrace = stackTraceString(new Exception("Open"));
 
     try {
       // Wrap the stream in a DigestInputStream
@@ -240,12 +240,8 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
           this);
       inputStreamUsed = true;
     } catch (NoSuchAlgorithmException e) {
-      String errMsg = String.format(
-          "Unknown digest algorithm: %s; could not instantiate a MessageDigest", DEFAULT_DIGEST_ALGORITHM
-      );
-
-      log.error(errMsg);
-      throw new RuntimeException(errMsg);
+      // Digest algorithm is not parameterized so this should never happen
+      throw new RuntimeException("Unknown digest algorithm: " + DEFAULT_DIGEST_ALGORITHM);
     }
     InputStream res = artifactStream;
     artifactStream = null;

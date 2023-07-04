@@ -370,7 +370,7 @@ public class RestLockssRepository implements LockssRepository {
    *                             repository.
    * @param includeContent A {@link IncludeContent} indicating whether the artifact content should be included in the
    *                       {@link ArtifactData} returned by this method.
-   * @return The {@code ArtifactData} referenced by the artifact ID.
+   * @return The {@link ArtifactData} of the {@link Artifact}.
    * @throws IOException
    */
   @Override

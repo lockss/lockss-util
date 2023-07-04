@@ -190,8 +190,7 @@ public class ArtifactDataUtil {
         // Return the concatenation of the header and content streams
         return new SequenceInputStream(
             new ByteArrayInputStream(getHttpResponseHeader(response)),
-            response.getEntity().getContent()
-        );
+            response.getEntity().getContent());
     }
 
     private static HttpResponse getHttpResponseHeadersFromArtifactData(ArtifactData artifactData) {
@@ -200,8 +199,6 @@ public class ArtifactDataUtil {
 
         // Add artifact headers into HTTP response
         if (artifactData.getHttpHeaders() != null) {
-
-            // Compile a list of headers
             artifactData.getHttpHeaders().forEach((headerName, headerValues) ->
                 headerValues.forEach((headerValue) ->
                     response.addHeader(headerName, headerValue)
