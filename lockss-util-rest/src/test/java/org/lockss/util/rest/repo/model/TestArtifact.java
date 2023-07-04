@@ -154,25 +154,6 @@ public class TestArtifact extends LockssTestCase5 {
         assertEquals(expectedMessage, iae.getMessage());
       }
 
-      expectedMessage =
-	  "Cannot create Artifact with null or empty storageUrl";
-
-      try {
-	new Artifact("aidid", NS1, AUID1, "uri", 0, Boolean.FALSE, null, 0, null);
-        fail("Should have thrown IllegalArgumentException(" + expectedMessage
-  	  + ")");
-      } catch (IllegalArgumentException iae) {
-        assertEquals(expectedMessage, iae.getMessage());
-      }
-
-      try {
-	new Artifact("aidid", NS1, AUID1, "uri", 0, Boolean.FALSE, "", 0, null);
-        fail("Should have thrown IllegalArgumentException(" + expectedMessage
-  	  + ")");
-      } catch (IllegalArgumentException iae) {
-        assertEquals(expectedMessage, iae.getMessage());
-      }
-
       Artifact aidata = new Artifact("aidid", NS1, AUID1, "uri", 0, Boolean.TRUE, "surl", 0, null);
       assertEquals("aidid", aidata.getUuid());
       assertEquals(NS1, aidata.getNamespace());

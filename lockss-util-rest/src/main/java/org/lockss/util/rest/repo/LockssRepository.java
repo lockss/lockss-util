@@ -31,12 +31,11 @@
 package org.lockss.util.rest.repo;
 
 import org.lockss.log.L4JLogger;
+import org.lockss.util.lang.Ready;
 import org.lockss.util.rest.repo.model.*;
 import org.lockss.util.rest.repo.util.ImportStatusIterable;
-import org.lockss.util.lang.Ready;
 import org.lockss.util.storage.StorageInfo;
 import org.lockss.util.time.Deadline;
-import org.springframework.http.HttpHeaders;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -105,7 +104,7 @@ public interface LockssRepository extends Ready {
    * @throws IOException
    */
   default ArtifactData getArtifactData(Artifact artifact) throws IOException {
-    return getArtifactData(artifact.getNamespace(), artifact.getUuid());
+    return getArtifactData(artifact, IncludeContent.ALWAYS);
   }
 
   /**
@@ -119,56 +118,7 @@ public interface LockssRepository extends Ready {
    * @return The {@code ArtifactData} referenced by this artifact.
    * @throws IOException
    */
-  default ArtifactData getArtifactData(Artifact artifact,
-                                       IncludeContent includeContent)
-      throws IOException {
-    return getArtifactData(artifact.getNamespace(), artifact.getUuid(),
-        includeContent);
-  }
-
-  /**
-   * Retrieves an artifact from this LOCKSS repository.
-   * <br>(See Reusability and release note in {@link
-   * ArtifactData})
-   *
-   * @param namespace         The namespace of the artifact.
-   * @param artifactUuid         A {@code String} with the artifact ID of the artifact to retrieve from this repository.
-   * @param includeContent A {@link IncludeContent} indicating whether the artifact content should be included in the
-   *                       {@link ArtifactData} returned by this method.
-   * @return The {@code ArtifactData} referenced by this artifact ID.
-   * @throws IOException
-   */
-  default ArtifactData getArtifactData(String namespace,
-                                       String artifactUuid,
-                                       IncludeContent includeContent)
-      throws IOException {
-    return getArtifactData(namespace, artifactUuid);
-  }
-
-  /**
-   * Retrieves an artifact from this LOCKSS repository.
-   * <br>(See Reusability and release note in {@link
-   * ArtifactData})
-   *
-   * @param namespace The namespace of the artifact.
-   * @param artifactUuid A {@code String} with the artifact ID of the artifact to retrieve from this repository.
-   * @return The {@code ArtifactData} referenced by this artifact ID.
-   * @throws IOException
-   */
-  ArtifactData getArtifactData(String namespace,
-                               String artifactUuid)
-      throws IOException;
-
-  /**
-   * Returns the headers of an artifact.
-   *
-   * @param namespace The namespace of the artifact.
-   * @param artifactUuid A {@code String} with the artifact ID of the artifact to retrieve from this repository.
-   * @return A {@link HttpHeaders} containing the artifact's headers.
-   * @throws IOException
-   */
-  // Q: Use non-Spring HttpHeaders?
-  HttpHeaders getArtifactHeaders(String namespace, String artifactUuid) throws IOException;
+  ArtifactData getArtifactData(Artifact artifact, IncludeContent includeContent) throws IOException;
 
   /**
    * Commits an artifact to this LOCKSS repository for permanent storage and inclusion in LOCKSS repository queries.

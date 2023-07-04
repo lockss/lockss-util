@@ -37,8 +37,6 @@ import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.lockss.log.L4JLogger;
-import org.lockss.util.rest.repo.model.*;
-import org.lockss.util.rest.repo.util.*;
 import org.lockss.util.ListUtil;
 import org.lockss.util.LockssUncheckedIOException;
 import org.lockss.util.auth.AuthUtil;
@@ -52,14 +50,14 @@ import org.lockss.util.rest.RestUtil;
 import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.rest.exception.LockssRestHttpException;
 import org.lockss.util.rest.multipart.MultipartMessage;
-import org.lockss.util.rest.multipart.MultipartMessageHttpMessageConverter;
+import org.lockss.util.rest.repo.model.*;
+import org.lockss.util.rest.repo.util.*;
 import org.lockss.util.storage.StorageInfo;
 import org.lockss.util.time.Deadline;
 import org.lockss.util.time.TimeUtil;
 import org.lockss.util.time.TimerUtil;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
-import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -377,27 +375,11 @@ public class RestLockssRepository implements LockssRepository {
     throw new UnsupportedOperationException();
   }
 
-  /**
-   * Retrieves an artifact from a remote REST LOCKSS Repository server.
-   *
-   * @param namespace A {@code String} containing the namespace.
-   * @param artifactUuid A {@code String} containing the UUID of the artifact to retrieve from the remote
-   *                     repository.
-   * @return The {@code ArtifactData} referenced by the artifact ID.
-   * @throws IOException
-   */
-  @Override
-  public ArtifactData getArtifactData(String namespace, String artifactUuid)
-      throws IOException {
-    return getArtifactData(namespace, artifactUuid, IncludeContent.ALWAYS);
-  }
 
   /**
    * Retrieves an artifact from a remote REST LOCKSS Repository server.
    *
-   * @param namespace         A {@code String} containing the namespace.
-   * @param artifactUuid         A {@code String} containing the UUID of the artifact to retrieve from the remote
-   *                             repository.
+   * @param artifact The {@link Artifact} of the {@link ArtifactData} to return.
    * @param includeContent A {@link IncludeContent} indicating whether the artifact content should be included in the
    *                       {@link ArtifactData} returned by this method.
    * @return The {@link ArtifactData} of the {@link Artifact}.
@@ -553,25 +535,6 @@ public class RestLockssRepository implements LockssRepository {
       log.error("Could not get artifact data", e);
       throw e;
     }
-  }
-
-  @Override
-  public HttpHeaders getArtifactHeaders(String namespace, String artifactUuid) throws IOException {
-    if (StringUtils.isEmpty(artifactUuid)) {
-      throw new IllegalArgumentException("Null artifact UUID");
-    }
-
-    // Retrieve artifact from the artifact cache if cached
-    ArtifactData cached = artCache.getArtifactData(namespace, artifactUuid, false);
-
-    if (cached != null) {
-      // Artifact found in cache; return its headers
-      return cached.getHttpHeaders();
-    }
-
-    ArtifactData ad = getArtifactData(namespace, artifactUuid, IncludeContent.IF_SMALL);
-    // TODO: IOUtils.closeQuietly(ad.getInputStream());
-    return ad.getHttpHeaders();
   }
 
   /**

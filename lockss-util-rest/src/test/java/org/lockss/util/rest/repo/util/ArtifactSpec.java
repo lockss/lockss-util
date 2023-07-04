@@ -438,7 +438,7 @@ public class ArtifactSpec implements Comparable<Object> {
     return statLine != null;
   }
 
-  public ArtifactSpec setIsHttpResponse(boolean isHttpResponse) {
+  public ArtifactSpec setStatusLine(boolean isHttpResponse) {
     this.statLine = isHttpResponse ? STATUS_LINE_OK : null;
     return this;
   }
@@ -486,7 +486,7 @@ public class ArtifactSpec implements Comparable<Object> {
         getArtifactIdentifier(),
         getMetadata(),
         getInputStream(),
-        isHttpResponse() ? getStatusLine() : null,
+        getStatusLine(),
         getStorageUrl());
 
     if (this.hasContent()) {
@@ -495,6 +495,27 @@ public class ArtifactSpec implements Comparable<Object> {
     }
 
     ad.setCollectionDate(getCollectionDate());
+
+    return ad;
+  }
+
+  /**
+   * Generates an {@link ArtifactData} from this {@link ArtifactSpec}. The {@code wantParsed}
+   * boolean controls whether the {@link ArtifactData} is backed by an unparsed HTTP response
+   * stream.
+   * @param wantParsed
+   * @return
+   */
+  public ArtifactData getArtifactData(boolean wantParsed) throws IOException {
+    ArtifactData ad = getArtifactData();
+
+    if (!wantParsed) {
+      // Create a new (unparsed) ArtifactData from parsed
+      ad = new ArtifactData()
+          .setIdentifier(getArtifactIdentifier())
+          .setStorageUrl(getStorageUrl())
+          .setResponseInputStream(ArtifactDataUtil.getHttpResponseStreamFromArtifactData(ad));
+    }
 
     return ad;
   }
@@ -553,19 +574,14 @@ public class ArtifactSpec implements Comparable<Object> {
       assertArtifactCommon(art);
 
       // Test for getArtifactData(Artifact)
-      try (ArtifactData ad1 = repository.getArtifactData(art)) {
-        Assertions.assertEquals(art.getIdentifier(), ad1.getIdentifier());
-        Assertions.assertEquals(getContentLength(), ad1.getContentLength());
-        Assertions.assertEquals(getContentDigest(), ad1.getContentDigest());
-        assertArtifactData(ad1);
+      try (ArtifactData ad = repository.getArtifactData(art)) {
+        Assertions.assertEquals(art.getIdentifier(), ad.getIdentifier());
+        Assertions.assertEquals(getContentLength(), ad.getContentLength());
+        Assertions.assertEquals(getContentDigest(), ad.getContentDigest());
+        assertArtifactData(ad);
       }
 
-      // Test for getArtifactData(String, String)
-      try (ArtifactData ad2 = repository.getArtifactData(getNamespace(), art.getUuid())) {
-        Assertions.assertEquals(getContentLength(), ad2.getContentLength());
-        Assertions.assertEquals(getContentDigest(), ad2.getContentDigest());
-        assertArtifactData(ad2);
-      }
+      // TODO: Write test for repository.getArtifactData(Artifact, LockssRepository.IncludeContent);
     } catch (Exception e) {
       log.error("Caught exception asserting artifact spec: {}", this, e);
       log.error("art = {}", art);
@@ -603,7 +619,7 @@ public class ArtifactSpec implements Comparable<Object> {
   /**
    * Assert that the ArtifactData matches the ArtifactSpec
    */
-  public void assertArtifactData(ArtifactData ad) {
+  public void assertArtifactData(ArtifactData ad) throws IOException {
     Assertions.assertNotNull(ad, "Didn't find ArtifactData for: " + this);
 
     if (this.isHttpResponse() || ad.isHttpResponse()) {

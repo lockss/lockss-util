@@ -32,13 +32,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.lockss.util.rest.repo.model;
 
-import java.io.*;
-import java.util.*;
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 import org.lockss.log.L4JLogger;
-import org.lockss.util.*;
-import org.lockss.util.rest.repo.util.*;
+import org.lockss.util.MapUtil;
+import org.lockss.util.rest.repo.util.ArtifactSpec;
 import org.lockss.util.test.LockssTestCase5;
+
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 /**
  * Test class for {@link ArtifactData}.
@@ -114,5 +117,26 @@ public class TestArtifactData extends LockssTestCase5 {
     assertEquals(2, st.getInputUsed());
     assertEquals(1, st.getInputUnused());
     assertEquals(0, st.getUnreleased());
+  }
+
+  @Test
+  public void testResponseArtifact() throws Exception {
+    ArtifactSpec spec = new ArtifactSpec()
+        .setUrl("http://www.example.org/")
+        .setCollectionDate(0)
+        .generateContent();
+
+    ArtifactData ad = spec.getArtifactData(false);
+
+    assertTrue(ad.hasContentInputStream());
+//    assertTrue(ad.isHttpResponse());
+//    assertTrue(ad.isHttpResponse());
+//
+//    log.info("status = {}", ad.getHttpStatus());
+//    log.info("headers = {}", ad.getHttpHeaders());
+//
+    InputStream is = ad.getResponseInputStream();
+
+    log.info("is = {}", IOUtils.toString(is, StandardCharsets.UTF_8));
   }
 }
