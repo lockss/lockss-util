@@ -1492,6 +1492,10 @@ public class RestLockssRepository implements LockssRepository {
     return restTemplate;
   }
 
+  public void setUseMultipartEndpoint(boolean useMultipartEndpoint) {
+    this.useMultipartEndpoint = useMultipartEndpoint;
+  }
+
   //
   // This is here, rather than in ArtifactCache, to make ArtifactCache
   // independent of the particular notification mechanism.
