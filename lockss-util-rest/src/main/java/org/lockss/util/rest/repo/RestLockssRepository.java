@@ -285,7 +285,7 @@ public class RestLockssRepository implements LockssRepository {
    */
   @Override
   public ImportStatusIterable addArtifacts(String namespace, String auId, InputStream inputStream,
-                                           ArchiveType type, boolean isCompressed) throws IOException {
+                                           ArchiveType type, boolean isCompressed, boolean storeDuplicate) throws IOException {
 
     if (type != ArchiveType.WARC) {
       throw new NotImplementedException("Archive not supported");
@@ -316,6 +316,9 @@ public class RestLockssRepository implements LockssRepository {
 
     Map<String, String> queryParams = new HashMap<>();
     queryParams.put("namespace", namespace);
+    if (storeDuplicate) {
+      queryParams.put("storeDuplicate", "true");
+    }
 
     try {
       ResponseEntity<Resource> response =

@@ -70,7 +70,9 @@ public class ImportStatus   {
   public enum StatusEnum {
     OK("OK"),
     
-    ERROR("ERROR");
+    ERROR("ERROR"),
+
+    DUPLICATE("DUPLICATE");
 
     private String value;
 
