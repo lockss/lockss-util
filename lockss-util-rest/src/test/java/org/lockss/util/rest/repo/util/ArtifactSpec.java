@@ -438,7 +438,7 @@ public class ArtifactSpec implements Comparable<Object> {
     return statLine != null;
   }
 
-  public ArtifactSpec setStatusLine(boolean isHttpResponse) {
+  public ArtifactSpec setIsHttpResponse(boolean isHttpResponse) {
     this.statLine = isHttpResponse ? STATUS_LINE_OK : null;
     return this;
   }
