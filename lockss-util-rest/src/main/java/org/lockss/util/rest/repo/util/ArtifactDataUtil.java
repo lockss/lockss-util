@@ -124,28 +124,12 @@ public class ArtifactDataUtil {
      * @throws IOException
      */
     public static HttpResponse getHttpResponseFromArtifactData(ArtifactData artifactData) throws IOException {
-        StatusLine httpStatus = artifactData.getHttpStatus();
-        HttpHeaders httpHeaders = artifactData.getHttpHeaders();
-
-        // Synthesize HTTP status and headers if this is a resource artifact
-        if (!artifactData.isHttpResponse()) {
-          httpStatus = DEFAULT_STATUS_LINE_OK;
-
-          if (httpHeaders == null) {
-            httpHeaders = new HttpHeaders();
-          }
-        }
-
-        // Craft a new HTTP response object representation from the artifact
-        BasicHttpResponse response = new BasicHttpResponse(httpStatus);
+        HttpResponse response = getHttpResponseHeadersFromArtifactData(artifactData);
 
         // Create an InputStreamEntity from artifact InputStream
         response.setEntity(new InputStreamEntity(artifactData.getInputStream()));
 
-        // Add artifact headers into HTTP response
-        httpHeaders.forEach((k, vs) -> vs.forEach((v) -> response.addHeader(k, v)));
-
-        return response;
+      return response;
     }
 
     /**
@@ -195,18 +179,25 @@ public class ArtifactDataUtil {
     }
 
     private static HttpResponse getHttpResponseHeadersFromArtifactData(ArtifactData artifactData) throws IOException {
-        // Craft a new HTTP response object representation from the artifact
-        BasicHttpResponse response = new BasicHttpResponse(artifactData.getHttpStatus());
+      StatusLine httpStatus = artifactData.getHttpStatus();
+      HttpHeaders httpHeaders = artifactData.getHttpHeaders();
 
-        // Add artifact headers into HTTP response
-        if (artifactData.getHttpHeaders() != null) {
-            artifactData.getHttpHeaders().forEach((headerName, headerValues) ->
-                headerValues.forEach((headerValue) ->
-                    response.addHeader(headerName, headerValue)
-                ));
+      // Synthesize HTTP status and headers if this is a resource artifact
+      if (!artifactData.isHttpResponse()) {
+        httpStatus = DEFAULT_STATUS_LINE_OK;
+
+        if (httpHeaders == null) {
+          httpHeaders = new HttpHeaders();
         }
+      }
 
-        return response;
+      // Craft a new HTTP response object representation from the artifact
+      BasicHttpResponse response = new BasicHttpResponse(httpStatus);
+
+      // Add artifact headers into HTTP response
+      httpHeaders.forEach((k, vs) -> vs.forEach((v) -> response.addHeader(k, v)));
+
+      return response;
     }
 
     public static byte[] getHttpResponseHeader(ArtifactData ad) throws IOException {
