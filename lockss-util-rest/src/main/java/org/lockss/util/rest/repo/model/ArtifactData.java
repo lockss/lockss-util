@@ -272,7 +272,7 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
     return res;
   }
 
-  public void setInputStream(InputStream inputStream) {
+  public ArtifactData setInputStream(InputStream inputStream) {
     if (inputStream != null) {
       origInputStream = inputStream;
       isResponseStream = false;
@@ -280,6 +280,8 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
       hadAnInputStream = true;
       stats.withContent++;
     }
+
+    return this;
   }
 
   private void parseResponseStream() throws IOException {
