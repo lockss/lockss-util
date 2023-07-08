@@ -36,6 +36,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.StatusLine;
 import org.lockss.log.L4JLogger;
 import org.lockss.util.ListUtil;
 import org.lockss.util.LockssUncheckedIOException;
@@ -433,6 +434,10 @@ public class RestLockssRepository implements LockssRepository {
           responseHeaders.containsKey(ArtifactConstants.INCLUDES_CONTENT) &&
           responseHeaders.getFirst(ArtifactConstants.INCLUDES_CONTENT).equals("false");
 
+      boolean isResourceType =
+          responseHeaders.containsKey(ArtifactConstants.ARTIFACT_DATA_TYPE) &&
+          responseHeaders.getFirst(ArtifactConstants.ARTIFACT_DATA_TYPE).equals("resource");
+
       InputStream responseBodyStream = body.getInputStream();
 
       // Construct by default an unparsed response ArtifactData
@@ -440,17 +445,15 @@ public class RestLockssRepository implements LockssRepository {
           .setResponseInputStream(responseBodyStream);
 
       if (onlyHeaders) {
-        // ArtifactData ad = ArtifactDataUtil.fromHttpResponseStream(body.getInputStream());
         result = new ArtifactData()
             .setHttpStatus(result.getHttpStatus())
             .setHttpHeaders(result.getHttpHeaders());
-      } else if (responseHeaders.containsKey(ArtifactConstants.ARTIFACT_DATA_TYPE)) {
-        String type = responseHeaders.getFirst(ArtifactConstants.ARTIFACT_DATA_TYPE);
-        if (type.equalsIgnoreCase("resource")) {
-          // Parse the synthesized HTTP response and null the status line
-          result = ArtifactDataUtil.fromHttpResponseStream(responseBodyStream);
-          result.setHttpStatus(null);
-        }
+
+        if (isResourceType) result.setHttpStatus(null);
+      } else if (isResourceType) {
+        result = new ArtifactData()
+            .setHttpHeaders(result.getHttpHeaders())
+            .setInputStream(result.getInputStream());
       }
 
       // FIXME: Populate ArtifactData properties from Artifact; this is a workaround
