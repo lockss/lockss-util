@@ -304,13 +304,13 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
     }
   }
 
-  public InputStream getResponseInputStream() {
+  public InputStream getResponseInputStream() throws IOException {
     if (!hadAnInputStream) {
       throw new IllegalStateException("InputStream not set");
     } else if (inputStreamUsed) {
       throw new IllegalStateException("InputStream is consumed");
     } else if (!isResponseStream) {
-      throw new IllegalStateException("InputStream is a resource type");
+      return ArtifactDataUtil.getHttpResponseStreamFromArtifactData(this);
     } else if (isResponseStreamParsed) {
       // TODO: Reconstruct HTTP response?
       throw new UnsupportedOperationException("HTTP response stream already parsed");
