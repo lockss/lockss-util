@@ -433,30 +433,43 @@ public class RestLockssRepository implements LockssRepository {
       Resource body = response.getBody();
       HttpHeaders responseHeaders = response.getHeaders();
 
-      boolean onlyHeaders =
+      boolean receivedOnlyHeaders =
           responseHeaders.containsKey(ArtifactConstants.INCLUDES_CONTENT) &&
           responseHeaders.getFirst(ArtifactConstants.INCLUDES_CONTENT).equals("false");
 
-      boolean isResourceType =
+      boolean receivedResourceType =
           responseHeaders.containsKey(ArtifactConstants.ARTIFACT_DATA_TYPE) &&
           responseHeaders.getFirst(ArtifactConstants.ARTIFACT_DATA_TYPE).equals("resource");
 
       InputStream responseBodyStream = body.getInputStream();
 
       // Construct by default an unparsed response ArtifactData
-      ArtifactData result = new ArtifactData()
-          .setResponseInputStream(responseBodyStream);
 
-      if (onlyHeaders) {
-        result = new ArtifactData()
-            .setHttpStatus(result.getHttpStatus())
-            .setHttpHeaders(result.getHttpHeaders());
+      ArtifactData result;
 
-        if (isResourceType) result.setHttpStatus(null);
-      } else if (isResourceType) {
-        result = new ArtifactData()
-            .setHttpHeaders(result.getHttpHeaders())
-            .setInputStream(result.getInputStream());
+      try {
+        if (receivedOnlyHeaders) {
+          HttpResponse httpResponse = ArtifactDataUtil.getHttpResponseFromStream(responseBodyStream);
+
+          result = new ArtifactData()
+              .setHttpStatus(httpResponse.getStatusLine())
+              .setHttpHeaders(ArtifactDataUtil.transformHeaderArrayToHttpHeaders(httpResponse.getAllHeaders()));
+
+          if (receivedResourceType)
+            result.setHttpStatus(null);
+
+        } else if (receivedResourceType) {
+          HttpResponse httpResponse = ArtifactDataUtil.getHttpResponseFromStream(responseBodyStream);
+
+          result = new ArtifactData()
+              .setHttpHeaders(ArtifactDataUtil.transformHeaderArrayToHttpHeaders(httpResponse.getAllHeaders()))
+              .setInputStream(httpResponse.getEntity().getContent());
+        } else {
+          result = new ArtifactData()
+              .setResponseInputStream(responseBodyStream);
+        }
+      } catch (HttpException e) {
+        throw new LockssRestHttpException("Malformed HTTP response in REST response body");
       }
 
       // Populate ArtifactData properties from Artifact
