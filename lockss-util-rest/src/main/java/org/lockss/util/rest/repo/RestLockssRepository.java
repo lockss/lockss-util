@@ -459,7 +459,7 @@ public class RestLockssRepository implements LockssRepository {
             .setInputStream(result.getInputStream());
       }
 
-      // FIXME: Populate ArtifactData properties from Artifact; this is a workaround
+      // Populate ArtifactData properties from Artifact
       result
           .setIdentifier(artifact.getIdentifier())
           .setContentLength(artifact.getContentLength())

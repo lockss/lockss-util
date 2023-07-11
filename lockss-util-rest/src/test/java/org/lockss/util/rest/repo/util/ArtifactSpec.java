@@ -580,8 +580,6 @@ public class ArtifactSpec implements Comparable<Object> {
         Assertions.assertEquals(getContentDigest(), ad.getContentDigest());
         assertArtifactData(ad);
       }
-
-      // TODO: Write test for repository.getArtifactData(Artifact, LockssRepository.IncludeContent);
     } catch (Exception e) {
       log.error("Caught exception asserting artifact spec: {}", this, e);
       log.error("art = {}", art);
