@@ -120,6 +120,7 @@ public class TestArtifactData extends LockssTestCase5 {
   }
 
   @Test
+  // TODO: Finish
   public void testResponseArtifact() throws Exception {
     ArtifactSpec spec = new ArtifactSpec()
         .setUrl("http://www.example.org/")
