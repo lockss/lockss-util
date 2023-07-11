@@ -186,8 +186,15 @@ public class ArtifactDataUtil {
       if (!artifactData.isHttpResponse()) {
         httpStatus = DEFAULT_STATUS_LINE_OK;
 
-        if (httpHeaders == null) {
+        // The following condition is exceptional since even ArtifactData backed by WARC resource
+        // records will have a HttpHeaders populated by properties/fields from the record's header
+        // e.g., Content-Type and Content-Length. ArtifactData is also constructed with an empty
+        // HttpHeaders. If the AD's headers are null or empty at this point, there isn't much we
+        // do or use to synthesize one except from properties of the AD, which are limited.
+        if (httpHeaders == null || httpHeaders.isEmpty()) {
           httpHeaders = new HttpHeaders();
+          httpHeaders.setContentLength(artifactData.getContentLength());
+          // httpHeaders.setContentType(artifactData.getHttpHeaders().getContentType());
         }
       }
 
