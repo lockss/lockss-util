@@ -379,6 +379,8 @@ public class RestLockssRepository implements LockssRepository {
     throw new UnsupportedOperationException();
   }
 
+  MediaType APPLICATION_HTTP_RESPONSE = MediaType.parseMediaType("application/http;msgtype=response");
+
 
   /**
    * Retrieves an artifact from a remote REST LOCKSS Repository server.
@@ -416,7 +418,7 @@ public class RestLockssRepository implements LockssRepository {
 
       // Set Accept header in request
       HttpHeaders requestHeaders = getInitializedHttpHeaders();
-      requestHeaders.setAccept(ListUtil.list(MediaType.ALL, MediaType.APPLICATION_JSON));
+      requestHeaders.setAccept(ListUtil.list(APPLICATION_HTTP_RESPONSE, MediaType.APPLICATION_JSON));
 
       // Make the request to the REST service and get its response
       ResponseEntity<Resource> response = RestUtil.callRestService(
