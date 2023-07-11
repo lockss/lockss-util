@@ -288,7 +288,7 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
     if (!isResponseStream) {
       throw new IllegalStateException("Cannot parse stream as HTTP response");
     } else if (isResponseStreamParsed) {
-      log.warn("Stream already parsed as HTTP response");
+      log.warn("Stream already parsed as HTTP response", new Throwable());
       return;
     }
 
