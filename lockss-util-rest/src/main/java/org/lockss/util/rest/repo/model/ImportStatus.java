@@ -72,7 +72,9 @@ public class ImportStatus   {
     
     ERROR("ERROR"),
 
-    DUPLICATE("DUPLICATE");
+    DUPLICATE("DUPLICATE"),
+
+    EXCLUDED("EXCLUDED");
 
     private String value;
 
