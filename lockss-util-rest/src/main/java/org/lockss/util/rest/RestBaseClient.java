@@ -103,8 +103,10 @@ public class RestBaseClient<C extends RestBaseClient<?>> {
   }
 
   private RestTemplate getRestTemplate() {
-    return this.restTemplate == null ?
-        RestUtil.getRestTemplate(connectTimeout, readTimeout) : this.restTemplate;
+    if (this.restTemplate == null) {
+      this.restTemplate = RestUtil.getRestTemplate(connectTimeout, readTimeout);
+    }
+    return this.restTemplate;
   }
 
   /** Add the headers to the request headers, replacing any that already
