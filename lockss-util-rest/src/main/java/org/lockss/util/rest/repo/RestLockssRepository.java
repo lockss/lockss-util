@@ -516,7 +516,7 @@ public class RestLockssRepository implements LockssRepository {
    * @throws IOException
    */
   public void deleteArtifact(Artifact artifact) throws IOException {
-    artCache.invalidate(ArtifactCache.InvalidateOp.Delete,
+    artCache.invalidateArtifact(ArtifactCache.InvalidateOp.Delete,
         artifact.makeKey());
     deleteArtifact(artifact.getNamespace(), artifact.getUuid());
   }
@@ -1241,8 +1241,10 @@ public class RestLockssRepository implements LockssRepository {
   public static final String REST_ARTIFACT_CACHE_ID = "ArtifactCache";
   public static final String REST_ARTIFACT_CACHE_TOPIC = "ArtifactCacheTopic";
   public static final String REST_ARTIFACT_CACHE_MSG_ACTION = "CacheAction";
-  public static final String REST_ARTIFACT_CACHE_MSG_ACTION_INVALIDATE =
-      "Invalidate";
+  public static final String REST_ARTIFACT_CACHE_MSG_ACTION_INVALIDATE_ARTIFACT =
+      "InvalidateArt";
+  public static final String REST_ARTIFACT_CACHE_MSG_ACTION_INVALIDATE_AU =
+      "InvalidateAu";
   public static final String REST_ARTIFACT_CACHE_MSG_ACTION_FLUSH = "Flush";
   public static final String REST_ARTIFACT_CACHE_MSG_ACTION_ECHO = "Echo";
   public static final String REST_ARTIFACT_CACHE_MSG_ACTION_ECHO_RESP =
@@ -1394,8 +1396,12 @@ public class RestLockssRepository implements LockssRepository {
             action, key);
         if (action != null) {
           switch (action) {
-            case REST_ARTIFACT_CACHE_MSG_ACTION_INVALIDATE:
-              artCache.invalidate(msgOp(msgMap.get(REST_ARTIFACT_CACHE_MSG_OP)),
+            case REST_ARTIFACT_CACHE_MSG_ACTION_INVALIDATE_ARTIFACT:
+              artCache.invalidateArtifact(msgOp(msgMap.get(REST_ARTIFACT_CACHE_MSG_OP)),
+                  key);
+              break;
+            case REST_ARTIFACT_CACHE_MSG_ACTION_INVALIDATE_AU:
+              artCache.invalidateAu(msgOp(msgMap.get(REST_ARTIFACT_CACHE_MSG_OP)),
                   key);
               break;
             case REST_ARTIFACT_CACHE_MSG_ACTION_FLUSH:
