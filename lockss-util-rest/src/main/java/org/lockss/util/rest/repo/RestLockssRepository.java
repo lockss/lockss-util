@@ -559,7 +559,13 @@ public class RestLockssRepository implements LockssRepository {
 
       HttpHeaders artifactHeaders = new HttpHeaders();
 
-      // TODO
+      if (responseHeaders.getContentType() != null) {
+        artifactHeaders.setContentType(responseHeaders.getContentType());
+      }
+
+      artifactHeaders.setContentLength(responseHeaders.getContentLength());
+      artifactHeaders.set(ArtifactConstants.ARTIFACT_DIGEST_KEY,
+          responseHeaders.getFirst(ArtifactConstants.ARTIFACT_DIGEST_KEY));
 
       ArtifactData result = new ArtifactData()
           .setHttpHeaders(artifactHeaders);
