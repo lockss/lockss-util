@@ -620,8 +620,7 @@ public class ArtifactSpec implements Comparable<Object> {
   public void assertArtifactData(ArtifactData ad) throws IOException {
     Assertions.assertNotNull(ad, "Didn't find ArtifactData for: " + this);
 
-    if (this.isHttpResponse() || ad.isHttpResponse()) {
-      // FIXME: This is ugly...
+    if (isHttpResponse() || ad.isHttpResponse()) {
       Assertions.assertEquals(String.valueOf(getStatusLine()), String.valueOf(ad.getHttpStatus()));
       Assertions.assertEquals(getHeaders(), RepoUtil.mapFromHttpHeaders(ad.getHttpHeaders()));
     }
@@ -637,8 +636,8 @@ public class ArtifactSpec implements Comparable<Object> {
       Assertions.assertEquals(getStorageUrl(), ad.getStorageUrl());
     }
 
-    new LockssTestCase5().assertSameBytes(getInputStream(), ad.getInputStream(), getContentLength());
-  }
+      new LockssTestCase5().assertSameBytes(getInputStream(), ad.getInputStream(), getContentLength());
+    }
 
   /**
    * Assert that the sequence of Artifacts matches the stream of ArtifactSpecs

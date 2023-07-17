@@ -196,8 +196,18 @@ public class RestLockssRepository implements LockssRepository {
   }
 
   private enum ArtifactDataType {
-    response,
-    resource
+    response("response"),
+    resource("payload");
+
+    private String endpoint;
+
+    ArtifactDataType(String endpoint) {
+      this.endpoint = endpoint;
+    }
+
+    public String getEndpoint() {
+      return endpoint;
+    }
   }
 
   private URI artifactDataEndpoint(String namespace, String artifactUuid, ArtifactDataType type,
@@ -208,7 +218,7 @@ public class RestLockssRepository implements LockssRepository {
 
     // URI path parameters
     uriParams.put("uuid", artifactUuid);
-    uriParams.put("type", String.valueOf(type));
+    uriParams.put("endpoint", type.getEndpoint());
 
     // Query parameters
     if (namespace != null) {
@@ -219,7 +229,7 @@ public class RestLockssRepository implements LockssRepository {
       queryParams.put("includeContent", includeContent.toString());
     }
 
-    return RestUtil.getRestUri(repositoryUrl + "/artifacts/{uuid}/{type}", uriParams, queryParams);
+    return RestUtil.getRestUri(repositoryUrl + "/artifacts/{uuid}/{endpoint}", uriParams, queryParams);
   }
 
   /**
@@ -446,8 +456,6 @@ public class RestLockssRepository implements LockssRepository {
 
       InputStream responseBodyStream = body.getInputStream();
 
-      // Construct by default an unparsed response ArtifactData
-
       ArtifactData result;
 
       try {
@@ -482,9 +490,90 @@ public class RestLockssRepository implements LockssRepository {
           .setContentDigest(artifact.getContentDigest());
 
       // FIXME: Instances of Artifact from RestLockssRepository don't have a meaningful storage URL
-      //        at this time and probably never will but if it has one, set it on the ArtifactData
+      //        at this time and probably never will but if it has one, set it on the ArtifactData.
       if (artifact.getStorageUrl() != null) {
           result.setStorageUrl(URI.create(artifact.getStorageUrl()));
+      }
+
+      // Add to artifact data cache
+      artCache.putArtifactData(namespace, artifactUuid, result);
+
+      return result;
+    } catch (LockssRestHttpException e) {
+      checkArtIdError(e, artifactUuid, "Artifact not found");
+      log.error("Could not get artifact data", e);
+      throw e;
+    } catch (LockssRestException e) {
+      log.error("Could not get artifact data", e);
+      throw e;
+    }
+  }
+
+  public ArtifactData getArtifactDataByPayload(Artifact artifact, IncludeContent includeContent)
+      throws IOException {
+
+    if (artifact == null) {
+      throw new IllegalArgumentException("Null artifact");
+    }
+
+    String namespace = artifact.getNamespace();
+    String artifactUuid = artifact.getUuid();
+
+    // Check ArtifactCache first
+    boolean needInputStream = (includeContent != IncludeContent.NEVER);
+    ArtifactData cached = artCache.getArtifactData(namespace, artifactUuid, needInputStream);
+    if (cached != null) {
+      return cached;
+    }
+
+    try {
+      URI endpoint = artifactDataEndpoint(namespace, artifactUuid, ArtifactDataType.resource, includeContent);
+
+      // Set Accept header in request
+      HttpHeaders requestHeaders = getInitializedHttpHeaders();
+      requestHeaders.setAccept(ListUtil.list(MediaType.ALL, MediaType.APPLICATION_JSON));
+
+      // Make the request to the REST service and get its response
+      ResponseEntity<Resource> response = RestUtil.callRestService(
+          restTemplate,
+          endpoint,
+          HttpMethod.GET,
+          new HttpEntity<>(requestHeaders),
+          Resource.class,
+          "REST client error: getArtifactDataByPayload()");
+
+      checkStatusOk(response);
+
+      // Transform HTTP response stream in REST response body to ArtifactData
+      Resource body = response.getBody();
+      HttpHeaders responseHeaders = response.getHeaders();
+
+      boolean receivedOnlyHeaders =
+          responseHeaders.containsKey(ArtifactConstants.INCLUDES_CONTENT) &&
+              responseHeaders.getFirst(ArtifactConstants.INCLUDES_CONTENT).equals("false");
+
+      HttpHeaders artifactHeaders = new HttpHeaders();
+
+      // TODO
+
+      ArtifactData result = new ArtifactData()
+          .setHttpHeaders(artifactHeaders);
+
+      if (!receivedOnlyHeaders) {
+        InputStream responseBodyStream = body.getInputStream();
+        result.setInputStream(responseBodyStream);
+      }
+
+      // Populate ArtifactData properties from Artifact
+      result
+          .setIdentifier(artifact.getIdentifier())
+          .setContentLength(artifact.getContentLength())
+          .setContentDigest(artifact.getContentDigest());
+
+      // FIXME: Instances of Artifact from RestLockssRepository don't have a meaningful storage URL
+      //        at this time and probably never will but if it has one, set it on the ArtifactData.
+      if (artifact.getStorageUrl() != null) {
+        result.setStorageUrl(URI.create(artifact.getStorageUrl()));
       }
 
       // Add to artifact data cache
@@ -535,8 +624,7 @@ public class RestLockssRepository implements LockssRepository {
           HttpMethod.GET,
           new HttpEntity<>(requestHeaders),
           MultipartMessage.class,
-          "REST call from RestLockssRepository#getArtifactData() failed"
-      );
+          "REST client error: getArtifactDataByMultipart()");
 
       checkStatusOk(response);
 
