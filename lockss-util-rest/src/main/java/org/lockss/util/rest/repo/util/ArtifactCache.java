@@ -33,7 +33,7 @@ import org.lockss.log.L4JLogger;
 import org.lockss.util.rest.repo.model.Artifact;
 import org.lockss.util.rest.repo.model.ArtifactData;
 
-import java.util.Iterator;
+import java.util.*;
 
 
 /**
@@ -261,7 +261,7 @@ public class ArtifactCache {
    * invalidation.  (Not currently used.)
    * @param key the artifact key
    */
-  public synchronized void invalidate(InvalidateOp op, String key) {
+  public synchronized void invalidateArtifact(InvalidateOp op, String key) {
     if (artMap == null) return;
     String latestKey = Artifact.makeLatestKey(key);
 
@@ -278,6 +278,36 @@ public class ArtifactCache {
       artIterMap.remove(key);
       artIterMap.remove(latestKey);
       stats.cacheInvalidates++;
+    }
+  }
+
+  /** Remove all Artifacts in AU from the cache.
+   * @param op an InvalidateOp reflecting the operation that caused the
+   * invalidation.  (Not currently used.)
+   * @param auid the auid
+   */
+  public synchronized void invalidateAu(InvalidateOp op, String auid) {
+    log.debug("Invalidating {}", auid);
+    if (artMap == null) return;
+    List<String> toDel = new ArrayList<>();
+    for (Map.Entry<String,Artifact> ent : artMap.entrySet()) {
+      Artifact art = ent.getValue();
+      if (auid.equals(art.getAuid())) {
+        toDel.add(ent.getKey());
+      }
+    }
+    for (String key : toDel) {
+      artMap.remove(key);
+    }
+    toDel.clear();
+    for (Map.Entry<String,Artifact> ent : artIterMap.entrySet()) {
+      Artifact art = ent.getValue();
+      if (auid.equals(art.getAuid())) {
+        toDel.add(ent.getKey());
+      }
+    }
+    for (String key : toDel) {
+      artIterMap.remove(key);
     }
   }
 
