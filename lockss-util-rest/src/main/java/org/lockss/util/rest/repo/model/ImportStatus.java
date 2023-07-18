@@ -70,7 +70,11 @@ public class ImportStatus   {
   public enum StatusEnum {
     OK("OK"),
     
-    ERROR("ERROR");
+    ERROR("ERROR"),
+
+    DUPLICATE("DUPLICATE"),
+
+    EXCLUDED("EXCLUDED");
 
     private String value;
 
@@ -161,14 +165,14 @@ public class ImportStatus   {
     this.url = url;
   }
 
-  public ImportStatus artifactId(String artifactId) {
-    this.artifactUuid = artifactId;
+  public ImportStatus artifactUuid(String artifactUuid) {
+    this.artifactUuid = artifactUuid;
     return this;
   }
 
   /**
-   * Get artifactId
-   * @return artifactId
+   * Get artifactUuid
+   * @return artifactUuid
   **/
   @ApiModelProperty(value = "")
 
@@ -177,8 +181,8 @@ public class ImportStatus   {
     return artifactUuid;
   }
 
-  public void setArtifactUuid(String artifactId) {
-    this.artifactUuid = artifactId;
+  public void setArtifactUuid(String artifactUuid) {
+    this.artifactUuid = artifactUuid;
   }
 
   public ImportStatus digest(String digest) {

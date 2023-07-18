@@ -106,6 +106,24 @@ public class TestArtifactCache extends LockssTestCase5 {
     assertArrayEquals(new int[] {7,3,1,0,0,0,0,0,0,0},
 		      cache.getStats().getArtHist());
 
+    // test invalidateArtifact
+    cache.invalidateArtifact(ArtifactCache.InvalidateOp.Commit, u2v2.makeKey());
+    assertNull(cache.get(NS1, AUID1, URL2, -1));
+    assertSame(u2v1, cache.get(NS1, AUID1, URL2, 1));
+
+    // test invalidateAu
+    Artifact a2u1v1 = makeArt(NS1, AUID2, URL1, 1);
+    Artifact a2u2v1 = makeArt(NS1, AUID2, URL2, 1);
+    assertSame(a2u1v1, cache.putLatest(a2u1v1));
+    assertSame(a2u2v1, cache.putLatest(a2u2v1));
+    assertSame(a2u1v1, cache.get(NS1, AUID2, URL1, -1));
+    assertSame(a2u2v1, cache.get(NS1, AUID2, URL2, -1));
+    assertSame(u2v1, cache.get(NS1, AUID1, URL2, 1));
+    cache.invalidateAu(ArtifactCache.InvalidateOp.Commit, AUID2);
+    assertNull(cache.get(NS1, AUID2, URL1, 1));
+    assertNull(cache.get(NS1, AUID2, URL2, 1));
+    assertSame(u2v1, cache.get(NS1, AUID1, URL2, 1));
+
     cache.flush();
     assertEquals(1, stats.getCacheFlushes());
     assertNull(cache.get(NS1, AUID1, URL2, -1));

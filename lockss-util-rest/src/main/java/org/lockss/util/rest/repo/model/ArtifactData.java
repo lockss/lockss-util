@@ -35,10 +35,14 @@ package org.lockss.util.rest.repo.model;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.CountingInputStream;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.lockss.log.L4JLogger;
 import org.lockss.util.CloseCallbackInputStream;
+import org.lockss.util.LockssUncheckedIOException;
 import org.lockss.util.io.EofRememberingInputStream;
+import org.lockss.util.rest.repo.util.ArtifactDataUtil;
 import org.springframework.http.HttpHeaders;
 
 import java.io.IOException;
@@ -86,6 +90,8 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
   private InputStream origInputStream;
   private boolean inputStreamUsed = false;
   private boolean hadAnInputStream = false;
+  private boolean isResponseStream = false;
+  private boolean isResponseStreamParsed = false;
   private long contentLength = -1;
   private String contentDigest;
 
@@ -167,12 +173,17 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
    *
    * @return A {@code HttpHeaders} containing this artifact's additional properties.
    */
-  public HttpHeaders getHttpHeaders() {
+  public HttpHeaders getHttpHeaders() throws IOException {
+    if (isResponseStream && !isResponseStreamParsed) {
+      parseResponseStream();
+    }
+
     return httpHeaders;
   }
 
-  public void setHttpHeaders(HttpHeaders headers) {
+  public ArtifactData setHttpHeaders(HttpHeaders headers) {
     this.httpHeaders = headers;
+    return this;
   }
 
   /**
@@ -207,24 +218,35 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
    * @return An {@code InputStream} containing this artifact's byte stream.
    */
   public synchronized InputStream getInputStream() {
+    if (!hadAnInputStream) {
+      throw new IllegalStateException("Attempt to get InputStream from ArtifactData that was created without one");
+    } else if (inputStreamUsed) {
+      throw new IllegalStateException("Attempt to get InputStream from ArtifactData whose InputStream has been used");
+    }
+
+    if (isResponseStream && !isResponseStreamParsed) {
+      // FIXME: Allow this method to throw IOException and handle error correctly
+      try {
+        parseResponseStream();
+      } catch (IOException e) {
+        throw new LockssUncheckedIOException(e);
+      }
+    }
+
     // Comment in to log creation point of unused InputStreams
-// 	openTrace = stackTraceString(new Exception("Open"));
+    // openTrace = stackTraceString(new Exception("Open"));
 
     try {
-      // Wrap the stream in a DigestInputStream
-      if (!hadAnInputStream) {
-	throw new IllegalStateException("Attempt to get InputStream from ArtifactData that was created without one");
-      }
-      if (inputStreamUsed) {
-	throw new IllegalStateException("Attempt to get InputStream from ArtifactData whose InputStream has been used");
-      }
       cis = new CountingInputStream(origInputStream);
+
+      // Wrap the stream in a DigestInputStream
       if (isComputeDigestOnRead) {
 	dis = new DigestInputStream(cis, MessageDigest.getInstance(DEFAULT_DIGEST_ALGORITHM));
 	eofis = new EofRememberingInputStream(dis);
       } else {
 	eofis = new EofRememberingInputStream(cis);
       }
+
       // Wrap the WARC-aware byte stream of this artifact so that the
       // underlying stream can be closed.
       artifactStream = new CloseCallbackInputStream(
@@ -238,26 +260,90 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
             }
           },
           this);
+
       inputStreamUsed = true;
     } catch (NoSuchAlgorithmException e) {
-      String errMsg = String.format(
-          "Unknown digest algorithm: %s; could not instantiate a MessageDigest", DEFAULT_DIGEST_ALGORITHM
-      );
-
-      log.error(errMsg);
-      throw new RuntimeException(errMsg);
+      // Digest algorithm is not parameterized so this should never happen
+      throw new RuntimeException("Unknown digest algorithm: " + DEFAULT_DIGEST_ALGORITHM);
     }
+
     InputStream res = artifactStream;
     artifactStream = null;
     return res;
   }
 
-  public void setInputStream(InputStream inputStream) {
+  public ArtifactData setInputStream(InputStream inputStream) {
     if (inputStream != null) {
-      this.origInputStream = inputStream;
+      origInputStream = inputStream;
+      isResponseStream = false;
+
       hadAnInputStream = true;
       stats.withContent++;
     }
+
+    return this;
+  }
+
+  private void parseResponseStream() throws IOException {
+    if (!isResponseStream) {
+      throw new IllegalStateException("Cannot parse stream as HTTP response");
+    } else if (isResponseStreamParsed) {
+      log.warn("Stream already parsed as HTTP response", new Throwable());
+      return;
+    }
+
+    try {
+      // Parse HTTP response stream into HttpResponse object
+      HttpResponse httpResponse = ArtifactDataUtil.getHttpResponseFromStream(origInputStream);
+      isResponseStreamParsed = true;
+
+      // Pull out parts of the HTTP response
+      httpStatus = httpResponse.getStatusLine();
+      httpHeaders = ArtifactDataUtil.transformHeaderArrayToHttpHeaders(httpResponse.getAllHeaders());
+      origInputStream = httpResponse.getEntity().getContent();
+    } catch (HttpException e) {
+      throw new IOException("Error parsing HTTP response", e);
+    }
+  }
+
+  public InputStream getResponseInputStream() throws IOException {
+    if (!hadAnInputStream) {
+      throw new IllegalStateException("InputStream not set");
+    } else if (inputStreamUsed) {
+      throw new IllegalStateException("InputStream is consumed");
+    } else if (!isResponseStream) {
+      return ArtifactDataUtil.getHttpResponseStreamFromArtifactData(this);
+    } else if (isResponseStreamParsed) {
+      // TODO: Reconstruct HTTP response?
+      throw new UnsupportedOperationException("HTTP response stream already parsed");
+    }
+
+    EofRememberingInputStream eofis = new EofRememberingInputStream(origInputStream);
+
+    // Called when the close() method of the stream is closed.
+    InputStream responseStream = artifactStream = new CloseCallbackInputStream(
+        eofis,
+        cookie -> {
+          // Release any resources bound to this object.
+          ((ArtifactData) cookie).release();
+        },
+        this);
+
+    inputStreamUsed = true;
+
+    return responseStream;
+  }
+
+  public ArtifactData setResponseInputStream(InputStream stream) {
+    if (stream != null) {
+      origInputStream = stream;
+      isResponseStream = true;
+      isResponseStreamParsed = false;
+
+      hadAnInputStream = true;
+      stats.withContent++;
+    }
+    return this;
   }
 
   /**
@@ -265,15 +351,20 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
    *
    * @return A {@code StatusLine} containing this artifact's HTTP response status.
    */
-  public StatusLine getHttpStatus() {
-    return this.httpStatus;
+  public StatusLine getHttpStatus() throws IOException {
+    if (isResponseStream && !isResponseStreamParsed) {
+      parseResponseStream();
+    }
+
+    return httpStatus;
   }
 
   /**
    * @return Returns a boolean indicating whether this artifact has an HTTP status (was therefore from a web crawl).
    */
-  public boolean isHttpResponse() {
-    return httpStatus != null;
+  public boolean isHttpResponse() throws IOException {
+    return isResponseStream ||
+           (getHttpStatus() != null && getHttpHeaders() != null);
   }
 
   public boolean isCommitted() {
@@ -288,8 +379,9 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
     this.isCommitted = isCommitted;
   }
 
-  public void setHttpStatus(StatusLine status) {
+  public ArtifactData setHttpStatus(StatusLine status) {
     this.httpStatus = status;
+    return this;
   }
 
   /**
@@ -326,8 +418,9 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
    *
    * @param storageUrl A {@code String} containing the location of this artifact data.
    */
-  public void setStorageUrl(URI storageUrl) {
+  public ArtifactData setStorageUrl(URI storageUrl) {
     this.storageUrl = storageUrl;
+    return this;
   }
 
   /**
@@ -347,8 +440,9 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
     return contentDigest;
   }
 
-  public void setContentDigest(String contentDigest) {
+  public ArtifactData setContentDigest(String contentDigest) {
     this.contentDigest = contentDigest;
+    return this;
   }
 
   public long getContentLength() {
@@ -362,11 +456,12 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
     return !(contentLength < 0);
   }
 
-  public void setContentLength(long contentLength) {
+  public ArtifactData setContentLength(long contentLength) {
     if (contentLength < 0) {
       throw new IllegalArgumentException("Invalid content length: " + contentLength);
     }
     this.contentLength = contentLength;
+    return this;
   }
 
   /**

@@ -141,10 +141,6 @@ public class Artifact implements Serializable {
         }
         this.committed = committed;
 
-        if (StringUtils.isEmpty(storageUrl)) {
-          throw new IllegalArgumentException("Cannot create "
-              + "Artifact with null or empty storageUrl");
-        }
         this.storageUrl = storageUrl;
 
         this.contentLength = contentLength;

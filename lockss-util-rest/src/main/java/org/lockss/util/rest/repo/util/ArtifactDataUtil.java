@@ -36,28 +36,28 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.Header;
-import org.apache.http.HttpException;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
+import org.apache.http.*;
 import org.apache.http.entity.BasicHttpEntity;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.io.*;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicLineFormatter;
+import org.apache.http.message.BasicStatusLine;
 import org.apache.http.util.CharArrayBuffer;
+import org.lockss.log.L4JLogger;
 import org.lockss.util.rest.multipart.MultipartMessage;
 import org.lockss.util.rest.multipart.MultipartResponse;
 import org.lockss.util.rest.repo.LockssRepository;
+import org.lockss.util.rest.repo.RestLockssRepository;
 import org.lockss.util.rest.repo.model.Artifact;
 import org.lockss.util.rest.repo.model.ArtifactData;
 import org.lockss.util.rest.repo.model.ArtifactIdentifier;
-import org.lockss.util.rest.repo.RestLockssRepository;
-import org.lockss.log.L4JLogger;
 import org.lockss.util.rest.repo.model.ArtifactProperties;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -105,15 +105,11 @@ public class ArtifactDataUtil {
      * @throws HttpException
      */
     public static InputStream getHttpResponseStreamFromArtifactData(ArtifactData artifactData) throws IOException {
-        InputStream httpResponse =
-            getHttpResponseStreamFromHttpResponse(getHttpResponseFromArtifactData(artifactData));
-
-	// getBytesRead() hasn't been computed yet
-//         artifactData.setContentLength(artifactData.getBytesRead());
-
-        return httpResponse;
+      return getHttpResponseStreamFromHttpResponse(getHttpResponseFromArtifactData(artifactData));
     }
 
+  protected static StatusLine DEFAULT_STATUS_LINE_OK =
+      new BasicStatusLine(new ProtocolVersion("HTTP", 1,1), 200, "OK");
 
     /**
      * Adapter that takes an {@code ArtifactData} and returns an Apache {@code HttpResponse} object representation of
@@ -127,24 +123,13 @@ public class ArtifactDataUtil {
      * @throws HttpException
      * @throws IOException
      */
-    public static HttpResponse getHttpResponseFromArtifactData(ArtifactData artifactData) {
-        // Craft a new HTTP response object representation from the artifact
-        BasicHttpResponse response = new BasicHttpResponse(artifactData.getHttpStatus());
+    public static HttpResponse getHttpResponseFromArtifactData(ArtifactData artifactData) throws IOException {
+        HttpResponse response = getHttpResponseHeadersFromArtifactData(artifactData);
 
         // Create an InputStreamEntity from artifact InputStream
         response.setEntity(new InputStreamEntity(artifactData.getInputStream()));
 
-        // Add artifact headers into HTTP response
-        if (artifactData.getHttpHeaders() != null) {
-
-            // Compile a list of headers
-            artifactData.getHttpHeaders().forEach((headerName, headerValues) ->
-                headerValues.forEach((headerValue) ->
-                    response.addHeader(headerName, headerValue)
-            ));
-        }
-
-        return response;
+      return response;
     }
 
     /**
@@ -190,25 +175,36 @@ public class ArtifactDataUtil {
         // Return the concatenation of the header and content streams
         return new SequenceInputStream(
             new ByteArrayInputStream(getHttpResponseHeader(response)),
-            response.getEntity().getContent()
-        );
+            response.getEntity().getContent());
     }
 
-    private static HttpResponse getHttpResponseHeadersFromArtifactData(ArtifactData artifactData) {
-        // Craft a new HTTP response object representation from the artifact
-        BasicHttpResponse response = new BasicHttpResponse(artifactData.getHttpStatus());
+    private static HttpResponse getHttpResponseHeadersFromArtifactData(ArtifactData artifactData) throws IOException {
+      StatusLine httpStatus = artifactData.getHttpStatus();
+      HttpHeaders httpHeaders = artifactData.getHttpHeaders();
 
-        // Add artifact headers into HTTP response
-        if (artifactData.getHttpHeaders() != null) {
+      // Synthesize HTTP status and headers if this is a resource artifact
+      if (!artifactData.isHttpResponse()) {
+        httpStatus = DEFAULT_STATUS_LINE_OK;
 
-            // Compile a list of headers
-            artifactData.getHttpHeaders().forEach((headerName, headerValues) ->
-                headerValues.forEach((headerValue) ->
-                    response.addHeader(headerName, headerValue)
-                ));
+        // The following condition is exceptional since even ArtifactData backed by WARC resource
+        // records will have a HttpHeaders populated by properties/fields from the record's header
+        // e.g., Content-Type and Content-Length. ArtifactData is also constructed with an empty
+        // HttpHeaders. If the AD's headers are null or empty at this point, there isn't much we
+        // do or use to synthesize one except from properties of the AD, which are limited.
+        if (httpHeaders == null || httpHeaders.isEmpty()) {
+          httpHeaders = new HttpHeaders();
+          httpHeaders.setContentLength(artifactData.getContentLength());
+          // httpHeaders.setContentType(artifactData.getHttpHeaders().getContentType());
         }
+      }
 
-        return response;
+      // Craft a new HTTP response object representation from the artifact
+      BasicHttpResponse response = new BasicHttpResponse(httpStatus);
+
+      // Add artifact headers into HTTP response
+      httpHeaders.forEach((k, vs) -> vs.forEach((v) -> response.addHeader(k, v)));
+
+      return response;
     }
 
     public static byte[] getHttpResponseHeader(ArtifactData ad) throws IOException {
