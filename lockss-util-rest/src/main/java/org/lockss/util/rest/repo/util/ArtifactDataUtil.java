@@ -413,6 +413,7 @@ public class ArtifactDataUtil {
 
     putIfNotNull(props, Artifact.ARTIFACT_DIGEST_KEY, ad.getContentDigest());
     putIfNonZero(props, Artifact.ARTIFACT_COLLECTION_DATE_KEY, ad.getCollectionDate());
+    putIfNonZero(props, Artifact.ARTIFACT_STORE_DATE_KEY, ad.getStoreDate());
 
     return props;
   }
@@ -630,6 +631,15 @@ public class ArtifactDataUtil {
         // Set misc. artifact properties
         result.setContentLength(props.getContentLength());
         result.setContentDigest(props.getContentDigest());
+
+        long collectionDate = props.getCollectionDate() == null ?
+            0 : props.getCollectionDate();
+
+        long storeDate = props.getStoreDate() == null ?
+            0 : props.getStoreDate();
+
+        result.setCollectionDate(collectionDate);
+        result.setStoreDate(storeDate);
       }
 
       //// Set artifact HTTP response status and headers

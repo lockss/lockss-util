@@ -100,7 +100,7 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
 
   // The collection date.
   private long collectionDate = -1;
-  private long storedDate = -1;
+  private long storeDate = -1;
 
   private boolean isReleased;
 
@@ -597,12 +597,12 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
     }
   }
 
-  public long getStoredDate() {
-    return storedDate;
+  public long getStoreDate() {
+    return storeDate;
   }
 
-  public void setStoredDate(long storedDate) {
-    this.storedDate = storedDate;
+  public void setStoreDate(long storeDate) {
+    this.storeDate = storeDate;
   }
 
   public static class Stats {

@@ -73,6 +73,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
 import java.util.*;
 
 /**
@@ -500,6 +505,12 @@ public class RestLockssRepository implements LockssRepository {
           result.setStorageUrl(URI.create(artifact.getStorageUrl()));
       }
 
+      String storeDate = responseHeaders.getFirst(ArtifactConstants.ARTIFACT_STORE_DATE);
+      if (!(storeDate == null || storeDate.isEmpty())) {
+        TemporalAccessor t = DateTimeFormatter.ISO_INSTANT.parse(storeDate);
+        result.setStoreDate(ZonedDateTime.ofInstant(Instant.from(t), ZoneOffset.UTC).toInstant().toEpochMilli());
+      }
+
       // Add to artifact data cache
       artCache.putArtifactData(namespace, artifactUuid, result);
 
@@ -585,6 +596,12 @@ public class RestLockssRepository implements LockssRepository {
       //        at this time and probably never will but if it has one, set it on the ArtifactData.
       if (artifact.getStorageUrl() != null) {
         result.setStorageUrl(URI.create(artifact.getStorageUrl()));
+      }
+
+      String storeDate = responseHeaders.getFirst(ArtifactConstants.ARTIFACT_STORE_DATE);
+      if (!(storeDate == null || storeDate.isEmpty())) {
+        TemporalAccessor t = DateTimeFormatter.ISO_INSTANT.parse(storeDate);
+        result.setStoreDate(ZonedDateTime.ofInstant(Instant.from(t), ZoneOffset.UTC).toInstant().toEpochMilli());
       }
 
       // Add to artifact data cache

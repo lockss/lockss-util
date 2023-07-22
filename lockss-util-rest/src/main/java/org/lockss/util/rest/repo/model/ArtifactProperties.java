@@ -36,6 +36,9 @@ public class ArtifactProperties   {
   @JsonProperty("collectionDate")
   private Long collectionDate = null;
 
+  @JsonProperty("storeDate")
+  private Long storeDate = null;
+
   @JsonProperty("state")
   private String state = null;
 
@@ -199,6 +202,26 @@ public class ArtifactProperties   {
     this.collectionDate = collectionDate;
   }
 
+  public ArtifactProperties storeDate(Long storeDate) {
+    this.storeDate = storeDate;
+    return this;
+  }
+
+  /**
+   * Get storeDate
+   * @return storeDate
+  **/
+  @ApiModelProperty(value = "")
+
+
+  public Long getStoreDate() {
+    return storeDate;
+  }
+
+  public void setStoreDate(Long storeDate) {
+    this.storeDate = storeDate;
+  }
+
   public ArtifactProperties state(String state) {
     this.state = state;
     return this;
@@ -237,12 +260,13 @@ public class ArtifactProperties   {
         Objects.equals(this.contentLength, artifactProperties.contentLength) &&
         Objects.equals(this.contentDigest, artifactProperties.contentDigest) &&
         Objects.equals(this.collectionDate, artifactProperties.collectionDate) &&
+        Objects.equals(this.storeDate, artifactProperties.storeDate) &&
         Objects.equals(this.state, artifactProperties.state);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(namespace, uuid, auid, uri, version, contentLength, contentDigest, collectionDate, state);
+    return Objects.hash(namespace, uuid, auid, uri, version, contentLength, contentDigest, collectionDate, storeDate, state);
   }
 
   @Override
@@ -258,6 +282,7 @@ public class ArtifactProperties   {
     sb.append("    contentLength: ").append(toIndentedString(contentLength)).append("\n");
     sb.append("    contentDigest: ").append(toIndentedString(contentDigest)).append("\n");
     sb.append("    collectionDate: ").append(toIndentedString(collectionDate)).append("\n");
+    sb.append("    storeDate: ").append(toIndentedString(storeDate)).append("\n");
     sb.append("    state: ").append(toIndentedString(state)).append("\n");
     sb.append("}");
     return sb.toString();
