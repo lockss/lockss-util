@@ -633,10 +633,10 @@ public class ArtifactDataUtil {
         result.setContentDigest(props.getContentDigest());
 
         long collectionDate = props.getCollectionDate() == null ?
-            0 : props.getCollectionDate();
+            -1 : props.getCollectionDate();
 
         long storeDate = props.getStoreDate() == null ?
-            0 : props.getStoreDate();
+            -1 : props.getStoreDate();
 
         result.setCollectionDate(collectionDate);
         result.setStoreDate(storeDate);
