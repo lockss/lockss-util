@@ -505,7 +505,7 @@ public class RestLockssRepository implements LockssRepository {
           result.setStorageUrl(URI.create(artifact.getStorageUrl()));
       }
 
-      String storeDate = responseHeaders.getFirst(ArtifactConstants.ARTIFACT_STORE_DATE);
+      String storeDate = responseHeaders.getFirst(ArtifactConstants.ARTIFACT_STORE_DATE_KEY);
       if (!(storeDate == null || storeDate.isEmpty())) {
         TemporalAccessor t = DateTimeFormatter.ISO_INSTANT.parse(storeDate);
         result.setStoreDate(ZonedDateTime.ofInstant(Instant.from(t), ZoneOffset.UTC).toInstant().toEpochMilli());
@@ -598,7 +598,7 @@ public class RestLockssRepository implements LockssRepository {
         result.setStorageUrl(URI.create(artifact.getStorageUrl()));
       }
 
-      String storeDate = responseHeaders.getFirst(ArtifactConstants.ARTIFACT_STORE_DATE);
+      String storeDate = responseHeaders.getFirst(ArtifactConstants.ARTIFACT_STORE_DATE_KEY);
       if (!(storeDate == null || storeDate.isEmpty())) {
         TemporalAccessor t = DateTimeFormatter.ISO_INSTANT.parse(storeDate);
         result.setStoreDate(ZonedDateTime.ofInstant(Instant.from(t), ZoneOffset.UTC).toInstant().toEpochMilli());
