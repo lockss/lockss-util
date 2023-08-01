@@ -58,6 +58,7 @@ public class Artifact implements Serializable {
     public final static String ARTIFACT_LENGTH_KEY = "contentLength";
     public final static String ARTIFACT_DIGEST_KEY = "contentDigest";
     public final static String ARTIFACT_COLLECTION_DATE_KEY = "collectionDate";
+  public final static String ARTIFACT_STORE_DATE_KEY = "storeDate";
 
     // We have chosen to map the artifact UUID to the Solr document's "id" field
     // for the sake of convention, even though Solr appears to support assigning
