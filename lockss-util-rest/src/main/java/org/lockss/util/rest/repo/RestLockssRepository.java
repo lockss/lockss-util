@@ -325,14 +325,13 @@ public class RestLockssRepository implements LockssRepository {
    * @param auId         A {@link String} containing the AUID of the artifacts.
    * @param inputStream  The {@link InputStream} of the archive.
    * @param type         A {@link ArchiveType} indicating the type of archive.
-   * @param isCompressed A {@code boolean} indicating whether the archive is GZIP compressed.
    * @param storeDuplicate A {@code boolean} indicating whether new versions of artifacets whose content would be identical to the previous version should be stored
    * @param excludeStatusPattern    A {@link String} containing a regexp.  WARC records whose HTTP response status code matches will not be added to the repository
    * @return
    */
   @Override
   public ImportStatusIterable addArtifacts(String namespace, String auId, InputStream inputStream,
-                                           ArchiveType type, boolean isCompressed, boolean storeDuplicate, String excludeStatusPattern) throws IOException {
+                                           ArchiveType type, boolean storeDuplicate, String excludeStatusPattern) throws IOException {
 
     if (type != ArchiveType.WARC) {
       throw new NotImplementedException("Archive not supported");
@@ -351,10 +350,7 @@ public class RestLockssRepository implements LockssRepository {
     archiveHeaders.setContentLength(0);
     archiveHeaders.setContentType(APPLICATION_WARC);
 
-    String archiveExt = isCompressed ?
-        DOT_COMPRESSED_WARC_FILE_EXTENSION : DOT_WARC_FILE_EXTENSION;
-
-    Resource archiveResource = new NamedInputStreamResource("archive" + archiveExt, inputStream);
+    Resource archiveResource = new NamedInputStreamResource("archive", inputStream);
 
     parts.add("archive", new HttpEntity<>(archiveResource, archiveHeaders));
 

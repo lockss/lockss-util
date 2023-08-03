@@ -60,14 +60,13 @@ public interface LockssRepository extends Ready {
    * @param auId         A {@link String} containing the AUID of the artifacts.
    * @param inputStream  The {@link InputStream} of the archive.
    * @param type         A {@link ArchiveType} indicating the type of archive.
-   * @param isCompressed A {@code boolean} indicating whether the archive is GZIP compressed.
    * @return
    */
   default ImportStatusIterable addArtifacts(String namespace, String auId, InputStream inputStream,
-                                            ArchiveType type, boolean isCompressed)
+                                            ArchiveType type)
       throws IOException {
     return addArtifacts(namespace, auId, inputStream,
-                        type, isCompressed, false);
+                        type, false);
   }
 
   /**
@@ -77,15 +76,14 @@ public interface LockssRepository extends Ready {
    * @param auId         A {@link String} containing the AUID of the artifacts.
    * @param inputStream  The {@link InputStream} of the archive.
    * @param type         A {@link ArchiveType} indicating the type of archive.
-   * @param isCompressed A {@code boolean} indicating whether the archive is GZIP compressed.
    * @param storeDuplicate A {@code boolean} indicating whether new versions of artifacets whose content would be identical to the previous version should be stored
    * @return
    */
   default ImportStatusIterable addArtifacts(String namespace, String auId, InputStream inputStream,
-                                            ArchiveType type, boolean isCompressed, boolean storeDuplicate)
+                                            ArchiveType type, boolean storeDuplicate)
       throws IOException {
     return addArtifacts(namespace, auId, inputStream,
-                        type, isCompressed, storeDuplicate, null);
+                        type, storeDuplicate, null);
   }
 
   /**
@@ -95,13 +93,12 @@ public interface LockssRepository extends Ready {
    * @param auId         A {@link String} containing the AUID of the artifacts.
    * @param inputStream  The {@link InputStream} of the archive.
    * @param type         A {@link ArchiveType} indicating the type of archive.
-   * @param isCompressed A {@code boolean} indicating whether the archive is GZIP compressed.
    * @param storeDuplicate A {@code boolean} indicating whether new versions of artifacets whose content would be identical to the previous version should be stored
    * @param excludeStatusPattern    A {@link String} containing a regexp.  WARC records whose HTTP response status code matches will not be added to the repository
    * @return
    */
   ImportStatusIterable addArtifacts(String namespace, String auId, InputStream inputStream,
-                                    ArchiveType type, boolean isCompressed, boolean storeDuplicate, String excludeStatusPattern) throws IOException;
+                                    ArchiveType type, boolean storeDuplicate, String excludeStatusPattern) throws IOException;
 
   /**
    * NEVER: Artifact content should never be included. The client does not want it, period.
