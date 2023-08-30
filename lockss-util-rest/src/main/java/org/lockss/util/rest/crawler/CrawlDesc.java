@@ -51,9 +51,10 @@ import javax.validation.constraints.NotNull;
 
 public class CrawlDesc   {
   /**
-   * The identifier of the LOCKSS crawler.
+   * The identifier of the classic LOCKSS crawler.
    */
-  public static final String LOCKSS_CRAWLER_ID = "lockss";
+  public static final String CLASSIC_CRAWLER_ID = "classic";
+
 
   // The identifier of the archival unit to be crawled.
   @JsonProperty("auId")
@@ -94,7 +95,7 @@ public class CrawlDesc   {
   private CrawlKindEnum crawlKind = null;
 
   @JsonProperty("crawlerId")
-  private String crawlerId = "lockss";
+  private String crawlerId = "classic";
 
   @JsonProperty("forceCrawl")
   private Boolean forceCrawl = false;
@@ -145,7 +146,7 @@ public class CrawlDesc   {
   /**
    * The kind of crawl being performed either 'newContent' or 'repair'.
    * @return crawlKind
-  **/
+   **/
   @ApiModelProperty(required = true, value = "The kind of crawl being performed either 'newContent' or 'repair'.")
   @NotNull
 

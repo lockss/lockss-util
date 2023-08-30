@@ -322,6 +322,17 @@ public class FileUtil {
     return createTempDir(prefix, suffix, null);
   }
 
+  public static File getUniqueFileName(File dir, String name)
+      throws IOException {
+    File uniq = createTempDir(name, "", dir);
+    if (uniq.exists()) {
+      uniq.delete();
+      return uniq;
+    }
+    return null;
+  }
+
+
   /** Ensure the directory exists, creating it and any parents if
    * necessary.  mkdirs() has been observed to fail intermittently on some
    * platforms, so try a few times if it fails.

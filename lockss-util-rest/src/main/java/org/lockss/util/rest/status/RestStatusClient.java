@@ -30,6 +30,7 @@ package org.lockss.util.rest.status;
 import org.springframework.http.*;
 import org.lockss.log.*;
 import org.lockss.util.rest.RestBaseClient;
+import org.lockss.util.rest.RestUtil;
 import org.lockss.util.rest.exception.*;
 import org.lockss.util.rest.status.ApiStatus;
 
@@ -60,7 +61,7 @@ public class RestStatusClient extends RestBaseClient<RestStatusClient> {
     try {
       ResponseEntity<ApiStatus> response = callRestService("/status", null,
 	  null, HttpMethod.GET, null, null, ApiStatus.class,
-	  "Can't get status");
+          "Can't get status", RestUtil.NO_RETRY_BACKOFFS);
       int status = response.getStatusCodeValue();
       log.debug2("status = " + status);
       ApiStatus result = response.getBody();

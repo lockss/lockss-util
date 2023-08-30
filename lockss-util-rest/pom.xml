@@ -38,16 +38,20 @@ POSSIBILITY OF SUCH DAMAGE.
   <parent>
     <groupId>org.lockss</groupId>
     <artifactId>lockss-parent-pom</artifactId>
-    <version>1.15.0-SNAPSHOT</version>
+    <version>1.16.0-SNAPSHOT</version>
     <relativePath />
   </parent>
 
   <artifactId>lockss-util-rest</artifactId>
-  <version>1.4.0-SNAPSHOT</version>
+  <version>1.5.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>lockss-util-rest</name>
   <description>LOCKSS utility library for REST</description>
+
+  <properties>
+    <build.java.jarTests.skip>false</build.java.jarTests.skip>
+  </properties>
 
   <dependencies>
 
@@ -134,6 +138,18 @@ POSSIBILITY OF SUCH DAMAGE.
       <version>1.4</version>
     </dependency>
 
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>31.1-jre</version>
+      <scope>compile</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-test</artifactId>
+      <version>${version.group.spring}</version><!-- FIXME is this needed in test scope only? -->
+    </dependency>
   </dependencies>
 
 </project>

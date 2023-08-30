@@ -138,7 +138,11 @@ POSSIBILITY OF SUCH DAMAGE.
 	<header>File started Timestamp: $${date:EEE dd MMM yyyy HH:mm:ss zzz}\n</header>
 	<footer>File ended Timestamp: $${date:EEE dd MMM yyyy HH:mm:ss zzz}\n</footer>
       </PatternLayout>
-      <ThresholdFilter level="${level.min.errlog}" onMatch="ACCEPT" onMismatch="DENY"/>
+      <Filters>
+        <MarkerFilter marker="Timestamp" onMatch="ACCEPT" onMismatch="NEUTRAL"/>
+        <ThresholdFilter level="${level.min.errlog}"
+                         onMatch="ACCEPT" onMismatch="DENY"/>
+      </Filters>
       <Policies>
 <!--         <TimeBasedTriggeringPolicy /> -->
 	<SizeBasedTriggeringPolicy size="${log.rollingfile.sizetrigger}"/>
