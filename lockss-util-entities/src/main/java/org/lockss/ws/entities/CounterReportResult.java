@@ -31,7 +31,7 @@
  */
 package org.lockss.ws.entities;
 
-import javax.activation.DataHandler;
+import jakarta.activation.DataHandler;
 
 /**
  * A wrapper for a COUNTER report provided by the server.

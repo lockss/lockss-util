@@ -28,10 +28,10 @@
 package org.lockss.util.rest.multipart;
 
 import java.io.*;
-import javax.activation.DataSource;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.util.ByteArrayDataSource;
+import jakarta.activation.DataSource;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMultipart;
+import jakarta.mail.util.ByteArrayDataSource;
 
 public class MultipartUtil {
   public static final String MULTIPART_FORM_DATA = "multipart/form-data";

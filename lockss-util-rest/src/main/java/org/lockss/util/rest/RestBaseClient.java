@@ -37,7 +37,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.URI;
 import java.util.*;
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 import org.lockss.log.L4JLogger;
 import org.lockss.util.Constants;
 import org.lockss.util.rest.exception.LockssRestException;

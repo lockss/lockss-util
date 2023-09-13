@@ -40,7 +40,7 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;

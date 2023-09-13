@@ -42,7 +42,7 @@ import org.lockss.util.rest.multipart.MultipartResponse.Part;
 import org.lockss.ws.entities.*;
 import org.springframework.http.*;
 
-import javax.activation.DataHandler;
+import jakarta.activation.DataHandler;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
