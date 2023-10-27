@@ -770,7 +770,7 @@ public class PlatformUtil {
 
 
   public static class MacOS extends PlatformUtil {
-    public String dfArgs = "-k";
+    public String dfArgs = "-k -I";
 
     /**
      * Determines whether file system is case-sensitive for operations that
