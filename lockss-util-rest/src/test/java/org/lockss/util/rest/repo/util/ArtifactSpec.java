@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2000-2022, Board of Trustees of Leland Stanford Jr. University
+Copyright (c) 2000-2023, Board of Trustees of Leland Stanford Jr. University
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -62,8 +62,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-
-import static org.lockss.util.rest.repo.util.ArtifactConstants.X_LOCKSS_CONTENT_TYPE;
 
 // NOTE: this class is used by TestRestLockssRepository in the
 // laaws-repository-service project
@@ -353,7 +351,7 @@ public class ArtifactSpec implements Comparable<Object> {
     } else if (contentGenerator != null) {
       CountingInputStream cis = new CountingInputStream(getInputStream());
       try {
-	IOUtils.copy(cis, new NullOutputStream());
+	IOUtils.copy(cis, NullOutputStream.nullOutputStream());
       } catch (IOException e) {
 	throw new RuntimeException("Couldn't read InputStream", e);
       }
@@ -383,7 +381,7 @@ public class ArtifactSpec implements Comparable<Object> {
 	MessageDigest digest = makeDigest();
 	DigestInputStream dis = new DigestInputStream(getInputStream(), digest);
 	try {
-	  IOUtils.copy(dis, new NullOutputStream());
+	  IOUtils.copy(dis, NullOutputStream.nullOutputStream());
 	} catch (IOException e) {
 	  throw new RuntimeException("Couldn't read InputStream", e);
 	}

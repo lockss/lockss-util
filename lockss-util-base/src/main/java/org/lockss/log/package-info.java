@@ -1,3 +1,35 @@
+/*
+
+Copyright (c) 2000-2023, Board of Trustees of Leland Stanford Jr. University
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors
+may be used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
+*/
+
 /**
 <pre>
 
@@ -9,24 +41,24 @@ Configuration:
 Logs are controlled by a chain of checked-in log4j config files and
 optionally a local file, a System property, and LOCKSS config params.
 
-Log4j config files are loded in this order, with later settings overriding
-eariler settings.  The exact merge rules are at
+Log4j config files are loaded in this order, with later settings overriding
+earlier settings.  The exact merge rules are at
 https://logging.apache.org/log4j/2.x/manual/configuration.html#CompositeConfiguration
 
-  - log4j2-lockss.xml (in lockss-util:src/main/resources/) contains
+  - log4j2-lockss.xml (in lockss-util-base:src/main/resources/) contains
     standard Logger and Appender setup.  No other project should contain a
     file with this name.
 
-  - log4j2-lockss-test.xml (in lockss-util:src/test/resources/) is
+  - log4j2-lockss-test.xml (in lockss-util-base:src/test/resources/) is
     used by the logger tests.  If you need special logger setup for tests
     in some other project, put them in a file with this name in the
-    project's test/resources/ dir.
+    project's src/test/resources/ dir.
 
   - log4j2-lockss-project.xml is intended for downstream project-wide
-    config.  It should be checked into the project's main/resources/ dir.
+    config.  It should be checked into the project's src/main/resources/ dir.
     See sample in samples dir.
 
-  - If the environemt variable LOG4J_LOCKSS_CONFIG is set, the file it
+  - If the environment variable LOG4J_LOCKSS_CONFIG is set, the file it
     points to be will be loaded last.  This is intended for user-specific
     config.  See sample in samples dir.
 

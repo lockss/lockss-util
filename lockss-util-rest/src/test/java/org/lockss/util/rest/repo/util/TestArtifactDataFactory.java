@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2000-2022, Board of Trustees of Leland Stanford Jr. University
+Copyright (c) 2000-2023, Board of Trustees of Leland Stanford Jr. University
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -37,8 +37,8 @@ import org.apache.http.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.lockss.log.L4JLogger;
+import org.lockss.util.Constants;
 import org.lockss.util.rest.repo.model.ArtifactData;
-import org.lockss.util.rest.repo.model.ArtifactIdentifier;
 import org.lockss.util.test.LockssTestCase5;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -131,7 +131,7 @@ public class TestArtifactDataFactory extends LockssTestCase5 {
 
             InputStream inputStream = artifact.getInputStream();
             assertNotNull(inputStream);
-            assertEquals(ARTIFACT_BYTES, IOUtils.toString(inputStream));
+            assertEquals(ARTIFACT_BYTES, IOUtils.toString(inputStream, Constants.DEFAULT_ENCODING));
 
             StatusLine statusLine = artifact.getHttpStatus();
             assertNotNull(statusLine);
@@ -176,7 +176,7 @@ public class TestArtifactDataFactory extends LockssTestCase5 {
 
             InputStream inputStream = artifact.getInputStream();
             assertNotNull(inputStream);
-            assertEquals(ARTIFACT_BYTES, IOUtils.toString(inputStream));
+            assertEquals(ARTIFACT_BYTES, IOUtils.toString(inputStream, Constants.DEFAULT_ENCODING));
 
             StatusLine statusLine = artifact.getHttpStatus();
             assertNotNull(statusLine);

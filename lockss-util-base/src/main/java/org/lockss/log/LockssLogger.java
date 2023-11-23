@@ -1,46 +1,46 @@
 /*
 
-Copyright (c) 2000-2018 Board of Trustees of Leland Stanford Jr. University,
-all rights reserved.
+Copyright (c) 2000-2023, Board of Trustees of Leland Stanford Jr. University
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+1. Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
-STANFORD UNIVERSITY BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
-IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
 
-Except as contained in this notice, the name of Stanford University shall not
-be used in advertising or otherwise to promote the sale, use or other dealings
-in this Software without prior written authorization from Stanford University.
+3. Neither the name of the copyright holder nor the names of its contributors
+may be used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
 
 */
 
 package org.lockss.log;
+
 import java.util.*;
 import java.beans.*;
-import java.sql.SQLException;
-import java.text.Format;
 import java.util.regex.*;
-
-import org.lockss.util.*;
 
 import org.apache.logging.log4j.*;
 import org.apache.logging.log4j.core.*;
 import org.apache.logging.log4j.core.config.*;
 import org.apache.logging.log4j.util.StackLocatorUtil;
 
-import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -180,8 +180,8 @@ public class LockssLogger {
   protected static LockssLogger myLog;
 
 
-  private L4JLogger log;		// The wrapped log4j Logger
-  private String name;			// this log's name
+  private L4JLogger log;                // The wrapped log4j Logger
+  private String name;                        // this log's name
 
 
   /** Create a LOCKSS logger wrapping the log4j logger */
@@ -231,14 +231,14 @@ public class LockssLogger {
    */
   protected static LockssLogger getWrappedLogger(String name) {
     return getWrappedLogger(name,
-			    (s) -> new LockssLogger(L4JLogger.getLogger(s)));
+                            (s) -> new LockssLogger(L4JLogger.getLogger(s)));
   }
 
   /**
    * Return an instance of 
    */
   protected static LockssLogger getWrappedLogger(String name,
-						 java.util.function.Function<String,LockssLogger> factory) {
+                                                 java.util.function.Function<String,LockssLogger> factory) {
     deferredInit();
     // This method MUST NOT make any reference to Configuration !!
     if (name == null) {
@@ -248,9 +248,9 @@ public class LockssLogger {
     synchronized (logs) {
       res = logs.get(name);
       if (res == null) {
-	res = factory.apply(name);
-	if (myLog != null) myLog.debug2("Creating logger: " + name);
-	logs.put(name, res);
+        res = factory.apply(name);
+        if (myLog != null) myLog.debug2("Creating logger: " + name);
+        logs.put(name, res);
       }
     }
     return res;
@@ -265,45 +265,45 @@ public class LockssLogger {
     synchronized (initLock) {
       if (!deferredInitDone) {
 
-	// Must set this true before calling getWrappedLogger or will
-	// recurse.  Rest of this is careful not to need the deferred init to
-	// be done.
-	deferredInitDone = true;
+        // Must set this true before calling getWrappedLogger or will
+        // recurse.  Rest of this is careful not to need the deferred init to
+        // be done.
+        deferredInitDone = true;
 
-	// Create my logger first as code below might use it
-	myLog = LockssLogger.getWrappedLogger(LockssLogger.class.getName());
+        // Create my logger first as code below might use it
+        myLog = LockssLogger.getWrappedLogger(LockssLogger.class.getName());
 
-	// Arrange to be notified when the log4j config is reloaded, so we
-	// can reset the levels dynamically configured using LOCKSS config
-	getLoggerContext().addPropertyChangeListener(new PropertyChangeListener() {
-	    @Override
-	    public void propertyChange(final PropertyChangeEvent evt) {
-	      if (myLog.isDebug3()) myLog.debug3("event: " + evt);
-	      switch (evt.getPropertyName()) {
-	      case LoggerContext.PROPERTY_CONFIG:
-		installLockssLevels(false);
-	      }
-	    }
-	  });
+        // Arrange to be notified when the log4j config is reloaded, so we
+        // can reset the levels dynamically configured using LOCKSS config
+        getLoggerContext().addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(final PropertyChangeEvent evt) {
+              if (myLog.isDebug3()) myLog.debug3("event: " + evt);
+              switch (evt.getPropertyName()) {
+              case LoggerContext.PROPERTY_CONFIG:
+                installLockssLevels(false);
+              }
+            }
+          });
 
-	// Process at startup all config items that normally get processed
-	// along with setting the LOCKSS config
+        // Process at startup all config items that normally get processed
+        // along with setting the LOCKSS config
 
-	// Ensure default values of stacktrace params are installed in the
-	// LoggerContext
-	installStackTraceParams(null);
+        // Ensure default values of stacktrace params are installed in the
+        // LoggerContext
+        installStackTraceParams(null);
 
-	processInitialSysprops();
-	installLockssLevels(false);
+        processInitialSysprops();
+        installLockssLevels(false);
 
-	// Complain if attempt to set log target using
-	// org.lockss.defaultLogTarget sysprop
-	if (!StringUtils.isBlank(System.getProperty(SYSPROP_DEFAULT_LOG_TARGET))) {
-	  myLog.error(SYSPROP_DEFAULT_LOG_TARGET +
-		      " sysprop not supported; use log4j2 config instead: " +
-		      System.getProperty(SYSPROP_DEFAULT_LOG_TARGET),
-		      new Throwable());
-	}
+        // Complain if attempt to set log target using
+        // org.lockss.defaultLogTarget sysprop
+        if (!StringUtils.isBlank(System.getProperty(SYSPROP_DEFAULT_LOG_TARGET))) {
+          myLog.error(SYSPROP_DEFAULT_LOG_TARGET +
+                      " sysprop not supported; use log4j2 config instead: " +
+                      System.getProperty(SYSPROP_DEFAULT_LOG_TARGET),
+                      new Throwable());
+        }
       }
     }
   }
@@ -317,10 +317,10 @@ public class LockssLogger {
       myLog.debug2("Reloading because levels changed");
       forceReload();
     }
-    setLockssConfig(MapUtil.map(PARAM_STACKTRACE_SEVERITY,
-				DEFAULT_STACKTRACE_SEVERITY,
-				PARAM_STACKTRACE_LEVEL,
-				DEFAULT_STACKTRACE_LEVEL));
+    setLockssConfig(new HashMap<>(Map.of(PARAM_STACKTRACE_SEVERITY,
+                                         DEFAULT_STACKTRACE_SEVERITY,
+                                         PARAM_STACKTRACE_LEVEL,
+                                         DEFAULT_STACKTRACE_LEVEL)));
   }
 
   private static void processInitialSysprops() {
@@ -364,7 +364,7 @@ public class LockssLogger {
   public static int levelOf(String name) throws IllegalLevelException {
     for (LevelDescr ld : allLevelDescrs) {
       if (ld != null && ld.name.equalsIgnoreCase(name)) {
-	return ld.level;
+        return ld.level;
       }
     }
     throw new IllegalLevelException("Log level not found: " + name);
@@ -506,7 +506,7 @@ public class LockssLogger {
     myLog.debug2("setLockssConfig: " + lconfig);
     if (!StringUtils.isBlank(lconfig.get(PARAM_LOG_TARGETS))) {
       myLog.error(PARAM_LOG_TARGETS +
-		  " param not supported; use log4j2 config instead");
+                  " param not supported; use log4j2 config instead");
     }
 
     // build map of <log-level> to LOCKSS level name
@@ -541,25 +541,25 @@ public class LockssLogger {
       String key = ent.getKey();
       Matcher mat = LOG_LEVEL_PAT.matcher(key);
       if (mat.matches()) {
-	String logname = mat.group(1);
-	String level = ent.getValue();
-	if (StringUtils.isBlank(logname)) {
-	  myLog.error("Illegal log name: " + key);
-	  continue;
-	}
-	try {
-	  switch (logname) {
-	  case LOCKSS_LOGGER_ALIAS:
-	    res.put(LOCKSS_ROOT_LOG_NAME, getLog4JLevel(level));
-	    break;
-	  default:
-	    anyLevelsChanged = true;
-	    res.put(logname, getLog4JLevel(level));
-	  }
-	} catch (IllegalLevelException e) {
-	  myLog.error("Ignoring illegal log level: " + key + " = " + level, e);
-	  continue;
-	}
+        String logname = mat.group(1);
+        String level = ent.getValue();
+        if (StringUtils.isBlank(logname)) {
+          myLog.error("Illegal log name: " + key);
+          continue;
+        }
+        try {
+          switch (logname) {
+          case LOCKSS_LOGGER_ALIAS:
+            res.put(LOCKSS_ROOT_LOG_NAME, getLog4JLevel(level));
+            break;
+          default:
+            anyLevelsChanged = true;
+            res.put(logname, getLog4JLevel(level));
+          }
+        } catch (IllegalLevelException e) {
+          myLog.error("Ignoring illegal log level: " + key + " = " + level, e);
+          continue;
+        }
       }
     }
     return res;
@@ -570,22 +570,22 @@ public class LockssLogger {
     if (ctx != null) {
       Map<String,Level> stackTraceConfig = new HashMap<>();
       copyIfSet(stackTraceConfig, lconfig,
-		PARAM_STACKTRACE_LEVEL, DEFAULT_STACKTRACE_LEVEL);
+                PARAM_STACKTRACE_LEVEL, DEFAULT_STACKTRACE_LEVEL);
       copyIfSet(stackTraceConfig, lconfig,
-		PARAM_STACKTRACE_SEVERITY, DEFAULT_STACKTRACE_SEVERITY);
+                PARAM_STACKTRACE_SEVERITY, DEFAULT_STACKTRACE_SEVERITY);
       ctx.setStackLevelMap(stackTraceConfig);
     }
   }
 
   static void copyIfSet(Map<String,Level> to, Map<String,String> from,
-			String key, String dfault) {
+                        String key, String dfault) {
     if (from != null && from.containsKey(key)) {
       String val = from.get(key);
       try {
-	to.put(key, getLog4JLevel(val));
-	return;
+        to.put(key, getLog4JLevel(val));
+        return;
       } catch (IllegalLevelException e) {
-	myLog.error("Illegal value for " + key + ": " + val);
+        myLog.error("Illegal value for " + key + ": " + val);
       }
     }
     try {
@@ -608,7 +608,7 @@ public class LockssLogger {
     }
     if (dynamicLevels != null) {
       if (myLog.isDebug2()) {
-	myLog.debug2("setLevels: " + dynamicLevels);
+        myLog.debug2("setLevels: " + dynamicLevels);
       }
       Configurator.setLevel(dynamicLevels);
     }

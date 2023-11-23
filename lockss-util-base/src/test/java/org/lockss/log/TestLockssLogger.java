@@ -1,32 +1,32 @@
 /*
 
-Copyright (c) 2000-2018, Board of Trustees of Leland Stanford Jr. University,
-All rights reserved.
+Copyright (c) 2000-2023, Board of Trustees of Leland Stanford Jr. University
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-1. Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer.
+1. Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
 
 2. Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation and/or
-other materials provided with the distribution.
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
 
 3. Neither the name of the copyright holder nor the names of its contributors
 may be used to endorse or promote products derived from this software without
 specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
 
 */
 
@@ -34,18 +34,21 @@ package org.lockss.log;
 
 import java.util.*;
 
-import org.apache.commons.collections4.*;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.*;
-import org.lockss.util.test.LockssTestCase5;
 
 import org.apache.logging.log4j.*;
 import org.apache.logging.log4j.core.*;
 import org.apache.logging.log4j.core.config.*;
 
-import org.lockss.util.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
-public class TestLockssLogger extends LockssTestCase5 {
+public class TestLockssLogger {
 
   protected static String lockssSysProp;
   protected static String rootSysProp;
@@ -76,7 +79,7 @@ public class TestLockssLogger extends LockssTestCase5 {
     // Record the org.lockss.defaultLogLevel and
     // org.lockss.defaultRootLogLevel sysprops at startup so we know what
     // to expect the default org.lockss and default root levels to be.
-    // It's not possible to exercise setting these propoerties in this test
+    // It's not possible to exercise setting these properties in this test
     // code, as the LockssLogger class may already have been initialized
     // before this code is executed.
 
@@ -86,27 +89,38 @@ public class TestLockssLogger extends LockssTestCase5 {
       origLockssLevel = LockssLogger.LEVEL_INFO;
     } else {
       try {
-	origLockssLevel = LockssLogger.levelOf(lockssSysProp);
+        origLockssLevel = LockssLogger.levelOf(lockssSysProp);
       } catch (Exception e) {
-	Assertions.fail("org.lockss.defaultLogLevel set to illegal level string: " +
-			lockssSysProp);
+        fail("org.lockss.defaultLogLevel set to illegal level string: " +
+                        lockssSysProp);
       }
     }
 
     rootSysProp = System.getProperty("org.lockss.defaultRootLogLevel");
 
     if (StringUtils.isBlank(rootSysProp)) {
-      origRootLevel = LockssLogger.LEVEL_INFO;
+      origRootLevel = LockssLogger.LEVEL_INFO; System.err.println("DEFAULT: INFO");
     } else {
       try {
-	origRootLevel = LockssLogger.levelOf(rootSysProp);
+        origRootLevel = LockssLogger.levelOf(rootSysProp); System.err.println("SYSPROP: " + rootSysProp);
       } catch (Exception e) {
-	Assertions.fail("org.lockss.defaultRootLogLevel set to illegal level string: " +
-			rootSysProp);
+        fail("org.lockss.defaultRootLogLevel set to illegal level string: " +
+                        rootSysProp);
       }
     }
   }
 
+  /*
+   * When our logging and testing utilities were both in lockss-util-core, this
+   * was part of the behind-the-scenes work of LockssTestCase5, but testFunc()
+   * doesn't quite work without this (assertIsLevel(origRootLevel, logRootDef)
+   * fails).
+   */
+  @BeforeEach
+  public void beforeEach_resetLogs() {
+    LockssLogger.resetLogs();
+  }
+  
   void assertIsLevel(int level, LockssLogger log) {
     assertEquals(level, log.getLevel());
     assertTrue(log.isLevel(level));
@@ -121,12 +135,13 @@ public class TestLockssLogger extends LockssTestCase5 {
     assertEquals(LockssLogger.LEVEL_SITE_ERROR, LockssLogger.levelOf("siteError"));
     assertEquals(LockssLogger.LEVEL_WARNING, LockssLogger.levelOf("warning"));
     assertEquals(LockssLogger.LEVEL_SITE_WARNING, LockssLogger.levelOf("siteWarning"));
+    assertEquals(LockssLogger.LEVEL_INFO, LockssLogger.levelOf("info"));
     assertEquals(LockssLogger.LEVEL_DEBUG, LockssLogger.levelOf("debug"));
     assertEquals(LockssLogger.LEVEL_DEBUG1, LockssLogger.levelOf("debug1"));
     assertEquals(LockssLogger.LEVEL_DEBUG2, LockssLogger.levelOf("debug2"));
     assertEquals(LockssLogger.LEVEL_DEBUG3, LockssLogger.levelOf("debug3"));
     assertThrows(LockssLogger.IllegalLevelException.class,
-		 () -> {LockssLogger.levelOf("nonesuch");});
+                 () -> {LockssLogger.levelOf("nonesuch");});
   }
 
   @Test
@@ -241,22 +256,22 @@ public class TestLockssLogger extends LockssTestCase5 {
     doLogs(LockssLogger.LEVEL_DEBUG3, logD3);
 
     List<String> expDefault =
-      ListUtil.list("crit", "crit", "err", "err", "warn", "warn",
-		    "info", "info", "debug", "debug",
-		    "debug2", "debug2", "debug3");
+      Arrays.asList("crit", "crit", "err", "err", "warn", "warn",
+                    "info", "info", "debug", "debug",
+                    "debug2", "debug2", "debug3");
 
     assertEquals(expDefault, getListAppender().getMessages());
 
     getListAppender().reset();
-    assertEmpty(getListAppender().getMessages());
+    assertTrue(getListAppender().getMessages().isEmpty());
 
-    Map<String,String> newConfig = new HashMap<String,String>() {{
-	put("org.lockss.log.test.debug2.level", "warning");
-	put("org.lockss.log.test.warning.level", "debug2");
-      }};
+    Map<String,String> newConfig = new HashMap<>(Map.of(
+        "org.lockss.log.test.debug2.level", "warning",
+        "org.lockss.log.test.warning.level", "debug2"
+    ));
 
     setConfig(newConfig);
-    assertEmpty(getListAppender().getMessages());
+    assertTrue(getListAppender().getMessages().isEmpty());
 
     assertIsLevel(LockssLogger.LEVEL_CRITICAL, logC);
     assertIsLevel(LockssLogger.LEVEL_ERROR, logE);
@@ -279,9 +294,9 @@ public class TestLockssLogger extends LockssTestCase5 {
     doLogs(origRootLevel, logRootDef);
 
     List<String> expNew =
-      ListUtil.list("crit", "crit", "err", "debug", "debug2",
-		    "warn", "info", "info", "debug",
-		    "err", "warn", "debug2", "debug3");
+      Arrays.asList("crit", "crit", "err", "debug", "debug2",
+                    "warn", "info", "info", "debug",
+                    "err", "warn", "debug2", "debug3");
 
     assertEquals(expNew, getListAppender().getMessages());
 
@@ -311,14 +326,14 @@ public class TestLockssLogger extends LockssTestCase5 {
     doLogs(LockssLogger.LEVEL_DEBUG3, logD3);
 
     expNew =
-      ListUtil.list("crit", "crit", "err", "debug", "debug2",
-		    "warn", "info", "info", "debug",
-		    "err", "warn", "debug2", "debug3");
+      Arrays.asList("crit", "crit", "err", "debug", "debug2",
+                    "warn", "info", "info", "debug",
+                    "err", "warn", "debug2", "debug3");
 
     assertEquals(expNew, getListAppender().getMessages());
 
     getListAppender().reset();
-    setConfig(new HashMap());
+    setConfig(new HashMap<>());
 
     assertIsLevel(LockssLogger.LEVEL_CRITICAL, logC);
     assertIsLevel(LockssLogger.LEVEL_ERROR, logE);
@@ -366,9 +381,9 @@ public class TestLockssLogger extends LockssTestCase5 {
 
   @Test
   public void testShortNameLevel() throws Exception {
-    Map<String,String> newConfig = new HashMap<String,String>() {{
-	put("org.lockss.log.default.level", "info");
-      }};
+    Map<String,String> newConfig = new HashMap<>(Map.of(
+        "org.lockss.log.default.level", "info"
+    ));
     setConfig(newConfig);
 
     LockssLogger logPollManager = getLogger("org.lockss.poll.PollManager");

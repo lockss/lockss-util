@@ -44,6 +44,7 @@ POSSIBILITY OF SUCH DAMAGE.
   <description>Aggregator to build LOCKSS utility libraries</description>
 
   <modules>
+    <module>lockss-util-base</module>
     <module>lockss-util-core</module>
     <module>lockss-util-rest</module>
     <module>lockss-util-entities</module>

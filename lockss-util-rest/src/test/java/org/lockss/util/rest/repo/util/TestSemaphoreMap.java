@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2000-2022, Board of Trustees of Leland Stanford Jr. University
+Copyright (c) 2000-2023, Board of Trustees of Leland Stanford Jr. University
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -34,15 +34,13 @@ package org.lockss.util.rest.repo.util;
 
 import java.io.*;
 import org.junit.Test;
-import org.lockss.log.L4JLogger;
-import org.lockss.util.rest.repo.util.SemaphoreMap.SemaphoreLock;
 import org.lockss.util.test.LockssTestCase5;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 public class TestSemaphoreMap extends LockssTestCase5 {
-  private final static L4JLogger log = L4JLogger.getLogger();
+
   private final static String TEST_KEY = "test";
   private final static int MAX_THREADS = 10;
 
@@ -89,19 +87,19 @@ public class TestSemaphoreMap extends LockssTestCase5 {
   }
 
   private int counter = 0;
-  private BlockingQueue queue = new ArrayBlockingQueue(4*MAX_THREADS);
+  private BlockingQueue<Integer> queue = new ArrayBlockingQueue<>(4*MAX_THREADS);
 
   private class SemaphoreMapTestRunnable implements Runnable {
-    private SemaphoreMap locks;
+    private SemaphoreMap<String> locks;
 
-    public SemaphoreMapTestRunnable(SemaphoreMap locks) {
+    public SemaphoreMapTestRunnable(SemaphoreMap<String> locks) {
       this.locks = locks;
     }
 
     @Override
     public void run() {
       try {
-        try (SemaphoreLock lock = locks.getLock(TEST_KEY)) {
+        try (SemaphoreMap<String>.SemaphoreLock lock = locks.getLock(TEST_KEY)) {
           try {
             queue.offer(counter++);
             Thread.sleep(50);
