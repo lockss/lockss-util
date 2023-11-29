@@ -50,6 +50,10 @@ POSSIBILITY OF SUCH DAMAGE.
   <name>lockss-util-base</name>
   <description>LOCKSS utilities for logging and time</description>
 
+  <properties>
+    <build.java.jarTests.skip>false</build.java.jarTests.skip>
+  </properties>
+
   <dependencies>
 
     <dependency>
@@ -68,6 +72,12 @@ POSSIBILITY OF SUCH DAMAGE.
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-web</artifactId>
       <version>${version.group.log4j}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.springframework</groupId>
+          <artifactId>spring-test</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- route slf4j to log4j2 -->
