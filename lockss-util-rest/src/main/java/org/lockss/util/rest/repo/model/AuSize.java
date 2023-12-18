@@ -1,15 +1,16 @@
 package org.lockss.util.rest.repo.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
-import org.springframework.validation.annotation.Validated;
-
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Objects;
+import javax.validation.constraints.*;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * AuSize
  */
 @Validated
+
 
 
 public class AuSize   {
@@ -30,11 +31,10 @@ public class AuSize   {
   /**
    * Get totalLatestVersions
    * @return totalLatestVersions
-  **/
-  @ApiModelProperty(value = "")
+   **/
+  @Schema(description = "")
 
-
-  public Long getTotalLatestVersions() {
+    public Long getTotalLatestVersions() {
     return totalLatestVersions;
   }
 
@@ -50,11 +50,10 @@ public class AuSize   {
   /**
    * Get totalAllVersions
    * @return totalAllVersions
-  **/
-  @ApiModelProperty(value = "")
+   **/
+  @Schema(description = "")
 
-
-  public Long getTotalAllVersions() {
+    public Long getTotalAllVersions() {
     return totalAllVersions;
   }
 
@@ -70,11 +69,10 @@ public class AuSize   {
   /**
    * Get totalWarcSize
    * @return totalWarcSize
-  **/
-  @ApiModelProperty(value = "")
+   **/
+  @Schema(description = "")
 
-
-  public Long getTotalWarcSize() {
+    public Long getTotalWarcSize() {
     return totalWarcSize;
   }
 

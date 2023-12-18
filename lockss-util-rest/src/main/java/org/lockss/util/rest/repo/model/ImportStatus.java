@@ -36,8 +36,10 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.validation.annotation.Validated;
+import javax.validation.Valid;
+import javax.validation.constraints.*;
 
 /**
  * ImportStatus
@@ -113,11 +115,10 @@ public class ImportStatus   {
   /**
    * Get warcId
    * @return warcId
-  **/
-  @ApiModelProperty(value = "")
+   **/
+  @Schema(description = "")
 
-
-  public String getWarcId() {
+    public String getWarcId() {
     return warcId;
   }
 
@@ -133,11 +134,10 @@ public class ImportStatus   {
   /**
    * Get offset
    * @return offset
-  **/
-  @ApiModelProperty(value = "")
+   **/
+  @Schema(description = "")
 
-
-  public Long getOffset() {
+    public Long getOffset() {
     return offset;
   }
 
@@ -153,11 +153,10 @@ public class ImportStatus   {
   /**
    * Get url
    * @return url
-  **/
-  @ApiModelProperty(value = "")
+   **/
+  @Schema(description = "")
 
-
-  public String getUrl() {
+    public String getUrl() {
     return url;
   }
 
@@ -173,11 +172,10 @@ public class ImportStatus   {
   /**
    * Get artifactUuid
    * @return artifactUuid
-  **/
-  @ApiModelProperty(value = "")
+   **/
+  @Schema(description = "")
 
-
-  public String getArtifactUuid() {
+    public String getArtifactUuid() {
     return artifactUuid;
   }
 
@@ -193,11 +191,10 @@ public class ImportStatus   {
   /**
    * Get digest
    * @return digest
-  **/
-  @ApiModelProperty(value = "")
+   **/
+  @Schema(description = "")
 
-
-  public String getDigest() {
+    public String getDigest() {
     return digest;
   }
 
@@ -213,11 +210,10 @@ public class ImportStatus   {
   /**
    * Get version
    * @return version
-  **/
-  @ApiModelProperty(value = "")
+   **/
+  @Schema(description = "")
 
-
-  public Integer getVersion() {
+    public Integer getVersion() {
     return version;
   }
 
@@ -233,11 +229,10 @@ public class ImportStatus   {
   /**
    * Get status
    * @return status
-  **/
-  @ApiModelProperty(value = "")
+   **/
+  @Schema(description = "")
 
-
-  public StatusEnum getStatus() {
+    public StatusEnum getStatus() {
     return status;
   }
 
@@ -253,11 +248,10 @@ public class ImportStatus   {
   /**
    * Get statusMessage
    * @return statusMessage
-  **/
-  @ApiModelProperty(value = "")
+   **/
+  @Schema(description = "")
 
-
-  public String getStatusMessage() {
+    public String getStatusMessage() {
     return statusMessage;
   }
 

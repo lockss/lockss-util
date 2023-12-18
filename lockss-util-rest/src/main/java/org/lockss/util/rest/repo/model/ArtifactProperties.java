@@ -1,14 +1,16 @@
 package org.lockss.util.rest.repo.model;
 
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
+import javax.validation.constraints.*;
 import org.springframework.validation.annotation.Validated;
 
 /**
  * ArtifactProperties
  */
 @Validated
+
 
 
 public class ArtifactProperties   {
@@ -50,11 +52,10 @@ public class ArtifactProperties   {
   /**
    * Get namespace
    * @return namespace
-  **/
-  @ApiModelProperty(value = "")
+   **/
+  @Schema(description = "")
 
-
-  public String getNamespace() {
+    public String getNamespace() {
     return namespace;
   }
 
@@ -70,11 +71,10 @@ public class ArtifactProperties   {
   /**
    * Get uuid
    * @return uuid
-  **/
-  @ApiModelProperty(value = "")
+   **/
+  @Schema(description = "")
 
-
-  public String getUuid() {
+    public String getUuid() {
     return uuid;
   }
 
@@ -90,11 +90,10 @@ public class ArtifactProperties   {
   /**
    * Get auid
    * @return auid
-  **/
-  @ApiModelProperty(value = "")
+   **/
+  @Schema(description = "")
 
-
-  public String getAuid() {
+    public String getAuid() {
     return auid;
   }
 
@@ -110,11 +109,10 @@ public class ArtifactProperties   {
   /**
    * Get uri
    * @return uri
-  **/
-  @ApiModelProperty(value = "")
+   **/
+  @Schema(description = "")
 
-
-  public String getUri() {
+    public String getUri() {
     return uri;
   }
 
@@ -130,11 +128,10 @@ public class ArtifactProperties   {
   /**
    * Get version
    * @return version
-  **/
-  @ApiModelProperty(value = "")
+   **/
+  @Schema(description = "")
 
-
-  public Integer getVersion() {
+    public Integer getVersion() {
     return version;
   }
 
@@ -150,11 +147,10 @@ public class ArtifactProperties   {
   /**
    * Get contentLength
    * @return contentLength
-  **/
-  @ApiModelProperty(value = "")
+   **/
+  @Schema(description = "")
 
-
-  public Long getContentLength() {
+    public Long getContentLength() {
     return contentLength;
   }
 
@@ -170,11 +166,10 @@ public class ArtifactProperties   {
   /**
    * Get contentDigest
    * @return contentDigest
-  **/
-  @ApiModelProperty(value = "")
+   **/
+  @Schema(description = "")
 
-
-  public String getContentDigest() {
+    public String getContentDigest() {
     return contentDigest;
   }
 
@@ -190,11 +185,10 @@ public class ArtifactProperties   {
   /**
    * Get collectionDate
    * @return collectionDate
-  **/
-  @ApiModelProperty(value = "")
+   **/
+  @Schema(description = "")
 
-
-  public Long getCollectionDate() {
+    public Long getCollectionDate() {
     return collectionDate;
   }
 
@@ -210,11 +204,10 @@ public class ArtifactProperties   {
   /**
    * Get storeDate
    * @return storeDate
-  **/
-  @ApiModelProperty(value = "")
+   **/
+  @Schema(description = "")
 
-
-  public Long getStoreDate() {
+    public Long getStoreDate() {
     return storeDate;
   }
 
@@ -230,11 +223,10 @@ public class ArtifactProperties   {
   /**
    * Get state
    * @return state
-  **/
-  @ApiModelProperty(value = "")
+   **/
+  @Schema(description = "")
 
-
-  public String getState() {
+    public String getState() {
     return state;
   }
 
