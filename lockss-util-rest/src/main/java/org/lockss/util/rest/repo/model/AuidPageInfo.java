@@ -34,21 +34,49 @@ package org.lockss.util.rest.repo.model;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.ArrayList;
+import java.util.List;
+import org.springframework.validation.annotation.Validated;
+import javax.validation.Valid;
+import javax.validation.constraints.*;
 
 /**
- * A page of archival unit identifier results.
+ * A display page of Archival Unit identifiers
  */
-public class AuidPageInfo {
+@Schema(description = "A display page of Archival Unit identifiers")
+@Validated
+
+
+
+public class AuidPageInfo   {
+  @JsonProperty("auids")
+  @Valid
   private List<String> auids = new ArrayList<>();
+
+  @JsonProperty("pageInfo")
   private PageInfo pageInfo = null;
 
+  public AuidPageInfo auids(List<String> auids) {
+    this.auids = auids;
+    return this;
+  }
+
+  public AuidPageInfo addAuidsItem(String auidsItem) {
+    this.auids.add(auidsItem);
+    return this;
+  }
+
   /**
-   * Provides the archival unit identifiers included in the page.
-   * 
-   * @return a List<String> with the archival unit identifiers included in the
-   *         page.
-   */
-  public List<String> getAuids() {
+   * The Archival Unit identifiers included in the page
+   * @return auids
+   **/
+  @Schema(required = true, description = "The Archival Unit identifiers included in the page")
+      @NotNull
+
+    public List<String> getAuids() {
     return auids;
   }
 
@@ -62,12 +90,20 @@ public class AuidPageInfo {
     this.auids = auids;
   }
 
+  public AuidPageInfo pageInfo(PageInfo pageInfo) {
+    this.pageInfo = pageInfo;
+    return this;
+  }
+
   /**
-   * Provides the pagination information.
-   * 
-   * @return a PageInfo with the pagination information.
-   */
-  public PageInfo getPageInfo() {
+   * Get pageInfo
+   * @return pageInfo
+   **/
+  @Schema(required = true, description = "")
+      @NotNull
+
+    @Valid
+    public PageInfo getPageInfo() {
     return pageInfo;
   }
 
