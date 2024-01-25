@@ -30,12 +30,10 @@ package org.lockss.util.rest;
 import java.io.*;
 import java.util.*;
 import java.net.ConnectException;
-import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.UnknownHostException;
-import org.apache.commons.io.IOUtils;
-import org.apache.http.conn.ConnectTimeoutException;
+import org.apache.hc.client5.http.ConnectTimeoutException;
 import org.junit.*;
 import org.lockss.util.*;
 import org.lockss.util.rest.exception.*;
@@ -328,7 +326,7 @@ public class TestRestUtil extends LockssTestCase5 {
       HttpHeaders hdrs = new HttpHeaders();
       hdrs.add("Authorization", "Basic bG9ja3NzLXU6bG9ja3NzLXA=");
       ResponseEntity<Map> resp =
-	doCallRestService("http://lockss-u:lockss-p@localhost:" + port + "/foo", "bar",
+	doCallRestService("http://localhost:" + port + "/foo", "bar",
 			  hdrs, Map.class);
       Assert.fail("Should have thrown, but returned: " + resp);
     } catch (LockssRestHttpException e) {
