@@ -57,7 +57,7 @@ public class HttpResponseStatusAndHeaders {
     this.headers = headers;
   }
 
-  public int getCode() {
+  public int getStatusCode() {
     return code;
   }
   public HttpResponseStatusAndHeaders setCode(int code) {

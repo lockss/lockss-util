@@ -759,9 +759,9 @@ public class RestLockssRepository implements LockssRepository {
               Void.class, "deleteArtifact");
 
       checkStatusOk(response);
-      HttpStatus status = response.getStatusCode();
+      HttpStatusCode statusCode = response.getStatusCode();
 
-      if (status.is2xxSuccessful()) {
+      if (statusCode.is2xxSuccessful()) {
         return;
       }
 
@@ -1421,8 +1421,8 @@ public class RestLockssRepository implements LockssRepository {
     checkStatusOk(resp.getStatusCode());
   }
 
-  private void checkStatusOk(HttpStatus status) {
-    if (!status.is2xxSuccessful()) {
+  private void checkStatusOk(HttpStatusCode statusCode) {
+    if (!statusCode.is2xxSuccessful()) {
       throw new RuntimeException("Shouldn't happen: RestUtil returned non-200 result");
     }
   }

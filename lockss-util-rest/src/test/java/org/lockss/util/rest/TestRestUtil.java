@@ -156,8 +156,9 @@ public class TestRestUtil extends LockssTestCase5 {
       doCallRestService("http://localhost:" + port + "/foo", "bar",
 			String.class);
 
-    HttpStatus statusCode = resp.getStatusCode();
-    log.debug("statusCode = {}", statusCode);
+    HttpStatusCode statusCode = resp.getStatusCode();
+    HttpStatus status = HttpStatus.valueOf(statusCode.value());
+    log.debug("status = {}", status);
     log.debug("response = {}", resp);
     assertEquals(exp, resp.getBody());
   }
@@ -237,8 +238,9 @@ public class TestRestUtil extends LockssTestCase5 {
       doCallRestService("http://localhost:" + port + "/foo", "bar",
 			Map.class);
 
-    HttpStatus statusCode = resp.getStatusCode();
-    log.debug("statusCode = {}", statusCode);
+    HttpStatusCode statusCode = resp.getStatusCode();
+    HttpStatus status = HttpStatus.valueOf(statusCode.value());
+    log.debug("status = {}", status);
     log.debug("response = {}", resp);
     Map resMap = resp.getBody();
     assertEquals(exp, resMap);

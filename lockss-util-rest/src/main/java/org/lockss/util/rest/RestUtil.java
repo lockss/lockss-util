@@ -219,9 +219,10 @@ public class RestUtil {
       ResponseEntity<T> response = restTemplate.exchange(uri, method, requestEntity, responseType);
 
       // Get the response status.
-      HttpStatus statusCode = response.getStatusCode();
+      HttpStatusCode statusCode = response.getStatusCode();
+      HttpStatus status = HttpStatus.valueOf(statusCode.value());
 
-      log.trace("statusCode = {}", statusCode);
+      log.trace("status = {}", status);
 
       // Check whether the call status code indicated failure.
       // Q: It's possible that this is never taken because 1xx and 3xx series of errors also cause
@@ -229,7 +230,7 @@ public class RestUtil {
       if (!isSuccess(statusCode)) {
         // Yes: Report it back to the caller.
         LockssRestHttpException lrhe = new LockssRestHttpException(clientExceptionMessage);
-        lrhe.setHttpStatus(statusCode);
+        lrhe.setHttpStatus(status);
         lrhe.setHttpResponseHeaders(response.getHeaders());
 
         log.trace("lrhe = {}", lrhe, (Exception) null);
@@ -443,7 +444,7 @@ public class RestUtil {
    * @return a boolean with <code>true</code> if a successful response has been
    *         obtained, <code>false</code> otherwise.
    */
-  public static boolean isSuccess(HttpStatus statusCode) {
+  public static boolean isSuccess(HttpStatusCode statusCode) {
     return statusCode.is2xxSuccessful();
   }
 }

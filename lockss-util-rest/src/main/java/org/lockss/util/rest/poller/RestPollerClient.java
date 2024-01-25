@@ -510,18 +510,19 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
     log.debug2("Invoked");
 
     // Get the status code included in the response.
-    HttpStatus statusCode = response.getStatusCode();
-    log.trace("statusCode = {}", statusCode);
+    HttpStatusCode statusCode = response.getStatusCode();
+    HttpStatusCode status = HttpStatus.valueOf(statusCode.value());
+    log.trace("status = {}", status);
 
     // Check whether the operation indicates success.
-    if (statusCode.equals(HttpStatus.OK)) {
+    if (status.equals(HttpStatus.OK)) {
       // Yes: Get the results.
       List<HasherWsAsynchronousResult> wsResults = getHasherResults(response);
       log.debug2("wsResults = {}", wsResults);
       return wsResults;
     } else {
       // No: report the problem.
-      String message = "REST service returned statusCode '" + statusCode
+      String message = "REST service returned status '" + status
 	  + ", statusMessage = '" + response.getStatusMessage() + "'";
 
       log.error(message);
