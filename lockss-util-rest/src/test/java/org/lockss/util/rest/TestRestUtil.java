@@ -127,9 +127,9 @@ public class TestRestUtil extends LockssTestCase5 {
 			String.class);
       fail("Should have thrown LockssRestException");
     } catch (LockssRestException lre) {
-      assertMatchesRE(message + ".*SocketTimeoutException", lre.getMessage());
+      assertMatchesRE(message + ".*ConnectTimeoutException", lre.getMessage());
       assertClass(ConnectTimeoutException.class, lre.getCause());
-      assertMatchesRE("connect timed out", lre.getCause().getMessage());
+      assertMatchesRE("Connect timed out", lre.getCause().getMessage());
     }
   }
 
