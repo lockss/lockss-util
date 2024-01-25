@@ -103,7 +103,14 @@ POSSIBILITY OF SUCH DAMAGE.
     <dependency>
       <groupId>org.mock-server</groupId>
       <artifactId>mockserver-netty</artifactId>
-      <version>5.6.1</version>
+      <version>${version.group.mockserver}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mock-server</groupId>
+      <artifactId>mockserver-junit-rule</artifactId>
+      <version>${version.group.mockserver}</version>
       <scope>test</scope>
     </dependency>
 
