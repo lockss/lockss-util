@@ -36,10 +36,8 @@ import org.lockss.util.rest.exception.LockssRestNetworkException;
 import org.lockss.util.rest.multipart.MultipartMessageHttpMessageConverter;
 import org.lockss.util.time.TimerUtil;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.boot.web.client.RestTemplateCustomizer;
+import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -302,6 +300,7 @@ public class RestUtil {
     return new RestTemplateBuilder()
         .setConnectTimeout(Duration.ofMillis(connectTimeout))
         .setReadTimeout(Duration.ofMillis(readTimeout))
+        // Q: Okay to remove? "...since 6.1 requests are never buffered, as if this property is false"
         .setBufferRequestBody(false)
         .errorHandler(new LockssResponseErrorHandler(new RestTemplate().getMessageConverters()));
   }
@@ -328,27 +327,52 @@ public class RestUtil {
       log.warn("readTimeout < 1 sec: {}", readTimeout);
     }
 
-    // It's necessary to specify this factory to get Spring support for PATCH
-    // operations.
-    HttpComponentsClientHttpRequestFactory requestFactory =
-	new HttpComponentsClientHttpRequestFactory();
+    RestTemplateBuilder builder = new RestTemplateBuilder()
+//        new MyClientHttpRequestFactoryCustomizer(connectTimeout, readTimeout, false))
+//        .detectRequestFactory(false)
+        .setConnectTimeout(Duration.ofMillis(connectTimeout))
+        .setReadTimeout(Duration.ofMillis(readTimeout))
+        // Q: Okay to remove? "...since 6.1 requests are never buffered, as if this property is false"
+        .setBufferRequestBody(false)
+        .errorHandler(new LockssResponseErrorHandler(new RestTemplate().getMessageConverters()));
 
-    // Specify the timeouts.
-    requestFactory.setConnectTimeout((int)connectTimeout);
-    requestFactory.setReadTimeout((int)readTimeout);
-
-    // Do not buffer the request body internally, to avoid running out of
-    // memory, or other failures, when sending large amounts of data.
-    requestFactory.setBufferRequestBody(false);
-
-    // Get the template.
-    RestTemplate restTemplate =	new RestTemplate(requestFactory);
-
-    // Set a default LockssResponseErrorHandler from the default set of message converters
-    restTemplate.setErrorHandler(new LockssResponseErrorHandler(restTemplate.getMessageConverters()));
+    RestTemplate restTemplate =	builder.build();
 
     log.debug2("restTemplate = {}", restTemplate);
     return restTemplate;
+  }
+  
+  private static class MyClientHttpRequestFactoryCustomizer implements RestTemplateCustomizer {
+    long connectTimeout;
+    long readTimeout;
+    boolean bufferRequestBody = false;
+
+    public MyClientHttpRequestFactoryCustomizer(
+        long connectTimeout, long readTimeout, boolean bufferRequestBody) {
+      this.connectTimeout = connectTimeout;
+      this.readTimeout = readTimeout;
+      this.bufferRequestBody = bufferRequestBody;
+    }
+
+    @Override
+    public void customize(RestTemplate restTemplate) {
+      // It's necessary to specify this factory to get Spring support for PATCH
+      // operations.
+      HttpComponentsClientHttpRequestFactory requestFactory =
+          new HttpComponentsClientHttpRequestFactory();
+
+      // Specify the timeouts.
+      requestFactory.setConnectTimeout((int)connectTimeout);
+      // FIXME: requestFactory.setReadTimeout((int)readTimeout);
+
+      // Do not buffer the request body internally, to avoid running out of
+      // memory, or other failures, when sending large amounts of data.
+      // Q: Okay to remove? "...since 6.1 requests are never buffered, as if this property is false"
+      requestFactory.setBufferRequestBody(false);
+
+      // Configure the template.
+      restTemplate.setRequestFactory(requestFactory);
+    }
   }
 
   /**
