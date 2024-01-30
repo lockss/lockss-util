@@ -694,12 +694,17 @@ public class RestLockssRepository implements LockssRepository {
     HttpHeaders headers = getInitializedHttpHeaders();
     headers.setContentType(MediaType.valueOf("multipart/form-data"));
 
+    // Need to send an empty multipart request; empty body will cause undefined
+    // behavior. In particular, Spring Boot 3.x will complain about a missing
+    // multipart boundary.
+    MultiValueMap<String, Object> emptyParts = new LinkedMultiValueMap<>();
+
     try {
       ResponseEntity<String> response =
           RestUtil.callRestService(restTemplate,
               builder.build().encode().toUri(),
               HttpMethod.PUT,
-              new HttpEntity<>(null, headers),
+              new HttpEntity<>(emptyParts, headers),
               String.class,
               "commitArtifact client error");
       checkStatusOk(response);
