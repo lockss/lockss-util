@@ -62,35 +62,31 @@ public class Artifact implements Serializable {
   public final static String ARTIFACT_COLLECTION_DATE_KEY = "collectionDate";
   public final static String ARTIFACT_STORE_DATE_KEY = "storeDate";
 
-  // We have chosen to map the artifact UUID to the Solr document's "id" field
-  // for the sake of convention, even though Solr appears to support assigning
-  // another field as the unique identifier.
+    // We have chosen to map the artifact UUID to the Solr document's "id" field
+    // for the sake of convention, even though Solr appears to support assigning
+    // another field as the unique identifier.
+    private String uuid;
 
-  @JsonProperty("uuid")
-  private String uuid;
-  @JsonProperty("namespace")
-  private String namespace = "lockss";
-  @JsonProperty("auid")
-  private String auid;
-  @JsonProperty("uri")
-  private String uri;
-  @JsonProperty("sortUri")
-  private String sortUri;
-  @JsonProperty("version")
-  private Integer version;
-  @JsonProperty("committed")
-  private Boolean committed = null;
-  @JsonProperty("storageUrl")
-  private String storageUrl = null;
-  @JsonProperty("contentLength")
-  private long contentLength;
-  @JsonProperty("contentDigest")
-  private String contentDigest;
-  @JsonProperty("collectionDate")
-  private long collectionDate;
-//  @JsonProperty("storeDate")
+    private String namespace = "lockss";
+
+    private String auid;
+
+    private String uri;
+
+    private String sortUri;
+
+    private Integer version;
+
+    private Boolean committed;
+
+    private String storageUrl;
+
+    private long contentLength;
+
+    private String contentDigest;
+
+    private long collectionDate;
 //  private long storeDate;
-//  @JsonProperty("state")
 //  private String state = null;
 
     /**
