@@ -25,35 +25,38 @@
  in this Software without prior written authorization from Stanford University.
 
  */
+@Schema(description = "Information about the repository")
+@Validated
 
 package org.lockss.util.rest.repo.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.Objects;
-import javax.validation.Valid;
-import javax.validation.constraints.*;
+import java.io.Serializable;
 import org.lockss.util.storage.StorageInfo;
-import org.springframework.validation.annotation.Validated;
 
 /**
  * Information about a repository and its storage areas
  */
-@Schema(description = "Information about the repository")
-@Validated
-
-
-
-public class RepositoryInfo   {
+public class RepositoryInfo implements Serializable {
   @JsonProperty("storeInfo")
   private StorageInfo storeInfo = null;
 
   @JsonProperty("indexInfo")
   private StorageInfo indexInfo = null;
 
+  /**
+   * Default constructor.
+   */
+  public RepositoryInfo() {
+  }
+
   public RepositoryInfo(StorageInfo storeInfo, StorageInfo indexInfo) {
     this.storeInfo = storeInfo;
     this.indexInfo = indexInfo;
+  }
+
+  public RepositoryInfo storeInfo(StorageInfo storeInfo) {
+    this.storeInfo = storeInfo;
+    return this;
   }
 
   /**
@@ -91,25 +94,6 @@ public class RepositoryInfo   {
 
   public void setIndexInfo(StorageInfo indexInfo) {
     this.indexInfo = indexInfo;
-  }
-
-
-  @Override
-  public boolean equals(java.lang.Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    RepositoryInfo repositoryInfo = (RepositoryInfo) o;
-    return Objects.equals(this.storeInfo, repositoryInfo.storeInfo) &&
-        Objects.equals(this.indexInfo, repositoryInfo.indexInfo);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(storeInfo, indexInfo);
   }
 
   @Override

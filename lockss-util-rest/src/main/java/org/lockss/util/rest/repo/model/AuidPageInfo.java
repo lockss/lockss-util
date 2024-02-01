@@ -44,38 +44,18 @@ import javax.validation.Valid;
 import javax.validation.constraints.*;
 
 /**
- * A display page of Archival Unit identifiers
+ * A page of archival unit identifier results.
  */
-@Schema(description = "A display page of Archival Unit identifiers")
-@Validated
-
-
-
 public class AuidPageInfo   {
-  @JsonProperty("auids")
-  @Valid
   private List<String> auids = new ArrayList<>();
-
-  @JsonProperty("pageInfo")
   private PageInfo pageInfo = null;
 
-  public AuidPageInfo auids(List<String> auids) {
-    this.auids = auids;
-    return this;
-  }
-
-  public AuidPageInfo addAuidsItem(String auidsItem) {
-    this.auids.add(auidsItem);
-    return this;
-  }
-
   /**
-   * The Archival Unit identifiers included in the page
-   * @return auids
-   **/
-  @Schema(required = true, description = "The Archival Unit identifiers included in the page")
-      @NotNull
-
+   * Provides the archival unit identifiers included in the page.
+   *
+   * @return a List<String> with the archival unit identifiers included in the
+   *         page.
+   */
     public List<String> getAuids() {
     return auids;
   }
@@ -96,13 +76,10 @@ public class AuidPageInfo   {
   }
 
   /**
-   * Get pageInfo
-   * @return pageInfo
-   **/
-  @Schema(required = true, description = "")
-      @NotNull
-
-    @Valid
+   * Provides the pagination information.
+   *
+   * @return a PageInfo with the pagination information.
+   */
     public PageInfo getPageInfo() {
     return pageInfo;
   }

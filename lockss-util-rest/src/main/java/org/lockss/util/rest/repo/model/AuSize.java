@@ -3,14 +3,12 @@ package org.lockss.util.rest.repo.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Objects;
-import javax.validation.constraints.*;
 import org.springframework.validation.annotation.Validated;
 
 /**
  * AuSize
  */
 @Validated
-
 
 
 public class AuSize   {
@@ -104,7 +102,7 @@ public class AuSize   {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class AuSize {\n");
-    
+
     sb.append("    totalLatestVersions: ").append(toIndentedString(totalLatestVersions)).append("\n");
     sb.append("    totalAllVersions: ").append(toIndentedString(totalAllVersions)).append("\n");
     sb.append("    totalWarcSize: ").append(toIndentedString(totalWarcSize)).append("\n");

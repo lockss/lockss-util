@@ -44,36 +44,15 @@ import javax.validation.constraints.*;
 /**
  * A display page of artifacts
  */
-@Schema(description = "A display page of artifacts")
-@Validated
-
-
-
 public class ArtifactPageInfo   {
-  @JsonProperty("artifacts")
-  @Valid
   private List<Artifact> artifacts = new ArrayList<>();
-
-  @JsonProperty("pageInfo")
   private PageInfo pageInfo = null;
 
-  public ArtifactPageInfo artifacts(List<Artifact> artifacts) {
-    this.artifacts = artifacts;
-    return this;
-  }
-
-  public ArtifactPageInfo addArtifactsItem(Artifact artifactsItem) {
-    this.artifacts.add(artifactsItem);
-    return this;
-  }
-
   /**
-   * The artifacts included in the page
-   * @return artifacts
-   **/
-  @Schema(required = true, description = "The artifacts included in the page")
-      @NotNull
-    @Valid
+   * Provides the artifacts included in the page.
+   *
+   * @return a List<Artifact> with the artifacts included in the page.
+   */
     public List<Artifact> getArtifacts() {
     return artifacts;
   }
@@ -133,23 +112,7 @@ public class ArtifactPageInfo   {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("ArtifactPageInfo [\n");
-
-    sb.append("    artifacts: ").append(toIndentedString(artifacts)).append("\n");
-    sb.append("    pageInfo: ").append(toIndentedString(pageInfo)).append("\n");
-    sb.append("]");
-    return sb.toString();
-  }
-
-  /**
-   * Convert the given object to string with each line indented by 4 spaces
-   * (except the first line).
-   */
-  private String toIndentedString(java.lang.Object o) {
-    if (o == null) {
-      return "null";
-    }
-    return o.toString().replace("\n", "\n    ");
+    return "[ArtifactPageInfo artifacts=" + artifacts
+	+ ", pageInfo=" + pageInfo + "]";
   }
 }

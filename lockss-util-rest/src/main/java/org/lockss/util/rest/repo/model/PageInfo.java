@@ -69,9 +69,10 @@ public class PageInfo   {
   }
 
   /**
-   * The total number of results
-   * @return totalCount
-   **/
+   * Provides the total number of results.
+   *
+   * @return an Integer with the total number of results.
+   */
   @Schema(required = true, description = "The total number of results")
       @NotNull
 
@@ -94,12 +95,12 @@ public class PageInfo   {
   }
 
   /**
-   * The number of results per page
-   * @return resultsPerPage
-   **/
+   * Provides the number of results per page.
+   *
+   * @return an Integer with the number of results per page.
+   */
   @Schema(required = true, description = "The number of results per page")
       @NotNull
-
     public Integer getResultsPerPage() {
     return resultsPerPage;
   }
@@ -109,6 +110,8 @@ public class PageInfo   {
    *
    * @param resultsPerPage An Integer with the number of results per page.
    */
+  @Schema(required = true, description = "The number of results per page")
+      @NotNull
   public void setResultsPerPage(Integer resultsPerPage) {
     this.resultsPerPage = resultsPerPage;
   }
@@ -119,12 +122,12 @@ public class PageInfo   {
   }
 
   /**
-   * The continuation token
-   * @return continuationToken
-   **/
+   * Provides the continuation token.
+   *
+   * @return a String with the continuation token.
+   */
   @Schema(required = true, description = "The continuation token")
       @NotNull
-
     public String getContinuationToken() {
     return continuationToken;
   }
@@ -144,12 +147,12 @@ public class PageInfo   {
   }
 
   /**
-   * The link of the current request
-   * @return curLink
-   **/
+   * Provides link to the current page.
+   *
+   * @return a String with the link to the current page.
+   */
   @Schema(required = true, description = "The link of the current request")
       @NotNull
-
     public String getCurLink() {
     return curLink;
   }
@@ -169,12 +172,12 @@ public class PageInfo   {
   }
 
   /**
-   * The link of the next request
-   * @return nextLink
-   **/
+   * Provides link to the next page.
+   *
+   * @return a String with the link to the next page.
+   */
   @Schema(required = true, description = "The link of the next request")
       @NotNull
-
     public String getNextLink() {
     return nextLink;
   }
@@ -212,26 +215,8 @@ public class PageInfo   {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("PageInfo [\n");
-
-    sb.append("    totalCount: ").append(toIndentedString(totalCount)).append("\n");
-    sb.append("    resultsPerPage: ").append(toIndentedString(resultsPerPage)).append("\n");
-    sb.append("    continuationToken: ").append(toIndentedString(continuationToken)).append("\n");
-    sb.append("    curLink: ").append(toIndentedString(curLink)).append("\n");
-    sb.append("    nextLink: ").append(toIndentedString(nextLink)).append("\n");
-    sb.append("]");
-    return sb.toString();
-  }
-
-  /**
-   * Convert the given object to string with each line indented by 4 spaces
-   * (except the first line).
-   */
-  private String toIndentedString(java.lang.Object o) {
-    if (o == null) {
-      return "null";
-    }
-    return o.toString().replace("\n", "\n    ");
+    return "[PageInfo totalCount=" + totalCount + ", resultsPerPage="
+	+ resultsPerPage + ", continuationToken=" + continuationToken
+	+ ", curLink=" + curLink + ", nextLink=" + nextLink + "]";
   }
 }
