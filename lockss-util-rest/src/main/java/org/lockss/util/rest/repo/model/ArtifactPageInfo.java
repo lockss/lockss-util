@@ -44,15 +44,32 @@ import javax.validation.constraints.*;
 /**
  * A display page of artifacts
  */
+
 public class ArtifactPageInfo   {
+  @JsonProperty("artifacts")
+  @Valid
   private List<Artifact> artifacts = new ArrayList<>();
+
+  @JsonProperty("pageInfo")
   private PageInfo pageInfo = null;
 
+  public ArtifactPageInfo artifacts(List<Artifact> artifacts) {
+    this.artifacts = artifacts;
+    return this;
+  }
+
+  public ArtifactPageInfo addArtifactsItem(Artifact artifactsItem) {
+    this.artifacts.add(artifactsItem);
+    return this;
+  }
+
   /**
-   * Provides the artifacts included in the page.
-   *
-   * @return a List<Artifact> with the artifacts included in the page.
-   */
+   * The artifacts included in the page
+   * @return artifacts
+   **/
+  @Schema(required = true, description = "The artifacts included in the page")
+      @NotNull
+    @Valid
     public List<Artifact> getArtifacts() {
     return artifacts;
   }

@@ -3,6 +3,7 @@ package org.lockss.util.rest.repo.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Objects;
+import javax.validation.constraints.*;
 import org.springframework.validation.annotation.Validated;
 
 /**
