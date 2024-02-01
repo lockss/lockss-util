@@ -55,7 +55,7 @@ public class ArtifactProperties   {
    **/
   @Schema(description = "")
 
-    public String getNamespace() {
+  public String getNamespace() {
     return namespace;
   }
 
@@ -74,7 +74,7 @@ public class ArtifactProperties   {
    **/
   @Schema(description = "")
 
-    public String getUuid() {
+  public String getUuid() {
     return uuid;
   }
 
@@ -93,7 +93,7 @@ public class ArtifactProperties   {
    **/
   @Schema(description = "")
 
-    public String getAuid() {
+  public String getAuid() {
     return auid;
   }
 
@@ -112,7 +112,7 @@ public class ArtifactProperties   {
    **/
   @Schema(description = "")
 
-    public String getUri() {
+  public String getUri() {
     return uri;
   }
 
@@ -131,7 +131,7 @@ public class ArtifactProperties   {
    **/
   @Schema(description = "")
 
-    public Integer getVersion() {
+  public Integer getVersion() {
     return version;
   }
 
@@ -150,7 +150,7 @@ public class ArtifactProperties   {
    **/
   @Schema(description = "")
 
-    public Long getContentLength() {
+  public Long getContentLength() {
     return contentLength;
   }
 
@@ -169,7 +169,7 @@ public class ArtifactProperties   {
    **/
   @Schema(description = "")
 
-    public String getContentDigest() {
+  public String getContentDigest() {
     return contentDigest;
   }
 
@@ -188,7 +188,7 @@ public class ArtifactProperties   {
    **/
   @Schema(description = "")
 
-    public Long getCollectionDate() {
+  public Long getCollectionDate() {
     return collectionDate;
   }
 
@@ -207,7 +207,7 @@ public class ArtifactProperties   {
    **/
   @Schema(description = "")
 
-    public Long getStoreDate() {
+  public Long getStoreDate() {
     return storeDate;
   }
 
@@ -226,7 +226,7 @@ public class ArtifactProperties   {
    **/
   @Schema(description = "")
 
-    public String getState() {
+  public String getState() {
     return state;
   }
 
@@ -245,15 +245,15 @@ public class ArtifactProperties   {
     }
     ArtifactProperties artifactProperties = (ArtifactProperties) o;
     return Objects.equals(this.namespace, artifactProperties.namespace) &&
-        Objects.equals(this.uuid, artifactProperties.uuid) &&
-        Objects.equals(this.auid, artifactProperties.auid) &&
-        Objects.equals(this.uri, artifactProperties.uri) &&
-        Objects.equals(this.version, artifactProperties.version) &&
-        Objects.equals(this.contentLength, artifactProperties.contentLength) &&
-        Objects.equals(this.contentDigest, artifactProperties.contentDigest) &&
-        Objects.equals(this.collectionDate, artifactProperties.collectionDate) &&
-        Objects.equals(this.storeDate, artifactProperties.storeDate) &&
-        Objects.equals(this.state, artifactProperties.state);
+      Objects.equals(this.uuid, artifactProperties.uuid) &&
+      Objects.equals(this.auid, artifactProperties.auid) &&
+      Objects.equals(this.uri, artifactProperties.uri) &&
+      Objects.equals(this.version, artifactProperties.version) &&
+      Objects.equals(this.contentLength, artifactProperties.contentLength) &&
+      Objects.equals(this.contentDigest, artifactProperties.contentDigest) &&
+      Objects.equals(this.collectionDate, artifactProperties.collectionDate) &&
+      Objects.equals(this.storeDate, artifactProperties.storeDate) &&
+      Objects.equals(this.state, artifactProperties.state);
   }
 
   @Override
@@ -265,7 +265,7 @@ public class ArtifactProperties   {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class ArtifactProperties {\n");
-    
+
     sb.append("    namespace: ").append(toIndentedString(namespace)).append("\n");
     sb.append("    uuid: ").append(toIndentedString(uuid)).append("\n");
     sb.append("    auid: ").append(toIndentedString(auid)).append("\n");
