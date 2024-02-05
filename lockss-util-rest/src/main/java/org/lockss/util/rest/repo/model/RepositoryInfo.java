@@ -30,9 +30,9 @@ package org.lockss.util.rest.repo.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.io.Serializable;
+import java.util.Objects;
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.*;
 import org.lockss.util.storage.StorageInfo;
 import org.springframework.validation.annotation.Validated;
 
@@ -97,6 +97,25 @@ public class RepositoryInfo implements Serializable {
 
   public void setIndexInfo(StorageInfo indexInfo) {
     this.indexInfo = indexInfo;
+  }
+
+
+  @Override
+  public boolean equals(java.lang.Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    RepositoryInfo repositoryInfo = (RepositoryInfo) o;
+    return Objects.equals(this.storeInfo, repositoryInfo.storeInfo) &&
+        Objects.equals(this.indexInfo, repositoryInfo.indexInfo);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(storeInfo, indexInfo);
   }
 
   @Override

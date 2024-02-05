@@ -69,10 +69,9 @@ public class PageInfo   {
   }
 
   /**
-   * Provides the total number of results.
-   *
-   * @return an Integer with the total number of results.
-   */
+   * The total number of results
+   * @return totalCount
+   **/
   @Schema(required = true, description = "The total number of results")
       @NotNull
 
@@ -95,10 +94,9 @@ public class PageInfo   {
   }
 
   /**
-   * Provides the number of results per page.
-   *
-   * @return an Integer with the number of results per page.
-   */
+   * The number of results per page
+   * @return resultsPerPage
+   **/
   @Schema(required = true, description = "The number of results per page")
       @NotNull
     public Integer getResultsPerPage() {
@@ -122,10 +120,9 @@ public class PageInfo   {
   }
 
   /**
-   * Provides the continuation token.
-   *
-   * @return a String with the continuation token.
-   */
+   * The continuation token
+   * @return continuationToken
+   **/
   @Schema(required = true, description = "The continuation token")
       @NotNull
     public String getContinuationToken() {
@@ -147,10 +144,9 @@ public class PageInfo   {
   }
 
   /**
-   * Provides link to the current page.
-   *
-   * @return a String with the link to the current page.
-   */
+   * The link of the current request
+   * @return curLink
+   **/
   @Schema(required = true, description = "The link of the current request")
       @NotNull
     public String getCurLink() {
@@ -172,10 +168,9 @@ public class PageInfo   {
   }
 
   /**
-   * Provides link to the next page.
-   *
-   * @return a String with the link to the next page.
-   */
+   * The link of the next request
+   * @return nextLink
+   **/
   @Schema(required = true, description = "The link of the next request")
       @NotNull
     public String getNextLink() {
@@ -215,8 +210,26 @@ public class PageInfo   {
 
   @Override
   public String toString() {
-    return "[PageInfo totalCount=" + totalCount + ", resultsPerPage="
-	+ resultsPerPage + ", continuationToken=" + continuationToken
-	+ ", curLink=" + curLink + ", nextLink=" + nextLink + "]";
+    StringBuilder sb = new StringBuilder();
+    sb.append("PageInfo [\n");
+
+    sb.append("    totalCount: ").append(toIndentedString(totalCount)).append("\n");
+    sb.append("    resultsPerPage: ").append(toIndentedString(resultsPerPage)).append("\n");
+    sb.append("    continuationToken: ").append(toIndentedString(continuationToken)).append("\n");
+    sb.append("    curLink: ").append(toIndentedString(curLink)).append("\n");
+    sb.append("    nextLink: ").append(toIndentedString(nextLink)).append("\n");
+    sb.append("]");
+    return sb.toString();
+  }
+
+  /**
+   * Convert the given object to string with each line indented by 4 spaces
+   * (except the first line).
+   */
+  private String toIndentedString(java.lang.Object o) {
+    if (o == null) {
+      return "null";
+    }
+    return o.toString().replace("\n", "\n    ");
   }
 }
