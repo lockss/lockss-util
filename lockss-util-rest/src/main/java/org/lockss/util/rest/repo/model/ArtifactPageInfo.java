@@ -44,6 +44,10 @@ import javax.validation.constraints.*;
 /**
  * A display page of artifacts
  */
+@Schema(description = "A display page of artifacts")
+@Validated
+
+
 
 public class ArtifactPageInfo   {
   @JsonProperty("artifacts")
@@ -129,7 +133,23 @@ public class ArtifactPageInfo   {
 
   @Override
   public String toString() {
-    return "[ArtifactPageInfo artifacts=" + artifacts
-	+ ", pageInfo=" + pageInfo + "]";
+    StringBuilder sb = new StringBuilder();
+    sb.append("ArtifactPageInfo [\n");
+
+    sb.append("    artifacts: ").append(toIndentedString(artifacts)).append("\n");
+    sb.append("    pageInfo: ").append(toIndentedString(pageInfo)).append("\n");
+    sb.append("]");
+    return sb.toString();
+  }
+
+  /**
+   * Convert the given object to string with each line indented by 4 spaces
+   * (except the first line).
+   */
+  private String toIndentedString(java.lang.Object o) {
+    if (o == null) {
+      return "null";
+    }
+    return o.toString().replace("\n", "\n    ");
   }
 }

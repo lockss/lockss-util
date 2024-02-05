@@ -44,8 +44,13 @@ import javax.validation.Valid;
 import javax.validation.constraints.*;
 
 /**
- * A page of archival unit identifier results.
+ * A display page of Archival Unit identifiers
  */
+@Schema(description = "A display page of Archival Unit identifiers")
+@Validated
+
+
+
 public class AuidPageInfo   {
   @JsonProperty("auids")
   @Valid

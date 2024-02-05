@@ -65,29 +65,33 @@ public class Artifact implements Serializable {
     // We have chosen to map the artifact UUID to the Solr document's "id" field
     // for the sake of convention, even though Solr appears to support assigning
     // another field as the unique identifier.
+
+  @JsonProperty("uuid")
     private String uuid;
-
+  @JsonProperty("namespace")
     private String namespace = "lockss";
-
+  @JsonProperty("auid")
     private String auid;
-
+  @JsonProperty("uri")
     private String uri;
-
+  @JsonProperty("sortUri")
     private String sortUri;
-
+  @JsonProperty("version")
     private Integer version;
-
-    private Boolean committed;
-
-    private String storageUrl;
-
+  @JsonProperty("committed")
+  private Boolean committed = null;
+  @JsonProperty("storageUrl")
+  private String storageUrl = null;
+  @JsonProperty("contentLength")
     private long contentLength;
-
+  @JsonProperty("contentDigest")
     private String contentDigest;
-
+  @JsonProperty("collectionDate")
     private long collectionDate;
-//  private long storeDate;
-//  private String state = null;
+  @JsonProperty("storeDate")
+  private long storeDate;
+  @JsonProperty("state")
+  private String state = null;
 
     /**
      * Constructor. Needed by SolrJ for getBeans() support. *
@@ -346,43 +350,43 @@ public class Artifact implements Serializable {
     return this;
   }
 
-//  public Artifact storeDate(long storeDate) {
-//    this.storeDate = storeDate;
-//    return this;
-//  }
-//
-//  /**
-//   * Get storeDate
-//   * @return storeDate
-//   **/
-//  @Schema(description = "")
-//
-//  public long getStoreDate() {
-//    return storeDate;
-//  }
-//
-//  public void setStoreDate(long storeDate) {
-//    this.storeDate = storeDate;
-//  }
-//
-//  public Artifact state(String state) {
-//    this.state = state;
-//    return this;
-//  }
-//
-//  /**
-//   * Get state
-//   * @return state
-//   **/
-//  @Schema(description = "")
-//
-//  public String getState() {
-//    return state;
-//  }
-//
-//  public void setState(String state) {
-//    this.state = state;
-//  }
+  public Artifact storeDate(long storeDate) {
+    this.storeDate = storeDate;
+    return this;
+  }
+
+  /**
+   * Get storeDate
+   * @return storeDate
+   **/
+  @Schema(description = "")
+
+  public long getStoreDate() {
+    return storeDate;
+  }
+
+  public void setStoreDate(long storeDate) {
+    this.storeDate = storeDate;
+  }
+
+  public Artifact state(String state) {
+    this.state = state;
+    return this;
+  }
+
+  /**
+   * Get state
+   * @return state
+   **/
+  @Schema(description = "")
+
+  public String getState() {
+    return state;
+  }
+
+  public void setState(String state) {
+    this.state = state;
+  }
 
 
   @Override
