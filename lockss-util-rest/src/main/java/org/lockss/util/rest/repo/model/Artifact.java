@@ -88,10 +88,6 @@ public class Artifact implements Serializable {
     private String contentDigest;
   @JsonProperty("collectionDate")
     private long collectionDate;
-  @JsonProperty("storeDate")
-  private long storeDate;
-  @JsonProperty("state")
-  private String state = null;
 
     /**
      * Constructor. Needed by SolrJ for getBeans() support. *
@@ -350,43 +346,6 @@ public class Artifact implements Serializable {
     return this;
   }
 
-  public Artifact storeDate(long storeDate) {
-    this.storeDate = storeDate;
-    return this;
-  }
-
-  /**
-   * Get storeDate
-   * @return storeDate
-   **/
-  @Schema(description = "")
-
-  public long getStoreDate() {
-    return storeDate;
-  }
-
-  public void setStoreDate(long storeDate) {
-    this.storeDate = storeDate;
-  }
-
-  public Artifact state(String state) {
-    this.state = state;
-    return this;
-  }
-
-  /**
-   * Get state
-   * @return state
-   **/
-  @Schema(description = "")
-
-  public String getState() {
-    return state;
-  }
-
-  public void setState(String state) {
-    this.state = state;
-  }
 
 
   @Override
