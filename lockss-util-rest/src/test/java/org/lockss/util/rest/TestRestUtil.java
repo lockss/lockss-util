@@ -82,7 +82,7 @@ public class TestRestUtil extends LockssTestCase5 {
     String message = "Cannot perform call to fake-fake";
 
     try {
-      doCallRestService("http://fake-fake:12345/v2/api-docs", message,
+      doCallRestService("http://fake-fake:12345/v3/api-docs", message,
 			String.class);
       fail("Should have thrown LockssRestException");
     } catch (LockssRestException lre) {
@@ -95,7 +95,7 @@ public class TestRestUtil extends LockssTestCase5 {
     message = "Cannot perform call to 192.0.2.0";
 
     try {
-      doCallRestService("http://192.0.2.0:23456/v2/api-docs", message,
+      doCallRestService("http://192.0.2.0:23456/v3/api-docs", message,
 			String.class);
       fail("Should have thrown LockssRestException");
     } catch (LockssRestException lre) {
@@ -109,7 +109,7 @@ public class TestRestUtil extends LockssTestCase5 {
     message = "Cannot perform call to 127.0.0.1";
 
     try {
-      doCallRestService("http://127.0.0.1:45678/v2/api-docs", message,
+      doCallRestService("http://127.0.0.1:45678/v3/api-docs", message,
 			String.class);
       fail("Should have thrown LockssRestException");
     } catch (LockssRestException lre) {
@@ -121,7 +121,7 @@ public class TestRestUtil extends LockssTestCase5 {
     message = "Cannot perform call to www.lockss.org";
 
     try {
-      doCallRestService("http://www.lockss.org:45678/v2/api-docs", message,
+      doCallRestService("http://www.lockss.org:45678/v3/api-docs", message,
 			String.class);
       fail("Should have thrown LockssRestException");
     } catch (LockssRestException lre) {

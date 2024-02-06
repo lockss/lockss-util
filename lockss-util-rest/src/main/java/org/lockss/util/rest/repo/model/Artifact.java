@@ -31,6 +31,8 @@
 package org.lockss.util.rest.repo.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.StringUtils;
 import org.lockss.log.L4JLogger;
 import org.lockss.util.StringPool;
@@ -48,16 +50,16 @@ public class Artifact implements Serializable {
     private static final long serialVersionUID = 1961138745993115018L;
     private final static L4JLogger log = L4JLogger.getLogger();
 
-    // These need to match those in the Artifact model defined in the Swagger/OpenAPI spec
-    public final static String ARTIFACT_NAMESPACE_KEY = "namespace";
-    public final static String ARTIFACT_UUID_KEY = "uuid";
-    public final static String ARTIFACT_AUID_KEY = "auid";
-    public final static String ARTIFACT_URI_KEY = "uri";
-    public final static String ARTIFACT_VERSION_KEY = "version";
-    public final static String ARTIFACT_COMMITTED_STATUS_KEY = "committed";
-    public final static String ARTIFACT_LENGTH_KEY = "contentLength";
-    public final static String ARTIFACT_DIGEST_KEY = "contentDigest";
-    public final static String ARTIFACT_COLLECTION_DATE_KEY = "collectionDate";
+  // These need to match those in the Artifact model defined in the Swagger/OpenAPI spec
+  public final static String ARTIFACT_NAMESPACE_KEY = "namespace";
+  public final static String ARTIFACT_UUID_KEY = "uuid";
+  public final static String ARTIFACT_AUID_KEY = "auid";
+  public final static String ARTIFACT_URI_KEY = "uri";
+  public final static String ARTIFACT_VERSION_KEY = "version";
+  public final static String ARTIFACT_COMMITTED_STATUS_KEY = "committed";
+  public final static String ARTIFACT_LENGTH_KEY = "contentLength";
+  public final static String ARTIFACT_DIGEST_KEY = "contentDigest";
+  public final static String ARTIFACT_COLLECTION_DATE_KEY = "collectionDate";
   public final static String ARTIFACT_STORE_DATE_KEY = "storeDate";
 
     // We have chosen to map the artifact UUID to the Solr document's "id" field
@@ -84,6 +86,8 @@ public class Artifact implements Serializable {
     private String contentDigest;
 
     private long collectionDate;
+//  private long storeDate;
+//  private String state = null;
 
     /**
      * Constructor. Needed by SolrJ for getBeans() support. *
@@ -124,29 +128,29 @@ public class Artifact implements Serializable {
         }
         setAuid(auid);
 
-        if (StringUtils.isEmpty(uri)) {
-          throw new IllegalArgumentException(
-              "Cannot create Artifact with null or empty URI");
-        }
-        this.setUri(uri);
-
-        if (version == null) {
-          throw new IllegalArgumentException(
-              "Cannot create Artifact with null version");
-        }
-        setVersion(version);
-
-        if (committed == null) {
-          throw new IllegalArgumentException(
-              "Cannot create Artifact with null commit status");
-        }
-        this.committed = committed;
-
-        this.storageUrl = storageUrl;
-
-        this.contentLength = contentLength;
-        this.contentDigest = contentDigest;
+    if (StringUtils.isEmpty(uri)) {
+      throw new IllegalArgumentException(
+        "Cannot create Artifact with null or empty URI");
     }
+    this.setUri(uri);
+
+    if (version == null) {
+      throw new IllegalArgumentException(
+        "Cannot create Artifact with null version");
+    }
+    setVersion(version);
+
+    if (committed == null) {
+      throw new IllegalArgumentException(
+        "Cannot create Artifact with null commit status");
+    }
+    this.committed = committed;
+
+    this.storageUrl = storageUrl;
+
+    this.contentLength = contentLength;
+    this.contentDigest = contentDigest;
+  }
 
     @JsonIgnore
     public ArtifactIdentifier getIdentifier() {
@@ -165,6 +169,10 @@ public class Artifact implements Serializable {
         this.namespace = namespace == null ? null
           : StringPool.MISCELLANEOUS.intern(namespace);
     }
+  public Artifact namespace(String namespace) {
+    setNamespace(namespace);
+    return this;
+  }
 
     public String getAuid() {
         return auid;
@@ -176,6 +184,10 @@ public class Artifact implements Serializable {
         }
         this.auid = auid == null ? null : StringPool.AUIDS.intern(auid);
     }
+  public Artifact auid(String auid) {
+    setAuid(auid);
+    return this;
+  }
 
     public String getUri() {
         return uri;
@@ -187,21 +199,30 @@ public class Artifact implements Serializable {
         }
       this.uri = uri;
       this.setSortUri(uri.replaceAll("/", "\u0000"));
-    }
+  }
+  public Artifact uri(String uri) {
+    setUri(uri);
+    return this;
+  }
 
-    public String getSortUri() {
-        if ((sortUri == null) && (uri != null)) {
-          this.setSortUri(uri.replaceAll("/", "\u0000"));
-        }
-        return sortUri;
+  public String getSortUri() {
+    if ((sortUri == null) && (uri != null)) {
+      this.setSortUri(uri.replaceAll("/", "\u0000"));
     }
+    return sortUri;
+  }
 
-    public void setSortUri(String sortUri) {
-        if (StringUtils.isEmpty(sortUri)) {
-          throw new IllegalArgumentException("Cannot set null or empty SortURI");
-        }
-        this.sortUri = sortUri;
+  public void setSortUri(String sortUri) {
+    if (StringUtils.isEmpty(sortUri)) {
+      throw new IllegalArgumentException("Cannot set null or empty SortURI");
     }
+    this.sortUri = sortUri;
+  }
+
+  public Artifact sortUri(String uri) {
+    setSortUri(uri);
+    return this;
+  }
 
     public Integer getVersion() {
         return version;
@@ -218,9 +239,19 @@ public class Artifact implements Serializable {
 
         this.version = Integer.valueOf(version);
     }
+  public Artifact version(Integer version) {
+    setVersion(version);
+    return this;
+  }
 
-  public void setUuid(String uuid) {
+
+    public void setUuid(String uuid) {
     this.uuid = uuid;
+  }
+
+  public Artifact uuid(String uuid) {
+    this.uuid = uuid;
+    return this;
   }
 
   public String getUuid() {
@@ -229,20 +260,26 @@ public class Artifact implements Serializable {
 
     public Boolean getCommitted() {
         return committed;
-    }
+  }
 
-    public boolean isCommitted() {
-      return getCommitted() == true;
-    }
+  public boolean isCommitted() {
+    return getCommitted() == true;
+  }
 
-    public void setCommitted(Boolean committed) {
-        if (committed == null) {
-          throw new IllegalArgumentException("Cannot set null commit status");
-        }
-        this.committed = committed;
+  public void setCommitted(Boolean committed) {
+    if (committed == null) {
+      throw new IllegalArgumentException("Cannot set null commit status");
     }
+    this.committed = committed;
+  }
 
-    public String getStorageUrl() {
+  public Artifact committed(Boolean committed) {
+    setCommitted(committed);
+    return this;
+  }
+
+
+  public String getStorageUrl() {
         return storageUrl;
     }
 
@@ -251,28 +288,41 @@ public class Artifact implements Serializable {
           throw new IllegalArgumentException(
               "Cannot set null or empty storageUrl");
         }
-        this.storageUrl = storageUrl;
+    this.storageUrl = storageUrl;
     }
+  public Artifact storageUrl(String storageUrl) {
+    setStorageUrl(storageUrl);
+    return this;
+  }
 
     public long getContentLength() {
         return contentLength;
-    }
+  }
 
     public void setContentLength(long contentLength) {
-        this.contentLength = contentLength;
+    this.contentLength = contentLength;
     }
+
+  public Artifact contentLength(long contentLength) {
+    this.contentLength = contentLength;
+    return this;
+  }
 
     public String getContentDigest() {
         return contentDigest;
-    }
+  }
 
     public void setContentDigest(String contentDigest) {
-        this.contentDigest = contentDigest;
+    this.contentDigest = contentDigest;
     }
+  public Artifact contentDigest(String contentDigest) {
+    this.contentDigest = contentDigest;
+    return this;
+  }
 
   /**
    * Provides the artifact collection date.
-   * 
+   *
    * @return a long with the artifact collection date in milliseconds since the
    *         epoch.
    */
@@ -282,7 +332,7 @@ public class Artifact implements Serializable {
 
   /**
    * Saves the artifact collection date.
-   * 
+   *
    * @param collectionDate
    *          A long with the artifact collection date in milliseconds since the
    *          epoch.
@@ -291,22 +341,66 @@ public class Artifact implements Serializable {
     this.collectionDate = collectionDate;
   }
 
-    @Override
-    public String toString() {
-        return "Artifact{" +
-                "uuid='" + uuid + '\'' +
-                ", namespace='" + namespace + '\'' +
-                ", auid='" + auid + '\'' +
-                ", uri='" + uri + '\'' +
+  public Artifact collectionDate(long collectionDate) {
+    this.collectionDate = collectionDate;
+    return this;
+  }
+
+//  public Artifact storeDate(long storeDate) {
+//    this.storeDate = storeDate;
+//    return this;
+//  }
+//
+//  /**
+//   * Get storeDate
+//   * @return storeDate
+//   **/
+//  @Schema(description = "")
+//
+//  public long getStoreDate() {
+//    return storeDate;
+//  }
+//
+//  public void setStoreDate(long storeDate) {
+//    this.storeDate = storeDate;
+//  }
+//
+//  public Artifact state(String state) {
+//    this.state = state;
+//    return this;
+//  }
+//
+//  /**
+//   * Get state
+//   * @return state
+//   **/
+//  @Schema(description = "")
+//
+//  public String getState() {
+//    return state;
+//  }
+//
+//  public void setState(String state) {
+//    this.state = state;
+//  }
+
+
+  @Override
+  public String toString() {
+    return "Artifact{" +
+      "uuid='" + uuid + '\'' +
+      ", namespace='" + namespace + '\'' +
+      ", auid='" + auid + '\'' +
+      ", uri='" + uri + '\'' +
 //                 ", sortUri='" + sortUri + '\'' +
-                ", version='" + version + '\'' +
-                ", committed=" + committed +
-                ", storageUrl='" + storageUrl + '\'' +
-                ", contentLength='" + contentLength + '\'' +
-                ", contentDigest='" + contentDigest + '\'' +
-                ", collectionDate='" + collectionDate + '\'' +
-                '}';
-    }
+      ", version='" + version + '\'' +
+      ", committed=" + committed +
+      ", storageUrl='" + storageUrl + '\'' +
+      ", contentLength='" + contentLength + '\'' +
+      ", contentDigest='" + contentDigest + '\'' +
+      ", collectionDate='" + collectionDate + '\'' +
+      '}';
+  }
 
     @Override
     public boolean equals(Object o) {
@@ -316,44 +410,44 @@ public class Artifact implements Serializable {
         && storageUrl.equalsIgnoreCase(((Artifact)o).getStorageUrl());
     }
 
-    public boolean equalsExceptStorageUrl(Object o) {
-        if (!(o instanceof Artifact)) {
-          return false;
-        }
-        Artifact other = (Artifact)o;
-
-        return other != null
-            && ((this.getIdentifier() == null && other.getIdentifier() == null)
-        	|| (this.getIdentifier() != null && this.getIdentifier().equals(other.getIdentifier())))
-            && committed.equals(other.getCommitted())
-            && getContentLength() == other.getContentLength()
-            && ((contentDigest == null && other.getContentDigest() == null)
-        	|| (contentDigest != null && contentDigest.equals(other.getContentDigest())))
-            && getCollectionDate() == other.getCollectionDate();
+  public boolean equalsExceptStorageUrl(Object o) {
+    if (!(o instanceof Artifact)) {
+      return false;
     }
+    Artifact other = (Artifact)o;
+
+    return other != null
+      && ((this.getIdentifier() == null && other.getIdentifier() == null)
+      || (this.getIdentifier() != null && this.getIdentifier().equals(other.getIdentifier())))
+      && committed.equals(other.getCommitted())
+      && getContentLength() == other.getContentLength()
+      && ((contentDigest == null && other.getContentDigest() == null)
+      || (contentDigest != null && contentDigest.equals(other.getContentDigest())))
+      && getCollectionDate() == other.getCollectionDate();
+  }
 
 
-    /** Return a String that uniquely identifies the Artifact with the
-     * specified values.  version -1 means latest version */
-    public static String makeKey(String namespace, String auid,
-				 String uri, int version) {
-	StringBuilder sb = new StringBuilder(200);
-	sb.append(namespace);
-	sb.append(":");
-	sb.append(auid);
-	sb.append(":");
-	sb.append(uri);
-	sb.append(":");
-	sb.append(version);
-	return sb.toString();
-    }
+  /** Return a String that uniquely identifies the Artifact with the
+   * specified values.  version -1 means latest version */
+  public static String makeKey(String namespace, String auid,
+    String uri, int version) {
+    StringBuilder sb = new StringBuilder(200);
+    sb.append(namespace);
+    sb.append(":");
+    sb.append(auid);
+    sb.append(":");
+    sb.append(uri);
+    sb.append(":");
+    sb.append(version);
+    return sb.toString();
+  }
 
-    /** Return a String that uniquely identifies "the latest committed
-     * version of the Artifact with the specified values" */
-    public static String makeLatestKey(String namespace, String auid,
-				       String uri) {
-	return makeKey(namespace, auid, uri, -1);
-    }
+  /** Return a String that uniquely identifies "the latest committed
+   * version of the Artifact with the specified values" */
+  public static String makeLatestKey(String namespace, String auid,
+    String uri) {
+    return makeKey(namespace, auid, uri, -1);
+  }
 
     /** Return a String that uniquely identifies this Artifact */
     public String makeKey() {
@@ -383,15 +477,15 @@ public class Artifact implements Serializable {
   public Artifact copyOf() {
 
     Artifact ret = new Artifact(
-        this.getUuid(),
-        this.getNamespace(),
-        this.getAuid(),
-        this.getUri(),
-        this.getVersion(),
-        this.getCommitted(),
-        this.getStorageUrl(),
-        this.getContentLength(),
-        this.getContentDigest()
+      this.getUuid(),
+      this.getNamespace(),
+      this.getAuid(),
+      this.getUri(),
+      this.getVersion(),
+      this.getCommitted(),
+      this.getStorageUrl(),
+      this.getContentLength(),
+      this.getContentDigest()
     );
 
     ret.setCollectionDate(this.getCollectionDate());

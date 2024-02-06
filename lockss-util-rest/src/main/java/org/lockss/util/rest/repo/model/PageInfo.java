@@ -32,101 +32,159 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.lockss.util.rest.repo.model;
 
 import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import io.swagger.v3.oas.annotations.media.Schema;
+import org.springframework.validation.annotation.Validated;
+import javax.validation.Valid;
+import javax.validation.constraints.*;
 
 /**
  * The information related to pagination of content.
  */
-public class PageInfo {
+@Schema(description = "The information related to pagination of content")
+@Validated
+
+
+
+public class PageInfo   {
+  @JsonProperty("totalCount")
   private Integer totalCount = null;
+
+  @JsonProperty("resultsPerPage")
   private Integer resultsPerPage = null;
+
+  @JsonProperty("continuationToken")
   private String continuationToken = null;
+
+  @JsonProperty("curLink")
   private String curLink = null;
+
+  @JsonProperty("nextLink")
   private String nextLink = null;
+
+  public PageInfo totalCount(Integer totalCount) {
+    this.totalCount = totalCount;
+    return this;
+  }
 
   /**
    * Provides the total number of results.
-   * 
+   *
    * @return an Integer with the total number of results.
    */
-  public Integer getTotalCount() {
+  @Schema(required = true, description = "The total number of results")
+      @NotNull
+
+    public Integer getTotalCount() {
     return totalCount;
   }
 
   /**
    * Saves the total number of results.
-   * 
+   *
    * @param totalCount An Integer with the total number of results.
    */
   public void setTotalCount(Integer totalCount) {
     this.totalCount = totalCount;
   }
 
+  public PageInfo resultsPerPage(Integer resultsPerPage) {
+    this.resultsPerPage = resultsPerPage;
+    return this;
+  }
+
   /**
    * Provides the number of results per page.
-   * 
+   *
    * @return an Integer with the number of results per page.
    */
-  public Integer getResultsPerPage() {
+  @Schema(required = true, description = "The number of results per page")
+      @NotNull
+    public Integer getResultsPerPage() {
     return resultsPerPage;
   }
 
   /**
    * Saves the number of results per page.
-   * 
+   *
    * @param resultsPerPage An Integer with the number of results per page.
    */
+  @Schema(required = true, description = "The number of results per page")
+      @NotNull
   public void setResultsPerPage(Integer resultsPerPage) {
     this.resultsPerPage = resultsPerPage;
   }
 
+  public PageInfo continuationToken(String continuationToken) {
+    this.continuationToken = continuationToken;
+    return this;
+  }
+
   /**
    * Provides the continuation token.
-   * 
+   *
    * @return a String with the continuation token.
    */
-  public String getContinuationToken() {
+  @Schema(required = true, description = "The continuation token")
+      @NotNull
+    public String getContinuationToken() {
     return continuationToken;
   }
 
   /**
    * Saves the continuation token.
-   * 
+   *
    * @param continuationToken A String with the continuation token.
    */
   public void setContinuationToken(String continuationToken) {
     this.continuationToken = continuationToken;
   }
 
+  public PageInfo curLink(String curLink) {
+    this.curLink = curLink;
+    return this;
+  }
+
   /**
    * Provides link to the current page.
-   * 
+   *
    * @return a String with the link to the current page.
    */
-  public String getCurLink() {
+  @Schema(required = true, description = "The link of the current request")
+      @NotNull
+    public String getCurLink() {
     return curLink;
   }
 
   /**
    * Saves the link to the current page.
-   * 
+   *
    * @param curLink A String with the link to the current page.
    */
   public void setCurLink(String curLink) {
     this.curLink = curLink;
   }
 
+  public PageInfo nextLink(String nextLink) {
+    this.nextLink = nextLink;
+    return this;
+  }
+
   /**
    * Provides link to the next page.
-   * 
+   *
    * @return a String with the link to the next page.
    */
-  public String getNextLink() {
+  @Schema(required = true, description = "The link of the next request")
+      @NotNull
+    public String getNextLink() {
     return nextLink;
   }
 
   /**
    * Saves the link to the next page.
-   * 
+   *
    * @param nextLink A String with the link to the next page.
    */
   public void setNextLink(String nextLink) {
