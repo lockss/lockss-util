@@ -9,7 +9,7 @@ import io.swagger.annotations.ApiModelProperty;
 import org.springframework.validation.annotation.Validated;
 import java.util.Objects;
 
-import javax.validation.constraints.*;
+import jakarta.validation.constraints.*;
 
 /**
  * A status which includes a code and a message.

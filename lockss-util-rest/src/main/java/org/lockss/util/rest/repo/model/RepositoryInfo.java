@@ -31,8 +31,8 @@ package org.lockss.util.rest.repo.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serializable;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 import org.lockss.util.storage.StorageInfo;
 import org.springframework.validation.annotation.Validated;
 

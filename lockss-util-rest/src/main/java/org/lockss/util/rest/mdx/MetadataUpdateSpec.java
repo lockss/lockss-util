@@ -33,16 +33,17 @@ package org.lockss.util.rest.mdx;
 
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.validation.annotation.Validated;
-import javax.validation.constraints.*;
+import jakarta.validation.constraints.*;
 
 /**
  * The information defining an AU metadata update operation
  */
-@ApiModel(description = "The information defining an AU metadata update operation")
+@Schema(description = "The information defining an AU metadata update operation")
 @Validated
+
+
 
 public class MetadataUpdateSpec   {
   @JsonProperty("auid")
@@ -51,14 +52,19 @@ public class MetadataUpdateSpec   {
   @JsonProperty("updateType")
   private String updateType = null;
 
+  public MetadataUpdateSpec auid(String auid) {
+    this.auid = auid;
+    return this;
+  }
+
   /**
    * The identifier of the AU for which the metadata update is to be performed
    * @return auid
-  **/
-  @ApiModelProperty(required = true,
-      value = "The identifier of the AU for which the metadata update is to be performed")
-  @NotNull
-  public String getAuid() {
+   **/
+  @Schema(required = true, description = "The identifier of the AU for which the metadata update is to be performed")
+      @NotNull
+
+    public String getAuid() {
     return auid;
   }
 
@@ -66,20 +72,26 @@ public class MetadataUpdateSpec   {
     this.auid = auid;
   }
 
+  public MetadataUpdateSpec updateType(String updateType) {
+    this.updateType = updateType;
+    return this;
+  }
+
   /**
    * The type of metadata update to be performed
    * @return updateType
-  **/
-  @ApiModelProperty(example = "full_extraction | incremental_extraction | delete",
-      required = true, value = "The type of metadata update to be performed")
-  @NotNull
-  public String getUpdateType() {
+   **/
+  @Schema(example = "full_extraction | incremental_extraction | delete", required = true, description = "The type of metadata update to be performed")
+      @NotNull
+
+    public String getUpdateType() {
     return updateType;
   }
 
   public void setUpdateType(String updateType) {
     this.updateType = updateType;
   }
+
 
   @Override
   public boolean equals(java.lang.Object o) {
@@ -121,4 +133,3 @@ public class MetadataUpdateSpec   {
     return o.toString().replace("\n", "\n    ");
   }
 }
-
