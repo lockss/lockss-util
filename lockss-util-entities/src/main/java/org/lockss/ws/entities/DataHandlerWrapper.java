@@ -31,7 +31,6 @@
  */
 package org.lockss.ws.entities;
 
-
 import jakarta.activation.DataHandler;
 
 /*
