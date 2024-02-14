@@ -94,7 +94,7 @@ public class PlatformUtil {
     "org.lockss.platform." + "diskSpaceSource";
 
   public static final DiskSpaceSource DEFAULT_DISK_SPACE_SOURCE =
-    DiskSpaceSource.DF;
+    DiskSpaceSource.Java;
 
   private static final DecimalFormat percentFmt = new DecimalFormat("0%");
 
