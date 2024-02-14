@@ -30,9 +30,9 @@
 
 package org.lockss.util.rest.repo.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.*;
 
@@ -57,7 +57,7 @@ public class Error   {
    * Get code
    * @return code
   **/
-  @ApiModelProperty(required = true, value = "")
+  @Schema(required = true, description = "")
   @NotNull
 
 
@@ -78,7 +78,7 @@ public class Error   {
    * Get message
    * @return message
   **/
-  @ApiModelProperty(required = true, value = "")
+  @Schema(required = true, description = "")
   @NotNull
 
 

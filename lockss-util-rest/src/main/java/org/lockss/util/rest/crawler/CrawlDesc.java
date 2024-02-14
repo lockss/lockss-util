@@ -31,11 +31,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.lockss.util.rest.crawler;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.validation.annotation.Validated;
 import java.util.*;
 
@@ -45,7 +44,7 @@ import javax.validation.constraints.NotNull;
 /**
  * A descriptor for a crawl.
  */
-@ApiModel(description = "A descriptor for a crawl.")
+@Schema(description = "A descriptor for a crawl.")
 @Validated
 
 
@@ -126,7 +125,7 @@ public class CrawlDesc   {
    * The identifier of the archival unit to be crawled.
    * @return auId
    **/
-  @ApiModelProperty(required = true, value = "The identifier of the archival unit to be crawled.")
+  @Schema(required = true, description = "The identifier of the archival unit to be crawled.")
   @NotNull
 
 
@@ -147,7 +146,7 @@ public class CrawlDesc   {
    * The kind of crawl being performed either 'newContent' or 'repair'.
    * @return crawlKind
    **/
-  @ApiModelProperty(required = true, value = "The kind of crawl being performed either 'newContent' or 'repair'.")
+  @Schema(required = true, description = "The kind of crawl being performed either 'newContent' or 'repair'.")
   @NotNull
 
 
@@ -168,7 +167,7 @@ public class CrawlDesc   {
    * The crawler to be used for this crawl.
    * @return crawlerId
    **/
-  @ApiModelProperty(value = "The crawler to be used for this crawl.")
+  @Schema(description = "The crawler to be used for this crawl.")
 
 
   public String getCrawlerId() {
@@ -185,10 +184,10 @@ public class CrawlDesc   {
   }
 
   /**
-   * An indication of whether the crawl is to be forced,\\ \\ suppressing conditions that might otherwise prevent the crawl from\\ \\ happening.
+   * An indication of whether the crawl is to be forced, suppressing conditions that might otherwise prevent the crawl from happening.
    * @return forceCrawl
    **/
-  @ApiModelProperty(value = "An indication of whether the crawl is to be forced,\\ \\ suppressing conditions that might otherwise prevent the crawl from\\ \\ happening.")
+  @Schema(description = "An indication of whether the crawl is to be forced, suppressing conditions that might otherwise prevent the crawl from happening.")
 
 
   public Boolean isForceCrawl() {
@@ -208,7 +207,7 @@ public class CrawlDesc   {
    * The refetch depth to use for a deep crawl.
    * @return refetchDepth
    **/
-  @ApiModelProperty(value = "The refetch depth to use for a deep crawl.")
+  @Schema(description = "The refetch depth to use for a deep crawl.")
 
 
   public Integer getRefetchDepth() {
@@ -228,7 +227,7 @@ public class CrawlDesc   {
    * The priority for the crawl.
    * @return priority
    **/
-  @ApiModelProperty(value = "The priority for the crawl.")
+  @Schema(description = "The priority for the crawl.")
 
 
   public Integer getPriority() {
@@ -256,7 +255,7 @@ public class CrawlDesc   {
    * The list of URLs to crawl.
    * @return crawlList
    **/
-  @ApiModelProperty(value = "The list of URLs to crawl.")
+  @Schema(description = "The list of URLs to crawl.")
 
 
   public List<String> getCrawlList() {
@@ -273,10 +272,10 @@ public class CrawlDesc   {
   }
 
   /**
-   * The depth to which the links should be followed. 0 means\\ \\ do not follow links.
+   * The depth to which the links should be followed. 0 means do not follow links.
    * @return crawlDepth
    **/
-  @ApiModelProperty(value = "The depth to which the links should be followed. 0 means\\ \\ do not follow links.")
+  @Schema(description = "The depth to which the links should be followed. 0 means do not follow links.")
 
 
   public Integer getCrawlDepth() {
@@ -304,8 +303,7 @@ public class CrawlDesc   {
    * A map of additional properties for a crawl on a given crawler.
    * @return extraCrawlerData
    **/
-  @ApiModelProperty(value = "A map of additional properties for a crawl on a given crawler.")
-
+  @Schema(description = "A map of additional properties for a crawl on a given crawler.")
 
   public Map<String, Object> getExtraCrawlerData() {
     return extraCrawlerData;

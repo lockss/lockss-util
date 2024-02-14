@@ -4,17 +4,15 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.validation.annotation.Validated;
-import java.util.Objects;
-
+import javax.validation.Valid;
 import javax.validation.constraints.*;
 
 /**
  * A status which includes a code and a message.
  */
-@ApiModel(description = "A status which includes a code and a message.")
+@Schema(description = "A status which includes a code and a message.")
 @Validated
 
 
@@ -97,7 +95,7 @@ public class JobStatus   {
    * The numeric value for this status.
    * @return statusCode
   **/
-  @ApiModelProperty(required = true, value = "The numeric value for this status.")
+  @Schema(required = true, description = "The numeric value for this status.")
   @NotNull
 
 
@@ -118,7 +116,7 @@ public class JobStatus   {
    * A text message explaining this status.
    * @return msg
   **/
-  @ApiModelProperty(value = "A text message explaining this status.")
+  @Schema(description = "A text message explaining this status.")
 
 
   public String getMsg() {
