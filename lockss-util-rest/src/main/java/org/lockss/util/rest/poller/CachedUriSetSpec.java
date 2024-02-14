@@ -34,8 +34,7 @@ package org.lockss.util.rest.poller;
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.validation.annotation.Validated;
 import javax.validation.Valid;
 import javax.validation.constraints.*;
@@ -43,7 +42,7 @@ import javax.validation.constraints.*;
 /**
  * A set of urls bounded by  upper and lower restraints.  If lower &#x3D; \&quot;.\&quot; this is a singleContentNode. If lower is null then start at the root url, if upper is null end with the last.
  */
-@ApiModel(description = "A set of urls bounded by  upper and lower restraints.  If lower = \".\" this is a singleContentNode. If lower is null then start at the root url, if upper is null end with the last.")
+@Schema(description = "A set of urls bounded by  upper and lower restraints.  If lower = \".\" this is a singleContentNode. If lower is null then start at the root url, if upper is null end with the last.")
 @Validated
 
 public class CachedUriSetSpec   {
@@ -65,7 +64,7 @@ public class CachedUriSetSpec   {
    * The base which roots the lower and upper bound
    * @return urlPrefix
   **/
-  @ApiModelProperty(required = true, value = "The base which roots the lower and upper bound")
+  @Schema(required = true, description = "The base which roots the lower and upper bound")
   @NotNull
 
 
@@ -86,7 +85,7 @@ public class CachedUriSetSpec   {
    * lower bound of the prefix range, inclusive.
    * @return lowerBound
   **/
-  @ApiModelProperty(value = "lower bound of the prefix range, inclusive.")
+  @Schema(description = "lower bound of the prefix range, inclusive.")
 
 
   public String getLowerBound() {
@@ -106,7 +105,7 @@ public class CachedUriSetSpec   {
    * upper bound of prefix range, inclusive.
    * @return upperBound
   **/
-  @ApiModelProperty(value = "upper bound of prefix range, inclusive.")
+  @Schema(description = "upper bound of prefix range, inclusive.")
 
 
   public String getUpperBound() {
@@ -141,7 +140,7 @@ public class CachedUriSetSpec   {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class CachedUriSetSpec {\n");
-    
+
     sb.append("    urlPrefix: ").append(toIndentedString(urlPrefix)).append("\n");
     sb.append("    lowerBound: ").append(toIndentedString(lowerBound)).append("\n");
     sb.append("    upperBound: ").append(toIndentedString(upperBound)).append("\n");
