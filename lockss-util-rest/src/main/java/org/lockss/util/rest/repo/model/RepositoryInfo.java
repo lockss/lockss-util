@@ -99,6 +99,25 @@ public class RepositoryInfo implements Serializable {
     this.indexInfo = indexInfo;
   }
 
+
+  @Override
+  public boolean equals(java.lang.Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    RepositoryInfo repositoryInfo = (RepositoryInfo) o;
+    return Objects.equals(this.storeInfo, repositoryInfo.storeInfo) &&
+        Objects.equals(this.indexInfo, repositoryInfo.indexInfo);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(storeInfo, indexInfo);
+  }
+
   @Override
   public String toString() {
     return "[RepositoryInfo store: " + storeInfo + " index: " + indexInfo + "]";
