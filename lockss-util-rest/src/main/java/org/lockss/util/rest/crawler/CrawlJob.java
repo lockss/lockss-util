@@ -142,7 +142,7 @@ public class CrawlJob   {
   }
 
   /**
-   * The status of the crawl operation.
+   * Get jobStatus
    * @return jobStatus
    **/
   @Schema(required = true, description = "")
@@ -167,7 +167,7 @@ public class CrawlJob   {
    * @return startDate
    **/
   @Schema(description = "The timestamp when the crawl began.")
-  
+
     public Long getStartDate() {
     return startDate;
   }
@@ -186,7 +186,7 @@ public class CrawlJob   {
    * @return endDate
    **/
   @Schema(description = "The timestamp when the crawl ended.")
-  
+
     public Long getEndDate() {
     return endDate;
   }
@@ -205,7 +205,7 @@ public class CrawlJob   {
    * @return result
    **/
   @Schema(description = "A URI which can be used to retrieve the crawl data.")
-  
+
     public String getResult() {
     return result;
   }
@@ -242,7 +242,7 @@ public class CrawlJob   {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class CrawlJob {\n");
-    
+
     sb.append("    crawlDesc: ").append(toIndentedString(crawlDesc)).append("\n");
     sb.append("    requestDate: ").append(toIndentedString(requestDate)).append("\n");
     sb.append("    jobId: ").append(toIndentedString(jobId)).append("\n");

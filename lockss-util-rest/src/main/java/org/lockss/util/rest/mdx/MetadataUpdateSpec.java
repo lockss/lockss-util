@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  */
 package org.lockss.util.rest.mdx;
-
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -103,7 +102,7 @@ public class MetadataUpdateSpec   {
     }
     MetadataUpdateSpec metadataUpdateSpec = (MetadataUpdateSpec) o;
     return Objects.equals(this.auid, metadataUpdateSpec.auid) &&
-        Objects.equals(this.updateType, metadataUpdateSpec.updateType);
+      Objects.equals(this.updateType, metadataUpdateSpec.updateType);
   }
 
   @Override
@@ -115,7 +114,7 @@ public class MetadataUpdateSpec   {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class MetadataUpdateSpec {\n");
-    
+
     sb.append("    auid: ").append(toIndentedString(auid)).append("\n");
     sb.append("    updateType: ").append(toIndentedString(updateType)).append("\n");
     sb.append("}");

@@ -69,11 +69,11 @@ public class PollDesc   {
    */
   public enum VariantEnum {
     POR("PoR"),
-    
+
     POP("PoP"),
-    
+
     LOCAL("Local"),
-    
+
     NOPOLL("NoPoll");
 
     private String value;
@@ -134,7 +134,7 @@ public class PollDesc   {
    * @return cuSetSpec
    **/
   @Schema(description = "")
-  
+
     @Valid
     public CachedUriSetSpec getCuSetSpec() {
     return cuSetSpec;
@@ -155,7 +155,7 @@ public class PollDesc   {
    * @return pollType
    **/
   @Schema(description = "The type of poll to run. Only V3 is supported.")
-  
+
   @Min(3)  public Integer getPollType() {
     return pollType;
   }
@@ -174,7 +174,7 @@ public class PollDesc   {
    * @return protocol
    **/
   @Schema(description = "The version of polling protocol.")
-  
+
     public Integer getProtocol() {
     return protocol;
   }
@@ -193,7 +193,7 @@ public class PollDesc   {
    * @return pluginPollVersion
    **/
   @Schema(description = "The version of the polling features needed by the plugin.")
-  
+
     public String getPluginPollVersion() {
     return pluginPollVersion;
   }
@@ -212,7 +212,7 @@ public class PollDesc   {
    * @return variant
    **/
   @Schema(description = "The V3 poll variation.")
-  
+
     public VariantEnum getVariant() {
     return variant;
   }
@@ -231,7 +231,7 @@ public class PollDesc   {
    * @return modulus
    **/
   @Schema(description = "Poll on every 'n'th url.")
-  
+
     public Integer getModulus() {
     return modulus;
   }
@@ -268,7 +268,7 @@ public class PollDesc   {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class PollDesc {\n");
-    
+
     sb.append("    auId: ").append(toIndentedString(auId)).append("\n");
     sb.append("    cuSetSpec: ").append(toIndentedString(cuSetSpec)).append("\n");
     sb.append("    pollType: ").append(toIndentedString(pollType)).append("\n");

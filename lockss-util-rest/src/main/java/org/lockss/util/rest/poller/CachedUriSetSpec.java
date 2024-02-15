@@ -87,7 +87,7 @@ public class CachedUriSetSpec   {
    * @return lowerBound
    **/
   @Schema(description = "lower bound of the prefix range, inclusive.")
-  
+
     public String getLowerBound() {
     return lowerBound;
   }
@@ -106,7 +106,7 @@ public class CachedUriSetSpec   {
    * @return upperBound
    **/
   @Schema(description = "upper bound of prefix range, inclusive.")
-  
+
     public String getUpperBound() {
     return upperBound;
   }
@@ -139,7 +139,7 @@ public class CachedUriSetSpec   {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class CachedUriSetSpec {\n");
-    
+
     sb.append("    urlPrefix: ").append(toIndentedString(urlPrefix)).append("\n");
     sb.append("    lowerBound: ").append(toIndentedString(lowerBound)).append("\n");
     sb.append("    upperBound: ").append(toIndentedString(upperBound)).append("\n");
