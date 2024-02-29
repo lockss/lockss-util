@@ -28,15 +28,24 @@
 
 package org.lockss.util.rest.repo.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serializable;
+import java.util.Objects;
+import javax.validation.Valid;
+import javax.validation.constraints.*;
 import org.lockss.util.storage.StorageInfo;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * Information about a repository and its storage areas
  */
 public class RepositoryInfo implements Serializable {
-  private StorageInfo storeInfo;
-  private StorageInfo indexInfo;
+  @JsonProperty("storeInfo")
+  private StorageInfo storeInfo = null;
+
+  @JsonProperty("indexInfo")
+  private StorageInfo indexInfo = null;
 
   /**
    * Default constructor.
@@ -49,7 +58,20 @@ public class RepositoryInfo implements Serializable {
     this.indexInfo = indexInfo;
   }
 
-  public StorageInfo getStoreInfo() {
+  public RepositoryInfo storeInfo(StorageInfo storeInfo) {
+    this.storeInfo = storeInfo;
+    return this;
+  }
+
+  /**
+   * Get storeInfo
+   * @return storeInfo
+   **/
+  @Schema(required = true, description = "")
+      @NotNull
+
+    @Valid
+    public StorageInfo getStoreInfo() {
     return storeInfo;
   }
 
@@ -57,12 +79,44 @@ public class RepositoryInfo implements Serializable {
     this.storeInfo = storeInfo;
   }
 
-  public StorageInfo getIndexInfo() {
+  public RepositoryInfo indexInfo(StorageInfo indexInfo) {
+    this.indexInfo = indexInfo;
+    return this;
+  }
+
+  /**
+   * Get indexInfo
+   * @return indexInfo
+   **/
+  @Schema(required = true, description = "")
+      @NotNull
+
+    @Valid
+    public StorageInfo getIndexInfo() {
     return indexInfo;
   }
 
   public void setIndexInfo(StorageInfo indexInfo) {
     this.indexInfo = indexInfo;
+  }
+
+
+  @Override
+  public boolean equals(java.lang.Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    RepositoryInfo repositoryInfo = (RepositoryInfo) o;
+    return Objects.equals(this.storeInfo, repositoryInfo.storeInfo) &&
+        Objects.equals(this.indexInfo, repositoryInfo.indexInfo);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(storeInfo, indexInfo);
   }
 
   @Override

@@ -1,8 +1,8 @@
 package org.lockss.util.rest.crawler;
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.validation.annotation.Validated;
 import javax.validation.Valid;
 import javax.validation.constraints.*;
@@ -10,7 +10,7 @@ import javax.validation.constraints.*;
 /**
  * The job resulting from a request to perform a crawl.
  */
-@ApiModel(description = "The job resulting from a request to perform a crawl.")
+@Schema(description = "The job resulting from a request to perform a crawl.")
 @Validated
 
 
@@ -51,7 +51,7 @@ public class CrawlJob   {
    * The descriptor of the crawl.
    * @return crawlDesc
    **/
-  @ApiModelProperty(required = true, value = "The descriptor of the crawl.")
+  @Schema(required = true, description = "")
   @NotNull
 
   @Valid
@@ -73,7 +73,7 @@ public class CrawlJob   {
    * The timestamp when the crawl was requested.
    * @return requestDate
    **/
-  @ApiModelProperty(required = true, value = "The timestamp when the crawl was requested.")
+  @Schema(required = true, description = "The timestamp when the crawl was requested.")
   @NotNull
 
 
@@ -94,7 +94,7 @@ public class CrawlJob   {
    * Identifier of the crawl job.
    * @return jobId
    **/
-  @ApiModelProperty(required = true, value = "Identifier of the crawl job.")
+  @Schema(required = true, description = "Identifier of the crawl job.")
   @NotNull
 
 
@@ -112,10 +112,10 @@ public class CrawlJob   {
   }
 
   /**
-   * The status of the crawl operation.
+   * Get jobStatus
    * @return jobStatus
    **/
-  @ApiModelProperty(required = true, value = "The status of the crawl operation.")
+  @Schema(required = true, description = "")
   @NotNull
 
   @Valid
@@ -137,7 +137,7 @@ public class CrawlJob   {
    * The timestamp when the crawl began.
    * @return startDate
    **/
-  @ApiModelProperty(value = "The timestamp when the crawl began.")
+  @Schema(description = "The timestamp when the crawl began.")
 
 
   public Long getStartDate() {
@@ -157,7 +157,7 @@ public class CrawlJob   {
    * The timestamp when the crawl ended.
    * @return endDate
    **/
-  @ApiModelProperty(value = "The timestamp when the crawl ended.")
+  @Schema(description = "The timestamp when the crawl ended.")
 
 
   public Long getEndDate() {
@@ -177,7 +177,7 @@ public class CrawlJob   {
    * A URI which can be used to retrieve the crawl data.
    * @return result
    **/
-  @ApiModelProperty(value = "A URI which can be used to retrieve the crawl data.")
+  @Schema(description = "A URI which can be used to retrieve the crawl data.")
 
 
   public String getResult() {
