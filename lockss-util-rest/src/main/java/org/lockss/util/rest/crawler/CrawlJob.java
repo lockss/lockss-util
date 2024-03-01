@@ -31,13 +31,13 @@ POSSIBILITY OF SUCH DAMAGE.
  */
 package org.lockss.util.rest.crawler;
 
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.springframework.validation.annotation.Validated;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.validation.annotation.Validated;
+
+import java.util.Objects;
 
 /**
  * The job resulting from a request to perform a crawl.

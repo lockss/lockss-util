@@ -31,13 +31,12 @@ POSSIBILITY OF SUCH DAMAGE.
  */
 package org.lockss.util.rest.poller;
 
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.validation.annotation.Validated;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
+
+import java.util.Objects;
 
 /**
  * A set of urls bounded by  upper and lower restraints.  If lower &#x3D; \&quot;.\&quot; this is a singleContentNode. If lower is null then start at the root url, if upper is null end with the last.
