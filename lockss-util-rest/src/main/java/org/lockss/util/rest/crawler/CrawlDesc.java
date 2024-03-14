@@ -48,7 +48,6 @@ import java.util.*;
 @Validated
 
 
-
 public class CrawlDesc   {
   /**
    * The identifier of the classic LOCKSS crawler.
@@ -65,7 +64,6 @@ public class CrawlDesc   {
    */
   public enum CrawlKindEnum {
     NEWCONTENT("newContent"),
-    
     REPAIR("repair");
 
     private String value;
@@ -90,6 +88,7 @@ public class CrawlDesc   {
       return null;
     }
   }
+
   @JsonProperty("crawlKind")
   private CrawlKindEnum crawlKind = null;
 

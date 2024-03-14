@@ -31,7 +31,6 @@
  */
 package org.lockss.ws.entities;
 
-
 import java.util.Arrays;
 import jakarta.activation.DataHandler;
 

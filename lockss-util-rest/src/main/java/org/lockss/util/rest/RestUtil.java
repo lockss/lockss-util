@@ -300,8 +300,6 @@ public class RestUtil {
     return new RestTemplateBuilder()
         .setConnectTimeout(Duration.ofMillis(connectTimeout))
         .setReadTimeout(Duration.ofMillis(readTimeout))
-        // Q: Okay to remove? "...since 6.1 requests are never buffered, as if this property is false"
-        .setBufferRequestBody(false)
         .errorHandler(new LockssResponseErrorHandler(new RestTemplate().getMessageConverters()));
   }
 
@@ -328,12 +326,8 @@ public class RestUtil {
     }
 
     RestTemplateBuilder builder = new RestTemplateBuilder()
-//        new MyClientHttpRequestFactoryCustomizer(connectTimeout, readTimeout, false))
-//        .detectRequestFactory(false)
         .setConnectTimeout(Duration.ofMillis(connectTimeout))
         .setReadTimeout(Duration.ofMillis(readTimeout))
-        // Q: Okay to remove? "...since 6.1 requests are never buffered, as if this property is false"
-        .setBufferRequestBody(false)
         .errorHandler(new LockssResponseErrorHandler(new RestTemplate().getMessageConverters()));
 
     RestTemplate restTemplate =	builder.build();
@@ -342,39 +336,6 @@ public class RestUtil {
     return restTemplate;
   }
   
-  private static class MyClientHttpRequestFactoryCustomizer implements RestTemplateCustomizer {
-    long connectTimeout;
-    long readTimeout;
-    boolean bufferRequestBody = false;
-
-    public MyClientHttpRequestFactoryCustomizer(
-        long connectTimeout, long readTimeout, boolean bufferRequestBody) {
-      this.connectTimeout = connectTimeout;
-      this.readTimeout = readTimeout;
-      this.bufferRequestBody = bufferRequestBody;
-    }
-
-    @Override
-    public void customize(RestTemplate restTemplate) {
-      // It's necessary to specify this factory to get Spring support for PATCH
-      // operations.
-      HttpComponentsClientHttpRequestFactory requestFactory =
-          new HttpComponentsClientHttpRequestFactory();
-
-      // Specify the timeouts.
-      requestFactory.setConnectTimeout((int)connectTimeout);
-      // FIXME: requestFactory.setReadTimeout((int)readTimeout);
-
-      // Do not buffer the request body internally, to avoid running out of
-      // memory, or other failures, when sending large amounts of data.
-      // Q: Okay to remove? "...since 6.1 requests are never buffered, as if this property is false"
-      requestFactory.setBufferRequestBody(false);
-
-      // Configure the template.
-      restTemplate.setRequestFactory(requestFactory);
-    }
-  }
-
   /**
    * Add a MultipartMessageHttpMessageConverter to the RestTemplate.
    * Temp files will be stored in the System temp dir

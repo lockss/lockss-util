@@ -54,8 +54,6 @@ import org.lockss.util.rest.RestUtil;
 import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.rest.exception.LockssRestHttpException;
 import org.lockss.util.rest.multipart.MultipartMessage;
-import org.lockss.util.rest.repo.model.*;
-import org.lockss.util.rest.repo.util.*;
 import org.lockss.util.storage.StorageInfo;
 import org.lockss.util.time.Deadline;
 import org.lockss.util.time.TimeUtil;
@@ -91,6 +89,7 @@ import java.util.*;
  */
 public class RestLockssRepository implements LockssRepository {
   private final static L4JLogger log = L4JLogger.getLogger();
+  private final static MultiValueMap<String, Object> EMPTY_MULTIPART_MAP = new LinkedMultiValueMap<>();
 
   public static final int DEFAULT_MAX_ART_CACHE_SIZE = 500;
   public static final int DEFAULT_MAX_ART_DATA_CACHE_SIZE = 20;
@@ -697,14 +696,12 @@ public class RestLockssRepository implements LockssRepository {
     // Need to send an empty multipart request; empty body will cause undefined
     // behavior. In particular, Spring Boot 3.x will complain about a missing
     // multipart boundary.
-    MultiValueMap<String, Object> emptyParts = new LinkedMultiValueMap<>();
-
     try {
       ResponseEntity<String> response =
           RestUtil.callRestService(restTemplate,
               builder.build().encode().toUri(),
               HttpMethod.PUT,
-              new HttpEntity<>(emptyParts, headers),
+              new HttpEntity<>(EMPTY_MULTIPART_MAP, headers),
               String.class,
               "commitArtifact client error");
       checkStatusOk(response);

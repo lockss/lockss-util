@@ -511,7 +511,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
 
     // Get the status code included in the response.
     HttpStatusCode statusCode = response.getStatusCode();
-    HttpStatusCode status = HttpStatus.valueOf(statusCode.value());
+    HttpStatus status = HttpStatus.valueOf(statusCode.value());
     log.trace("status = {}", status);
 
     // Check whether the operation indicates success.
