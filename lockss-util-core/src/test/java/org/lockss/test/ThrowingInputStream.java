@@ -38,8 +38,14 @@ public class ThrowingInputStream extends FilterInputStream {
   static L4JLogger log = L4JLogger.getLogger();
 
   private IOException throwOnRead;
+  private long throwAtPos = 0;
+  private long curPos = 0;
   private IOException throwOnClose;
   private Error errorOnRead;
+
+  public ThrowingInputStream(InputStream in) {
+    super(in);
+  }
 
   public ThrowingInputStream(InputStream in,
 			     IOException throwOnRead,
@@ -54,11 +60,19 @@ public class ThrowingInputStream extends FilterInputStream {
   }
 
   public void setThrowOnRead(IOException ioe) {
+    setThrowOnRead(ioe, 0);
+  }
+
+  /* Cause the stream to throw the specified IOException when it
+   * reaches the sprcified position (more-or-less - accurate only to
+   * within the buffer size) */
+  public void setThrowOnRead(IOException ioe, long atPos) {
     throwOnRead = ioe;
+    throwAtPos = atPos;
   }
 
   private void checkReadError() throws IOException {
-    if (throwOnRead != null) {
+    if (throwOnRead != null && (curPos >= throwAtPos)) {
       log.debug2("Injected read error: {}", throwOnRead.getMessage(),
 		 new Throwable());
       // Make stack trace reflect here, not where exception was created
@@ -74,17 +88,22 @@ public class ThrowingInputStream extends FilterInputStream {
 
   public int read() throws IOException {
     checkReadError();
-    return in.read();
+    int res = in.read();
+    curPos++;
+    return res;
   }
 
   public int read(byte[] b, int off, int len) throws IOException {
     checkReadError();
-    return in.read(b, off, len);
+    int res = in.read(b, off, len);
+    checkReadError();
+    curPos += res;
+    return res;
   }
 
   public int read(byte[] b) throws IOException {
     checkReadError();
-    return in.read(b);
+    return in.read(b, 0, b.length);
   }
 
   public void close() throws IOException {
