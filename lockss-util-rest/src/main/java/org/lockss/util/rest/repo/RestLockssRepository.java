@@ -34,13 +34,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections4.IteratorUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.lockss.log.L4JLogger;
-import org.lockss.util.rest.repo.model.*;
-import org.lockss.util.rest.repo.util.*;
 import org.lockss.util.ListUtil;
 import org.lockss.util.LockssUncheckedIOException;
 import org.lockss.util.auth.AuthUtil;
@@ -54,10 +53,13 @@ import org.lockss.util.rest.RestUtil;
 import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.rest.exception.LockssRestHttpException;
 import org.lockss.util.rest.multipart.MultipartMessage;
+import org.lockss.util.rest.repo.model.*;
+import org.lockss.util.rest.repo.util.*;
 import org.lockss.util.storage.StorageInfo;
 import org.lockss.util.time.Deadline;
 import org.lockss.util.time.TimeUtil;
 import org.lockss.util.time.TimerUtil;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
@@ -121,7 +123,9 @@ public class RestLockssRepository implements LockssRepository {
    *                      the remote LOCKSS Repository service.
    */
   public RestLockssRepository(URL repositoryUrl, String userName, String password) throws IOException {
-    this(repositoryUrl, RestUtil.getRestTemplate(), userName, password);
+    this(repositoryUrl,
+        RestUtil.getRestTemplate(0, 0, (int) (16 * FileUtils.ONE_MB), null),
+        userName, password);
   }
 
   /**
@@ -439,12 +443,12 @@ public class RestLockssRepository implements LockssRepository {
       requestHeaders.setAccept(ListUtil.list(APPLICATION_HTTP_RESPONSE, MediaType.APPLICATION_JSON));
 
       // Make the request to the REST service and get its response
-      ResponseEntity<Resource> response = RestUtil.callRestService(
+      ResponseEntity<InputStreamResource> response = RestUtil.callRestService(
           restTemplate,
           endpoint,
           HttpMethod.GET,
           new HttpEntity<>(requestHeaders),
-          Resource.class,
+          InputStreamResource.class,
           "REST client error: getArtifactData()");
 
       checkStatusOk(response);
