@@ -63,6 +63,7 @@ import java.io.*;
  * created. */
 public class DeferredTempFileOutputStream extends ThresholdingOutputStream {
 
+  private File tmpDir;
   /**
    * The output stream to which data will be written prior to the theshold
    * being reached.
@@ -95,6 +96,11 @@ public class DeferredTempFileOutputStream extends ThresholdingOutputStream {
    */
   public DeferredTempFileOutputStream(int threshold) {
     this(threshold, "deferred-temp-file");
+  }
+
+  public DeferredTempFileOutputStream(int threshold, File tmpDir) {
+    this(threshold, "deferred-temp-file");
+    this.tmpDir = tmpDir;
   }
 
   /**
@@ -141,7 +147,7 @@ public class DeferredTempFileOutputStream extends ThresholdingOutputStream {
 
   // Overridable for testing
   protected File createTempFile(String name) throws IOException {
-    return FileUtil.createTempFile(name, ".tmp");
+    return FileUtil.createTempFile(name, ".tmp", tmpDir);
   }
 
   // --------------------------------------------------------- Public methods
