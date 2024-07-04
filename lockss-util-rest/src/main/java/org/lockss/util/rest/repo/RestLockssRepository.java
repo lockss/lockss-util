@@ -111,6 +111,7 @@ public class RestLockssRepository implements LockssRepository {
   public static final String MULTIPART_ARTIFACT_PAYLOAD = "payload";
 
   private RestTemplate restTemplate;
+  private CloseableHttpClient httpClient;
   private URL repositoryUrl;
 
   // The value of the Authorization header to be used when calling the REST
@@ -153,6 +154,9 @@ public class RestLockssRepository implements LockssRepository {
 
     // Set RestTemplate used by RestLockssRepository
     this.restTemplate = restTemplate;
+
+    // Apache HttpClient used by getArtifactData()
+    httpClient = HttpClients.createDefault();
 
     // Set remote Repository service URL
     this.repositoryUrl = repositoryUrl;
@@ -448,8 +452,6 @@ public class RestLockssRepository implements LockssRepository {
       HttpHeaders requestHeaders = getInitializedHttpHeaders();
       requestHeaders.setAccept(ListUtil.list(APPLICATION_HTTP_RESPONSE, MediaType.APPLICATION_JSON));
 
-      CloseableHttpClient client = HttpClients.createDefault();
-
       HttpGet getRequest = new HttpGet(endpoint);
 
       // Set Apache GET request headers from Spring HttpHeaders
@@ -459,7 +461,7 @@ public class RestLockssRepository implements LockssRepository {
         }
       }
 
-      CloseableHttpResponse response = client.execute(getRequest);
+      CloseableHttpResponse response = httpClient.execute(getRequest);
 
       // Transform Apache HttpResponse to Spring HttpStatusCode
       HttpStatusCode statusCode =
