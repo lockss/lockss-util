@@ -118,26 +118,4 @@ public class TestArtifactData extends LockssTestCase5 {
     assertEquals(1, st.getInputUnused());
     assertEquals(0, st.getUnreleased());
   }
-
-  @Test
-  // TODO: Finish
-  public void testResponseArtifact() throws Exception {
-    ArtifactSpec spec = new ArtifactSpec()
-        .setUrl("http://www.example.org/")
-        .setCollectionDate(0)
-        .generateContent();
-
-    ArtifactData ad = spec.getArtifactData(false);
-
-    assertTrue(ad.hasContentInputStream());
-//    assertTrue(ad.isHttpResponse());
-//    assertTrue(ad.isHttpResponse());
-//
-//    log.info("status = {}", ad.getHttpStatus());
-//    log.info("headers = {}", ad.getHttpHeaders());
-//
-    InputStream is = ad.getResponseInputStream();
-
-    log.info("is = {}", IOUtils.toString(is, StandardCharsets.UTF_8));
-  }
 }

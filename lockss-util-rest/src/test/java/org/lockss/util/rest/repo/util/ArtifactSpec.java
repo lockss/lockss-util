@@ -511,13 +511,14 @@ public class ArtifactSpec implements Comparable<Object> {
   public ArtifactData getArtifactData(boolean wantParsed) throws IOException {
     ArtifactData ad = getArtifactData();
 
-    if (!wantParsed) {
-      // Create a new (unparsed) ArtifactData from parsed
-      ad = new ArtifactData()
-          .setIdentifier(getArtifactIdentifier())
-          .setStorageUrl(getStorageUrl())
-          .setResponseInputStream(ArtifactDataUtil.getHttpResponseStreamFromArtifactData(ad));
-    }
+    // Q: Is this still needed?
+//    if (!wantParsed) {
+//      // Create a new (unparsed) ArtifactData from parsed
+//      ad = new ArtifactData()
+//          .setIdentifier(getArtifactIdentifier())
+//          .setStorageUrl(getStorageUrl());
+//          .setResponseInputStream(ArtifactDataUtil.getHttpResponseStreamFromArtifactData(ad));
+//    }
 
     return ad;
   }

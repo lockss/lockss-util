@@ -40,12 +40,14 @@ import org.apache.http.*;
 import org.apache.http.entity.BasicHttpEntity;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.io.*;
+import org.apache.http.io.SessionInputBuffer;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicLineFormatter;
 import org.apache.http.message.BasicStatusLine;
 import org.apache.http.util.CharArrayBuffer;
 import org.lockss.log.L4JLogger;
+import org.lockss.util.CloseCallbackInputStream;
 import org.lockss.util.rest.multipart.MultipartMessage;
 import org.lockss.util.rest.multipart.MultipartResponse;
 import org.lockss.util.rest.repo.LockssRepository;
@@ -85,7 +87,7 @@ public class ArtifactDataUtil {
 
   /** Return a SessionInputBuffer with a UTF-8 decoder, bound to the
    * InputStream */
-  public static SessionInputBufferImpl getSessionInputBuffer(InputStream is) {
+  public static SessionInputBuffer getSessionInputBuffer(InputStream is) {
     SessionInputBufferImpl buffer =
       new SessionInputBufferImpl(new HttpTransportMetricsImpl(),
                                  4096, 4096, null,
@@ -493,20 +495,30 @@ public class ArtifactDataUtil {
    * @throws IOException
    */
   public static HttpResponse getHttpResponseFromStream(InputStream inputStream) throws HttpException, IOException {
-    // Create a SessionInputBuffer from the InputStream containing a HTTP response
-    SessionInputBufferImpl buffer =
-      getSessionInputBuffer(inputStream);
+    // Create a SessionInputBuffer from the InputStream containing an HTTP response
+    SessionInputBuffer buffer = getSessionInputBuffer(inputStream);
 
     // Parse the InputStream to a HttpResponse object
-    HttpResponse response = (new DefaultHttpResponseParser(buffer)).parse();
-//        long len = (new LaxContentLengthStrategy()).determineLength(response);
+    HttpResponse response = new DefaultHttpResponseParser(buffer).parse();
+
+    // The SessionBufferInput and IdentityInputStream obscure the original input stream and
+    // make it impossible to close it, so it's wrapped in a CloseCallbackInputStream here:
+    InputStream wrappedInputStream = new CloseCallbackInputStream(
+        new IdentityInputStream(buffer),
+        is -> {
+          try {
+            ((InputStream) is).close();
+          } catch (IOException e) {
+            log.error("An error occurred while attempting to close the input stream", e);
+          }
+        },
+        inputStream);
 
     // Create and attach an HTTP entity to the HttpResponse
-    BasicHttpEntity responseEntity = new BasicHttpEntity();
-//        responseEntity.setContentLength(len);
-    responseEntity.setContent(new IdentityInputStream(buffer));
-    response.setEntity(responseEntity);
+    BasicHttpEntity entity = new BasicHttpEntity();
+    entity.setContent(wrappedInputStream);
 
+    response.setEntity(entity);
     return response;
   }
 
@@ -524,15 +536,11 @@ public class ArtifactDataUtil {
 
     HttpHeaders headers = transformHeaderArrayToHttpHeaders(response.getAllHeaders());
 
-    ArtifactData artifactData = new ArtifactData(
+    return new ArtifactData(
         null,
         headers,
         response.getEntity().getContent(),
         response.getStatusLine());
-
-//        artifactData.setContentLength(response.getEntity().getContentLength());
-
-    return artifactData;
   }
 
   /**

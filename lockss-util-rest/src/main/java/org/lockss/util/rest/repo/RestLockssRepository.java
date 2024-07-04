@@ -39,7 +39,12 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.lockss.log.L4JLogger;
+import org.lockss.util.CloseCallbackInputStream;
 import org.lockss.util.ListUtil;
 import org.lockss.util.LockssUncheckedIOException;
 import org.lockss.util.auth.AuthUtil;
@@ -59,11 +64,12 @@ import org.lockss.util.storage.StorageInfo;
 import org.lockss.util.time.Deadline;
 import org.lockss.util.time.TimeUtil;
 import org.lockss.util.time.TimerUtil;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
+import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -442,32 +448,67 @@ public class RestLockssRepository implements LockssRepository {
       HttpHeaders requestHeaders = getInitializedHttpHeaders();
       requestHeaders.setAccept(ListUtil.list(APPLICATION_HTTP_RESPONSE, MediaType.APPLICATION_JSON));
 
-      // Make the request to the REST service and get its response
-      ResponseEntity<InputStreamResource> response = RestUtil.callRestService(
-          restTemplate,
-          endpoint,
-          HttpMethod.GET,
-          new HttpEntity<>(requestHeaders),
-          InputStreamResource.class,
-          "REST client error: getArtifactData()");
+      CloseableHttpClient client = HttpClients.createDefault();
 
-      checkStatusOk(response);
+      HttpGet getRequest = new HttpGet(endpoint);
 
-      // Transform HTTP response stream in REST response body to ArtifactData
-      Resource body = response.getBody();
-      HttpHeaders responseHeaders = response.getHeaders();
+      // Set Apache GET request headers from Spring HttpHeaders
+      for (Map.Entry<String, List<String>> header : requestHeaders.entrySet()) {
+        for (String value : header.getValue()) {
+          getRequest.addHeader(header.getKey(), value);
+        }
+      }
+
+      CloseableHttpResponse response = client.execute(getRequest);
+
+      // Transform Apache HttpResponse to Spring HttpStatusCode
+      HttpStatusCode statusCode =
+          HttpStatusCode.valueOf(response.getStatusLine().getStatusCode());
+
+      try {
+        if (statusCode.isError()) {
+          ResponseErrorHandler errorHandler = restTemplate.getErrorHandler();
+          errorHandler.handleError(getClientHttpResponse(response));
+        }
+      } catch (LockssResponseErrorHandler.WrappedLockssRestHttpException e) {
+        throw e.getLRHE();
+      }
+
+      checkStatusOk(statusCode);
+
+      // Transform  Apache Header array to Spring HttpHeaders
+      HttpHeaders responseHeaders =
+          ArtifactDataUtil.transformHeaderArrayToHttpHeaders(response.getAllHeaders());
 
       boolean receivedOnlyHeaders =
           responseHeaders.containsKey(ArtifactConstants.INCLUDES_CONTENT) &&
-          responseHeaders.getFirst(ArtifactConstants.INCLUDES_CONTENT).equals("false");
+              responseHeaders.getFirst(ArtifactConstants.INCLUDES_CONTENT).equals("false");
 
       boolean receivedResourceType =
           responseHeaders.containsKey(ArtifactConstants.ARTIFACT_DATA_TYPE) &&
-          responseHeaders.getFirst(ArtifactConstants.ARTIFACT_DATA_TYPE).equals("resource");
+              responseHeaders.getFirst(ArtifactConstants.ARTIFACT_DATA_TYPE).equals("resource");
 
-      InputStream responseBodyStream = body.getInputStream();
-
+      // Transform HTTP response stream in REST response body to ArtifactData
       ArtifactData result;
+      org.apache.http.HttpEntity entity = response.getEntity();
+
+      if (entity == null && !receivedOnlyHeaders) {
+        log.error("Expected to receive an entity");
+        throw new LockssRestHttpException("No entity received");
+      }
+
+      // Wrap socket input stream in a CloseCallbackInputStream to close the socket
+      // when the InputStream is closed by the client
+      InputStream responseBodyStream = new CloseCallbackInputStream(
+          entity.getContent(),
+          (rp) -> {
+            try {
+              ((CloseableHttpResponse) rp).close();
+            } catch (IOException e) {
+              log.error("Could not close HTTP response socket", e);
+            }
+          },
+          response);
 
       try {
         if (receivedOnlyHeaders) {
@@ -487,8 +528,7 @@ public class RestLockssRepository implements LockssRepository {
               .setHttpHeaders(ArtifactDataUtil.transformHeaderArrayToHttpHeaders(httpResponse.getAllHeaders()))
               .setInputStream(httpResponse.getEntity().getContent());
         } else {
-          result = new ArtifactData()
-              .setResponseInputStream(responseBodyStream);
+          result = ArtifactDataUtil.fromHttpResponseStream(responseBodyStream);
         }
       } catch (HttpException e) {
         throw new LockssRestHttpException("Malformed HTTP response in REST response body");
@@ -503,7 +543,7 @@ public class RestLockssRepository implements LockssRepository {
       // FIXME: Instances of Artifact from RestLockssRepository don't have a meaningful storage URL
       //        at this time and probably never will but if it has one, set it on the ArtifactData.
       if (artifact.getStorageUrl() != null) {
-          result.setStorageUrl(URI.create(artifact.getStorageUrl()));
+        result.setStorageUrl(URI.create(artifact.getStorageUrl()));
       }
 
       String storeDate = responseHeaders.getFirst(ArtifactConstants.ARTIFACT_STORE_DATE_KEY);
@@ -524,6 +564,39 @@ public class RestLockssRepository implements LockssRepository {
       log.error("Could not get artifact data", e);
       throw e;
     }
+  }
+
+  private ClientHttpResponse getClientHttpResponse(CloseableHttpResponse response) {
+    return new ClientHttpResponse() {
+      @Override
+      public HttpHeaders getHeaders() {
+        return ArtifactDataUtil.transformHeaderArrayToHttpHeaders(response.getAllHeaders());
+      }
+
+      @Override
+      public InputStream getBody() throws IOException {
+        return response.getEntity().getContent();
+      }
+
+      @Override
+      public HttpStatusCode getStatusCode() throws IOException {
+       return HttpStatusCode.valueOf(response.getStatusLine().getStatusCode());
+      }
+
+      @Override
+      public String getStatusText() throws IOException {
+        return response.getStatusLine().getReasonPhrase();
+      }
+
+      @Override
+      public void close() {
+        try {
+          response.close();
+        } catch (IOException e) {
+          log.error("Could not close HTTP response", e);
+        }
+      }
+    };
   }
 
   public ArtifactData getArtifactDataByPayload(Artifact artifact, IncludeContent includeContent)

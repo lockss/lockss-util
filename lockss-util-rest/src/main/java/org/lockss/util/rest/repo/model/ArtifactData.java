@@ -78,20 +78,15 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
   private CountingInputStream cis;
   private DigestInputStream dis;
   private EofRememberingInputStream eofis;
-  private boolean isComputeDigestOnRead = false;
 
-  // The byte stream of this artifact before it is wrapped in the WARC
-  // processing code that does not honor close().
-  private InputStream closableInputStream;
+  private boolean isComputeDigestOnRead = false;
+  private boolean inputStreamUsed = false;
+  private boolean hadAnInputStream = false;
 
   // Artifact data properties
   private HttpHeaders httpHeaders = new HttpHeaders();
   private StatusLine httpStatus;
-  private InputStream origInputStream;
-  private boolean inputStreamUsed = false;
-  private boolean hadAnInputStream = false;
-  private boolean isResponseStream = false;
-  private boolean isResponseStreamParsed = false;
+
   private long contentLength = -1;
   private String contentDigest;
 
@@ -174,10 +169,6 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
    * @return A {@code HttpHeaders} containing this artifact's additional properties.
    */
   public HttpHeaders getHttpHeaders() throws IOException {
-    if (isResponseStream && !isResponseStreamParsed) {
-      parseResponseStream();
-    }
-
     return httpHeaders;
   }
 
@@ -192,7 +183,7 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
    * @return true if this artifact's byte stream is available
    */
   public boolean hasContentInputStream() {
-    return origInputStream != null && !inputStreamUsed;
+    return artifactStream != null && !inputStreamUsed;
   }
 
   /**
@@ -224,20 +215,11 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
       throw new IllegalStateException("Attempt to get InputStream from ArtifactData whose InputStream has been used");
     }
 
-    if (isResponseStream && !isResponseStreamParsed) {
-      // FIXME: Allow this method to throw IOException and handle error correctly
-      try {
-        parseResponseStream();
-      } catch (IOException e) {
-        throw new LockssUncheckedIOException(e);
-      }
-    }
-
     // Comment in to log creation point of unused InputStreams
     // openTrace = stackTraceString(new Exception("Open"));
 
     try {
-      cis = new CountingInputStream(origInputStream);
+      cis = new CountingInputStream(artifactStream);
 
       // Wrap the stream in a DigestInputStream
       if (isComputeDigestOnRead) {
@@ -247,102 +229,30 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
 	eofis = new EofRememberingInputStream(cis);
       }
 
-      // Wrap the WARC-aware byte stream of this artifact so that the
-      // underlying stream can be closed.
-      artifactStream = new CloseCallbackInputStream(
+      inputStreamUsed = true;
+
+      // Q: Is this still necessary?
+      return new CloseCallbackInputStream(
           eofis,
-          new CloseCallbackInputStream.Callback() {
-            // Called when the close() method of the stream is closed.
-            @Override
-            public void streamClosed(Object o) {
-              // Release any resources bound to this object.
-              ((ArtifactData) o).release();
-            }
+          ad -> {
+            // Release any resources bound to this object.
+            ((ArtifactData) ad).release();
           },
           this);
 
-      inputStreamUsed = true;
     } catch (NoSuchAlgorithmException e) {
       // Digest algorithm is not parameterized so this should never happen
       throw new RuntimeException("Unknown digest algorithm: " + DEFAULT_DIGEST_ALGORITHM);
     }
-
-    InputStream res = artifactStream;
-    artifactStream = null;
-    return res;
   }
 
   public ArtifactData setInputStream(InputStream inputStream) {
     if (inputStream != null) {
-      origInputStream = inputStream;
-      isResponseStream = false;
-
+      artifactStream = inputStream;
       hadAnInputStream = true;
       stats.withContent++;
     }
 
-    return this;
-  }
-
-  private void parseResponseStream() throws IOException {
-    if (!isResponseStream) {
-      throw new IllegalStateException("Cannot parse stream as HTTP response");
-    } else if (isResponseStreamParsed) {
-      log.warn("Stream already parsed as HTTP response", new Throwable());
-      return;
-    }
-
-    try {
-      // Parse HTTP response stream into HttpResponse object
-      HttpResponse httpResponse = ArtifactDataUtil.getHttpResponseFromStream(origInputStream);
-      isResponseStreamParsed = true;
-
-      // Pull out parts of the HTTP response
-      httpStatus = httpResponse.getStatusLine();
-      httpHeaders = ArtifactDataUtil.transformHeaderArrayToHttpHeaders(httpResponse.getAllHeaders());
-      origInputStream = httpResponse.getEntity().getContent();
-    } catch (HttpException e) {
-      throw new IOException("Error parsing HTTP response", e);
-    }
-  }
-
-  public InputStream getResponseInputStream() throws IOException {
-    if (!hadAnInputStream) {
-      throw new IllegalStateException("InputStream not set");
-    } else if (inputStreamUsed) {
-      throw new IllegalStateException("InputStream is consumed");
-    } else if (!isResponseStream) {
-      return ArtifactDataUtil.getHttpResponseStreamFromArtifactData(this);
-    } else if (isResponseStreamParsed) {
-      // TODO: Reconstruct HTTP response?
-      throw new UnsupportedOperationException("HTTP response stream already parsed");
-    }
-
-    EofRememberingInputStream eofis = new EofRememberingInputStream(origInputStream);
-
-    // Called when the close() method of the stream is closed.
-    InputStream responseStream = artifactStream = new CloseCallbackInputStream(
-        eofis,
-        cookie -> {
-          // Release any resources bound to this object.
-          ((ArtifactData) cookie).release();
-        },
-        this);
-
-    inputStreamUsed = true;
-
-    return responseStream;
-  }
-
-  public ArtifactData setResponseInputStream(InputStream stream) {
-    if (stream != null) {
-      origInputStream = stream;
-      isResponseStream = true;
-      isResponseStreamParsed = false;
-
-      hadAnInputStream = true;
-      stats.withContent++;
-    }
     return this;
   }
 
@@ -352,10 +262,6 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
    * @return A {@code StatusLine} containing this artifact's HTTP response status.
    */
   public StatusLine getHttpStatus() throws IOException {
-    if (isResponseStream && !isResponseStreamParsed) {
-      parseResponseStream();
-    }
-
     return httpStatus;
   }
 
@@ -363,8 +269,7 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
    * @return Returns a boolean indicating whether this artifact has an HTTP status (was therefore from a web crawl).
    */
   public boolean isHttpResponse() throws IOException {
-    return isResponseStream ||
-           (getHttpStatus() != null && getHttpHeaders() != null);
+    return getHttpStatus() != null && getHttpHeaders() != null;
   }
 
   public boolean isCommitted() {
@@ -486,16 +391,6 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
     }
   }
 
-  /**
-   * Sets the closable version of this artifact's byte stream.
-   *
-   * @param closableInputStream A {@code InputStream} containing the underlying, closable, byte
-   *                            stream.
-   */
-  public void setClosableInputStream(InputStream closableInputStream) {
-    this.closableInputStream = closableInputStream;
-  }
-
   // Temporary until InputStream refactored
   private boolean isAutoRelease = false;
 
@@ -512,10 +407,9 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
    */
   public synchronized void release() {
     if (!isReleased) {
-      IOUtils.closeQuietly(closableInputStream);
+      IOUtils.closeQuietly(artifactStream);
       updateStats();
       artifactStream = null;
-      closableInputStream = null;
       isReleased = true;
     }
   }
@@ -531,17 +425,17 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
 
   public long getBytesRead() {
     if (!eofis.isAtEof()) {
-      throw new RuntimeException("Content length has not been computed");
+      throw new RuntimeException("Content length has not finished computing");
     }
     return cis.getByteCount();
   }
 
   public MessageDigest getMessageDigest() {
-    if (dis == null) {
+    if (!isComputeDigestOnRead) {
       throw new RuntimeException("Content digest was not requested");
     }
     if (!eofis.isAtEof()) {
-      throw new RuntimeException("Content digest has not been computed");
+      throw new RuntimeException("Content digest has not finished computed");
     }
     return dis.getMessageDigest();
   }
@@ -560,7 +454,7 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
   protected void finalize() throws Throwable {
     if (!isReleased) {
       stats.unreleased++;
-      IOUtils.closeQuietly(closableInputStream);
+      IOUtils.closeQuietly(artifactStream);
       updateStats();
     }
     super.finalize();
@@ -586,14 +480,9 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
 
   @Override
   public void close() throws IOException {
-    if (origInputStream != null) {
-      origInputStream.close();
-      origInputStream = null;
-    }
-
-    if (closableInputStream != null) {
-      closableInputStream.close();
-      closableInputStream = null;
+    if (artifactStream != null) {
+      artifactStream.close();
+      artifactStream = null;
     }
   }
 
