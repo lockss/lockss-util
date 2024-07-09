@@ -521,14 +521,14 @@ public class RestLockssRepository implements LockssRepository {
       // when the InputStream is closed by the client
       InputStream responseBodyStream = new CloseCallbackInputStream(
           entity.getContent(),
-          (rp) -> {
+          (entityRef) -> {
             try {
-              ((CloseableHttpResponse) rp).close();
+              EntityUtils.consume((org.apache.http.HttpEntity) entityRef);
             } catch (IOException e) {
               log.error("Could not close HTTP response socket", e);
             }
           },
-          response);
+          entity);
 
       try {
         if (receivedOnlyHeaders) {
