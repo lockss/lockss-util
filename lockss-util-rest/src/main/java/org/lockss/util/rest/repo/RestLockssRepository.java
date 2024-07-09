@@ -43,6 +43,8 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.util.EntityUtils;
 import org.lockss.log.L4JLogger;
 import org.lockss.util.CloseCallbackInputStream;
 import org.lockss.util.ListUtil;
@@ -101,6 +103,7 @@ public class RestLockssRepository implements LockssRepository {
 
   public static final int DEFAULT_MAX_ART_CACHE_SIZE = 500;
   public static final int DEFAULT_MAX_ART_DATA_CACHE_SIZE = 20;
+  private static final int DEFAULT_POOL_SIZE_PADDING = 20;
 
   public static final boolean DEFAULT_USE_MULTIPART_ENDPOINT = false;
   private boolean useMultipartEndpoint = DEFAULT_USE_MULTIPART_ENDPOINT;
@@ -111,6 +114,7 @@ public class RestLockssRepository implements LockssRepository {
   public static final String MULTIPART_ARTIFACT_PAYLOAD = "payload";
 
   private RestTemplate restTemplate;
+  private final PoolingHttpClientConnectionManager poolingConnMgr;
   private CloseableHttpClient httpClient;
   private URL repositoryUrl;
 
@@ -156,7 +160,14 @@ public class RestLockssRepository implements LockssRepository {
     this.restTemplate = restTemplate;
 
     // Apache HttpClient used by getArtifactData()
-    httpClient = HttpClients.createDefault();
+    poolingConnMgr =
+        new PoolingHttpClientConnectionManager();
+
+    setMaxCacheSizes(1, 1);
+
+    httpClient = HttpClients.custom()
+        .setConnectionManager(poolingConnMgr)
+        .build();
 
     // Set remote Repository service URL
     this.repositoryUrl = repositoryUrl;
@@ -175,6 +186,12 @@ public class RestLockssRepository implements LockssRepository {
 
     // Add the multipart/form-data converter to the RestTemplate
     RestUtil.addMultipartConverter(restTemplate, tmpDir);
+  }
+
+  public void setMaxCacheSizes(int maxArtifactCacheSize, int maxArtifactDataCacheSize) {
+    artCache.setMaxSize(maxArtifactCacheSize, maxArtifactDataCacheSize);
+    poolingConnMgr.setMaxTotal(maxArtifactDataCacheSize + DEFAULT_POOL_SIZE_PADDING);
+    poolingConnMgr.setDefaultMaxPerRoute(maxArtifactDataCacheSize + DEFAULT_POOL_SIZE_PADDING);
   }
 
   /**
@@ -214,6 +231,7 @@ public class RestLockssRepository implements LockssRepository {
 
     return RestUtil.getRestUri(repositoryUrl + "/artifacts/{uuid}", uriParams, queryParams);
   }
+
 
   private enum ArtifactDataType {
     response("response"),
