@@ -541,6 +541,9 @@ public class RestLockssRepository implements LockssRepository {
           if (receivedResourceType)
             result.setHttpStatus(null);
 
+          // We've processed the headers from the response stream and do not expect it to
+          // contain a response body; close the HTTP response connection immediately:
+          EntityUtils.consume(entity);
         } else if (receivedResourceType) {
           HttpResponse httpResponse = ArtifactDataUtil.getHttpResponseFromStream(responseBodyStream);
 
