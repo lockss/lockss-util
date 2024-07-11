@@ -416,6 +416,7 @@ public class ArtifactCache {
 						   String artifactUuid,
 						   ArtifactData ad) {
     if (artDataMap == null) {
+      log.debug("Artifact data cache not enabled");
       return ad;
     }
     String key = artifactDataKey(namespace, artifactUuid);
