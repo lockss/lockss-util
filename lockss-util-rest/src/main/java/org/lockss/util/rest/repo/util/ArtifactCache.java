@@ -34,6 +34,7 @@ import org.lockss.util.rest.repo.model.Artifact;
 import org.lockss.util.rest.repo.model.ArtifactData;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 
 /**
@@ -86,6 +87,10 @@ public class ArtifactCache {
       if (artMap == null) {
 	artMap = new LRUMap<>(maxArtSize);
 	artIterMap = new LRUMap<>(maxArtSize);
+
+        Thread adcThread = new Thread(new ArtifactDataConsumer());
+        adcThread.start();
+
 	artDataMap = new ArtifactDataReleasingLRUMap(maxArtDataSize);
 	stats.setSizes(maxArtSize, maxArtDataSize);
       }
@@ -357,9 +362,7 @@ public class ArtifactCache {
 
   /** For now, ArtifactData.release() is called when items exit the
    * cache */
-  static class ArtifactDataReleasingLRUMap
-    extends LRUMap<String, ArtifactData> {
-
+  class ArtifactDataReleasingLRUMap extends LRUMap<String, ArtifactData> {
     ArtifactDataReleasingLRUMap(int maxSize) {
       super(maxSize);
     }
@@ -367,8 +370,25 @@ public class ArtifactCache {
     @Override
     protected boolean removeLRU(LinkEntry<String, ArtifactData> entry) {
       ArtifactData ad = entry.getValue();
-      ad.release();
+      if (ad.hasContentInputStream()) {
+        artifactDataConsumerQueue.add(ad);
+      }
       return true;
+    }
+  }
+
+  Queue<ArtifactData> artifactDataConsumerQueue =
+      new ConcurrentLinkedQueue<>();
+
+  class ArtifactDataConsumer implements Runnable {
+    @Override
+    public void run() {
+      while (true) {
+        ArtifactData ad = artifactDataConsumerQueue.remove();
+        if (ad.hasContentInputStream()) {
+          ad.release();
+        }
+      }
     }
   }
 

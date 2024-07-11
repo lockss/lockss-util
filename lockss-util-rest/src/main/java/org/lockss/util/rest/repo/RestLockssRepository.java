@@ -89,6 +89,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
+import org.apache.http.config.SocketConfig;
 
 /**
  * REST client implementation of the LOCKSS Repository API; makes REST
@@ -104,6 +105,7 @@ public class RestLockssRepository implements LockssRepository {
   public static final int DEFAULT_MAX_ART_CACHE_SIZE = 500;
   public static final int DEFAULT_MAX_ART_DATA_CACHE_SIZE = 20;
   private static final int DEFAULT_POOL_SIZE_PADDING = 20;
+  private static final int DEFAULT_SOCKET_TIMEOUT = 5 * 60 * 1000;
 
   public static final boolean DEFAULT_USE_MULTIPART_ENDPOINT = false;
   private boolean useMultipartEndpoint = DEFAULT_USE_MULTIPART_ENDPOINT;
@@ -164,6 +166,12 @@ public class RestLockssRepository implements LockssRepository {
         new PoolingHttpClientConnectionManager();
 
     setMaxCacheSizes(1, 1);
+
+    SocketConfig socketCfg = SocketConfig.custom()
+        .setSoTimeout(DEFAULT_SOCKET_TIMEOUT)
+        .build();
+
+    poolingConnMgr.setDefaultSocketConfig(socketCfg);
 
     httpClient = HttpClients.custom()
         .setConnectionManager(poolingConnMgr)
