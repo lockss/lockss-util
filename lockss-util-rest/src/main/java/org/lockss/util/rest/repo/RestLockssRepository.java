@@ -35,6 +35,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpException;
@@ -50,6 +51,7 @@ import org.lockss.util.CloseCallbackInputStream;
 import org.lockss.util.ListUtil;
 import org.lockss.util.LockssUncheckedIOException;
 import org.lockss.util.auth.AuthUtil;
+import org.lockss.util.io.DeferredTempFileOutputStream;
 import org.lockss.util.io.FileUtil;
 import org.lockss.util.jms.JmsConsumer;
 import org.lockss.util.jms.JmsFactory;
@@ -123,6 +125,9 @@ public class RestLockssRepository implements LockssRepository {
   // The value of the Authorization header to be used when calling the REST
   // service.
   private String authHeaderValue = null;
+  private File tmpDir;
+  private long sizeThreshold;
+  private boolean useDTFOS;
 
   /**
    * Constructor that takes a base URL to a remote LOCKSS Repository service,
@@ -200,6 +205,18 @@ public class RestLockssRepository implements LockssRepository {
     artCache.setMaxSize(maxArtifactCacheSize, maxArtifactDataCacheSize);
     poolingConnMgr.setMaxTotal(maxArtifactDataCacheSize + DEFAULT_POOL_SIZE_PADDING);
     poolingConnMgr.setDefaultMaxPerRoute(maxArtifactDataCacheSize + DEFAULT_POOL_SIZE_PADDING);
+  }
+
+  public void setUseDTFOS(boolean useDTFOS) {
+    this.useDTFOS = useDTFOS;
+  }
+
+  public void setSizeThreshold(long sizeThreshold) {
+    this.sizeThreshold = sizeThreshold;
+  }
+
+  public void setTmpDir(File tmpDir) {
+    this.tmpDir = tmpDir;
   }
 
   /**
@@ -520,23 +537,37 @@ public class RestLockssRepository implements LockssRepository {
       ArtifactData result;
       org.apache.http.HttpEntity entity = response.getEntity();
 
-      if (entity == null && !receivedOnlyHeaders) {
+      if (entity == null) {
         log.error("Expected to receive an entity");
         throw new LockssRestHttpException("No entity received");
       }
 
-      // Wrap socket input stream in a CloseCallbackInputStream to close the socket
-      // when the InputStream is closed by the client
-      InputStream responseBodyStream = new CloseCallbackInputStream(
-          entity.getContent(),
-          (entityRef) -> {
-            try {
-              EntityUtils.consume((org.apache.http.HttpEntity) entityRef);
-            } catch (IOException e) {
-              log.error("Could not close HTTP response socket", e);
-            }
-          },
-          entity);
+      InputStream responseBodyStream;
+
+      if (useDTFOS) {
+        DeferredTempFileOutputStream dtfos =
+            new DeferredTempFileOutputStream((int) sizeThreshold, tmpDir);
+
+        IOUtils.copy(entity.getContent(), dtfos);
+        dtfos.close();
+
+        responseBodyStream = dtfos.getDeleteOnCloseInputStream();
+
+        EntityUtils.consume(entity);
+      } else {
+        // Wrap socket input stream in a CloseCallbackInputStream to close the socket
+        // when the InputStream is closed by the client
+        responseBodyStream = new CloseCallbackInputStream(
+            entity.getContent(),
+            (entityRef) -> {
+              try {
+                EntityUtils.consume((org.apache.http.HttpEntity) entityRef);
+              } catch (IOException e) {
+                log.error("Could not close HTTP response socket", e);
+              }
+            },
+            entity);
+      }
 
       try {
         if (receivedOnlyHeaders) {
