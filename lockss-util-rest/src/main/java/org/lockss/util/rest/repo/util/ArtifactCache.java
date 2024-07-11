@@ -427,7 +427,6 @@ public class ArtifactCache {
       return old;
     }
     artDataMap.put(key, ad);
-    ad.setAutoRelease(true);
     log.trace("putArtifactData({}, {})", key, ad);
     stats.dataCacheStores++;
     return ad;

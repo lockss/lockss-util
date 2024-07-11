@@ -391,17 +391,6 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
     }
   }
 
-  // Temporary until InputStream refactored
-  private boolean isAutoRelease = false;
-
-  public void setAutoRelease(boolean val) {
-    isAutoRelease = val;
-  }
-
-  public boolean isAutoRelease() {
-    return isAutoRelease;
-  }
-
   /**
    * Releases resources used.
    */
