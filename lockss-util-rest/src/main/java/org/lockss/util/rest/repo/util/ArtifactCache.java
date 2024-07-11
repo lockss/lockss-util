@@ -34,7 +34,9 @@ import org.lockss.util.rest.repo.model.Artifact;
 import org.lockss.util.rest.repo.model.ArtifactData;
 
 import java.util.*;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 
 /**
@@ -377,17 +379,21 @@ public class ArtifactCache {
     }
   }
 
-  Queue<ArtifactData> artifactDataConsumerQueue =
-      new ConcurrentLinkedQueue<>();
+  BlockingQueue<ArtifactData> artifactDataConsumerQueue =
+      new LinkedBlockingQueue<>();
 
   class ArtifactDataConsumer implements Runnable {
     @Override
     public void run() {
-      while (true) {
-        ArtifactData ad = artifactDataConsumerQueue.remove();
-        if (ad.hasContentInputStream()) {
-          ad.release();
+      try {
+        while (true) {
+          ArtifactData ad = artifactDataConsumerQueue.take();
+          if (ad.hasContentInputStream()) {
+            ad.release();
+          }
         }
+      } catch (InterruptedException e) {
+        log.warn("Caught InterruptedException", e);
       }
     }
   }
