@@ -241,7 +241,7 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
 
     } catch (NoSuchAlgorithmException e) {
       // Digest algorithm is not parameterized so this should never happen
-      throw new RuntimeException("Unknown digest algorithm: " + DEFAULT_DIGEST_ALGORITHM);
+      throw new IllegalArgumentException("Unknown digest algorithm: " + DEFAULT_DIGEST_ALGORITHM);
     }
   }
 
@@ -442,8 +442,7 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
   protected void finalize() throws Throwable {
     if (!isReleased) {
       stats.unreleased++;
-      IOUtils.closeQuietly(artifactStream);
-      updateStats();
+      release();
     }
     super.finalize();
   }
