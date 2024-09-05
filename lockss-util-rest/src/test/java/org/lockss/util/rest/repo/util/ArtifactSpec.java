@@ -501,28 +501,6 @@ public class ArtifactSpec implements Comparable<Object> {
     return ad;
   }
 
-  /**
-   * Generates an {@link ArtifactData} from this {@link ArtifactSpec}. The {@code wantParsed}
-   * boolean controls whether the {@link ArtifactData} is backed by an unparsed HTTP response
-   * stream.
-   * @param wantParsed
-   * @return
-   */
-  public ArtifactData getArtifactData(boolean wantParsed) throws IOException {
-    ArtifactData ad = getArtifactData();
-
-    // Q: Is this still needed?
-//    if (!wantParsed) {
-//      // Create a new (unparsed) ArtifactData from parsed
-//      ad = new ArtifactData()
-//          .setIdentifier(getArtifactIdentifier())
-//          .setStorageUrl(getStorageUrl());
-//          .setResponseInputStream(ArtifactDataUtil.getHttpResponseStreamFromArtifactData(ad));
-//    }
-
-    return ad;
-  }
-
   public InputStream getInputStream() {
     if (content != null) {
       return IOUtils.toInputStream(content, Charset.defaultCharset());
