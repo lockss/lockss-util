@@ -501,18 +501,16 @@ public class ArtifactDataUtil {
     // Parse the InputStream to a HttpResponse object
     HttpResponse response = new DefaultHttpResponseParser(buffer).parse();
 
-    // The SessionBufferInput and IdentityInputStream obscure the original input stream and
-    // make it impossible to close it, so it's wrapped in a CloseCallbackInputStream here:
-    InputStream wrappedInputStream = new CloseCallbackInputStream(
-        new IdentityInputStream(buffer),
-        is -> {
-          try {
-            ((InputStream) is).close();
-          } catch (IOException e) {
-            log.error("An error occurred while attempting to close the input stream", e);
-          }
-        },
-        inputStream);
+    // SessionInputBuffer is intended to parse "top-level" HTTP response sessions where the body input stream
+    // should not be closed because that would close the connection, and the connection wants to be drained
+    // and returned to the pool. Here, the HTTP response is itself the body so that logic does not apply.
+    InputStream wrappedInputStream = new IdentityInputStream(buffer) {
+      @Override
+      public void close() throws IOException {
+        super.close();
+        inputStream.close();
+      }
+    };
 
     // Create and attach an HTTP entity to the HttpResponse
     BasicHttpEntity entity = new BasicHttpEntity();
