@@ -497,7 +497,7 @@ public class RestLockssRepository implements LockssRepository {
 
       HttpGet getRequest = new HttpGet(endpoint);
 
-      // Set Apache GET request headers from Spring HttpHeaders
+      // Set GET request headers from Spring HttpHeaders
       for (Map.Entry<String, List<String>> header : requestHeaders.entrySet()) {
         for (String value : header.getValue()) {
           getRequest.addHeader(header.getKey(), value);
@@ -510,6 +510,7 @@ public class RestLockssRepository implements LockssRepository {
       HttpStatusCode statusCode =
           HttpStatusCode.valueOf(response.getStatusLine().getStatusCode());
 
+      // For compatibility with RestTemplate error handling behavior:
       try {
         if (statusCode.isError()) {
           ResponseErrorHandler errorHandler = restTemplate.getErrorHandler();
@@ -521,7 +522,7 @@ public class RestLockssRepository implements LockssRepository {
 
       checkStatusOk(statusCode);
 
-      // Transform  Apache Header array to Spring HttpHeaders
+      // Transform Apache Header array to Spring HttpHeaders
       HttpHeaders responseHeaders =
           ArtifactDataUtil.transformHeaderArrayToHttpHeaders(response.getAllHeaders());
 
@@ -555,8 +556,8 @@ public class RestLockssRepository implements LockssRepository {
 
         EntityUtils.consume(entity);
       } else {
-        // Wrap socket input stream in a CloseCallbackInputStream to close the socket
-        // when the InputStream is closed by the client
+        // Wrap socket input stream in a CloseCallbackInputStream to consume the socket when
+        // closed by the client, without closing the socket, so that it can be kept open:
         responseBodyStream = new CloseCallbackInputStream(
             entity.getContent(),
             (entityRef) -> {
@@ -573,6 +574,8 @@ public class RestLockssRepository implements LockssRepository {
         if (receivedOnlyHeaders) {
           HttpResponse httpResponse = ArtifactDataUtil.getHttpResponseFromStream(responseBodyStream);
 
+          // Create ArtifactData with only HTTP status and headers
+          // FIXME: Call ArtifactDataUtil.fromHttpResponse(httpResponse)?
           result = new ArtifactData()
               .setHttpStatus(httpResponse.getStatusLine())
               .setHttpHeaders(ArtifactDataUtil.transformHeaderArrayToHttpHeaders(httpResponse.getAllHeaders()));
@@ -602,8 +605,8 @@ public class RestLockssRepository implements LockssRepository {
           .setContentLength(artifact.getContentLength())
           .setContentDigest(artifact.getContentDigest());
 
-      // FIXME: Instances of Artifact from RestLockssRepository don't have a meaningful storage URL
-      //        at this time and probably never will but if it has one, set it on the ArtifactData.
+      // Set the storage URL for the artifact data to the REST endpoint used to retrieve it,
+      // unless the artifact has a storage URL set by the client, in which case, honor that.
       if (artifact.getStorageUrl() != null) {
         result.setStorageUrl(URI.create(artifact.getStorageUrl()));
       }
@@ -628,6 +631,12 @@ public class RestLockssRepository implements LockssRepository {
     }
   }
 
+  /**
+   * Transforms an Apache {@link CloseableHttpResponse} to a Spring {@link ClientHttpResponse}, so that
+   * it can be used with a Spring {@link ResponseErrorHandler}.
+   * @param response A {@link CloseableHttpResponse} from the Apache HTTP client library.
+   * @return A {@link ClientHttpResponse} from the Spring Web framework.
+   */
   private ClientHttpResponse getClientHttpResponse(CloseableHttpResponse response) {
     return new ClientHttpResponse() {
       @Override

@@ -389,6 +389,8 @@ public class ArtifactCache {
         while (true) {
           ArtifactData ad = artifactDataConsumerQueue.take();
           if (ad.hasContentInputStream()) {
+            // Q: Calling release() doesn't consume anything remaining in the stream before
+            //    closing - is that a problem?
             ad.release();
           }
         }

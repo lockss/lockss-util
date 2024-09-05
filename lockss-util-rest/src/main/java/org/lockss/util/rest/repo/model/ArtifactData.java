@@ -231,11 +231,10 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
 
       inputStreamUsed = true;
 
-      // Q: Is this still necessary?
       return new CloseCallbackInputStream(
           eofis,
           ad -> {
-            // Release any resources bound to this object.
+            // Call release() to close the underlying stream and update state and stats
             ((ArtifactData) ad).release();
           },
           this);
@@ -414,7 +413,7 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
 
   public long getBytesRead() {
     if (!eofis.isAtEof()) {
-      throw new RuntimeException("Content length has not finished computing");
+      throw new RuntimeException("Called before reaching EOF");
     }
     return cis.getByteCount();
   }
@@ -424,7 +423,7 @@ public class ArtifactData implements Comparable<ArtifactData>, AutoCloseable {
       throw new RuntimeException("Content digest was not requested");
     }
     if (!eofis.isAtEof()) {
-      throw new RuntimeException("Content digest has not finished computed");
+      throw new RuntimeException("Called before reaching EOF");
     }
     return dis.getMessageDigest();
   }
