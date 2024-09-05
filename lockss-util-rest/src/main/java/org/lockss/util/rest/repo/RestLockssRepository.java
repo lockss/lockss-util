@@ -609,6 +609,8 @@ public class RestLockssRepository implements LockssRepository {
       // unless the artifact has a storage URL set by the client, in which case, honor that.
       if (artifact.getStorageUrl() != null) {
         result.setStorageUrl(URI.create(artifact.getStorageUrl()));
+      } else {
+        result.setStorageUrl(endpoint);
       }
 
       String storeDate = responseHeaders.getFirst(ArtifactConstants.ARTIFACT_STORE_DATE_KEY);
