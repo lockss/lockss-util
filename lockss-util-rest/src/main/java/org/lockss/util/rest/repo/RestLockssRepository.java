@@ -170,7 +170,7 @@ public class RestLockssRepository implements LockssRepository {
     poolingConnMgr =
         new PoolingHttpClientConnectionManager();
 
-    setMaxCacheSizes(1, 1);
+    setConnectionPoolSizes();
 
     SocketConfig socketCfg = SocketConfig.custom()
         .setSoTimeout(DEFAULT_SOCKET_TIMEOUT)
@@ -201,10 +201,9 @@ public class RestLockssRepository implements LockssRepository {
     RestUtil.addMultipartConverter(restTemplate, tmpDir);
   }
 
-  public void setMaxCacheSizes(int maxArtifactCacheSize, int maxArtifactDataCacheSize) {
-    artCache.setMaxSize(maxArtifactCacheSize, maxArtifactDataCacheSize);
-    poolingConnMgr.setMaxTotal(maxArtifactDataCacheSize + DEFAULT_POOL_SIZE_PADDING);
-    poolingConnMgr.setDefaultMaxPerRoute(maxArtifactDataCacheSize + DEFAULT_POOL_SIZE_PADDING);
+  public void setConnectionPoolSizes() {
+    poolingConnMgr.setMaxTotal(DEFAULT_MAX_ART_DATA_CACHE_SIZE + DEFAULT_POOL_SIZE_PADDING);
+    poolingConnMgr.setDefaultMaxPerRoute(DEFAULT_MAX_ART_DATA_CACHE_SIZE + DEFAULT_POOL_SIZE_PADDING);
   }
 
   public void setUseDTFOS(boolean useDTFOS) {
@@ -556,8 +555,8 @@ public class RestLockssRepository implements LockssRepository {
 
         EntityUtils.consume(entity);
       } else {
-        // Wrap socket input stream in a CloseCallbackInputStream to consume the socket when
-        // closed by the client, without closing the socket, so that it can be kept open:
+        // Wrap socket input stream in a CloseCallbackInputStream to consume the stream when closed
+        // by the client, without closing the underlying socket, so that it can be kept open:
         responseBodyStream = new CloseCallbackInputStream(
             entity.getContent(),
             (entityRef) -> {
@@ -605,12 +604,8 @@ public class RestLockssRepository implements LockssRepository {
           .setContentLength(artifact.getContentLength())
           .setContentDigest(artifact.getContentDigest());
 
-      // Set the storage URL for the artifact data to the REST endpoint used to retrieve it,
-      // unless the artifact has a storage URL set by the client, in which case, honor that.
       if (artifact.getStorageUrl() != null) {
         result.setStorageUrl(URI.create(artifact.getStorageUrl()));
-      } else {
-        result.setStorageUrl(endpoint);
       }
 
       String storeDate = responseHeaders.getFirst(ArtifactConstants.ARTIFACT_STORE_DATE_KEY);

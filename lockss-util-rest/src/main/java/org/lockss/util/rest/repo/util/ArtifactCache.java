@@ -384,17 +384,16 @@ public class ArtifactCache {
   BlockingQueue<ArtifactData> artifactDataConsumerQueue =
       new LinkedBlockingQueue<>();
 
+  /**
+   * Calls release() in a thread in case we need to drain any large streams
+   */
   class ArtifactDataConsumer implements Runnable {
     @Override
     public void run() {
       try {
         while (true) {
           ArtifactData ad = artifactDataConsumerQueue.take();
-          if (ad.hasContentInputStream()) {
-            // Q: Calling release() doesn't consume anything remaining in the stream before
-            //    closing - is that a problem?
-            ad.release();
-          }
+          ad.release();
         }
       } catch (InterruptedException e) {
         log.warn("Caught InterruptedException", e);
