@@ -36,6 +36,8 @@ import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.rest.exception.LockssRestHttpException;
 import org.lockss.util.rest.exception.LockssRestNetworkException;
 import org.lockss.util.rest.multipart.MultipartMessageHttpMessageConverter;
+import org.lockss.util.rest.repo.RestLockssRepository;
+import org.lockss.util.rest.repo.model.Artifact;
 import org.lockss.util.time.TimerUtil;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.io.InputStreamResource;
@@ -352,27 +354,38 @@ public class RestUtil {
     log.debug2("sizeThreshold = {}", sizeThreshold);
     log.debug2("tmpDir = {}", tmpDir);
 
-    List<HttpMessageConverter<?>> msgConverters = new RestTemplate().getMessageConverters()
-        .stream()
-        .map(msgConv -> msgConv instanceof ResourceHttpMessageConverter ?
-            getResourceHttpMessageConverter(sizeThreshold, tmpDir) : msgConv)
-        .toList();
-
     RestTemplateBuilder builder = new RestTemplateBuilder()
         .setConnectTimeout(Duration.ofMillis(connectTimeout))
         .setReadTimeout(Duration.ofMillis(readTimeout))
-        .messageConverters(msgConverters)
         .errorHandler(new LockssResponseErrorHandler(new RestTemplate().getMessageConverters()));
+
+//    List<HttpMessageConverter<?>> msgConverters = new RestTemplate().getMessageConverters()
+//        .stream()
+//        .map(msgConv -> msgConv instanceof ResourceHttpMessageConverter ?
+//            getResourceHttpMessageConverter(sizeThreshold, tmpDir) : msgConv)
+//        .toList();
+//
+//    builder.messageConverters(msgConverters);
 
     return builder.build();
   }
 
+  /**
+   * Returns a patched version of {@link ResourceHttpMessageConverter} that fixes {@link InputStreamResource}
+   * requests by ensuring the {@link InputStream} its {@code getInputStream()} returns is not closed by
+   * {@link RestTemplate} before reaching client code. It does this by buffering a copy of the stream in a DTFOS.
+   *
+   * No longer used since {@link RestLockssRepository#getArtifactData(Artifact)} has been modified to make HTTP
+   * requests directly to the Repository service. Kept for posterity.
+   */
   private static HttpMessageConverter<?> getResourceHttpMessageConverter(int sizeThreshold, File tmpDir) {
     return new ResourceHttpMessageConverter(true) {
       @Override
       protected Resource readInternal(Class<? extends Resource> clazz, HttpInputMessage inputMessage)
           throws IOException, HttpMessageNotReadableException {
 
+        // We call super.readInterval() with a custom HttpInputMessage that creates a DTFOS from the
+        // input stream for InputStreamResource, or passes along the input stream for all other cases:
         return super.readInternal(clazz, new HttpInputMessage() {
           @Override
           public InputStream getBody() throws IOException {
