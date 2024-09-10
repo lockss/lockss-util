@@ -2508,12 +2508,13 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     return th;
   }
 
-  /** Read a byte, fail with a detailed message if an IOException is
+  /** Read bytes, fail with a detailed message if an IOException is
    * thrown. */
-  int paranoidRead(InputStream in, String streamName, long cnt, long expLen,
-                   String message) {
+  private byte[] paranoidReadNBytes(InputStream in, int len, String streamName,
+                                    long cnt, long expLen, String message) {
     try {
-      return in.read();
+      // Could use StreamUtil.readBytes() to reuse a byte array buffer
+      return in.readNBytes(len);
     } catch (IOException e) {
       fail( ( buildPrefix(message) + "after " + cnt + " bytes" +
               (expLen >= 0 ? " of " + expLen : "") +
@@ -2571,33 +2572,43 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     if (!(actual instanceof BufferedInputStream)) {
       actual = new BufferedInputStream(actual);
     }
+
     long cnt = 0;
-    int ch = paranoidRead(expected, "expected", cnt, expLen, message);
-    while (-1 != ch) {
-      int ch2 = paranoidRead(actual, "actual", cnt, expLen, message);
-      if (-1 == ch2) {
+
+    while (true) {
+      byte[] a = paranoidReadNBytes(expected, 8192, "expected", cnt, expLen, message);
+      byte[] b = paranoidReadNBytes(actual, 8192, "actual", cnt, expLen, message);
+
+      if (a.length < b.length) {
+        cnt += a.length;
         fail(buildPrefix(message) +
-             "actual stream ran out early, at byte position " + cnt);
+            "expected stream ran out early, at byte position " + cnt);
+      } else if (b.length < a.length) {
+        cnt += b.length;
+        fail(buildPrefix(message) +
+            "actual stream ran out early, at byte position " + cnt);
       }
-      cnt++;
 
-      if (ch != ch2) {      // Avoid building fail message unless necessary
-	assertEquals(ch, ch2,
-		     buildPrefix(message) + "at byte position " + cnt);
+      // Exit loop if no bytes read from either stream
+      if (a.length == 0) {
+        break;
       }
-      ch = paranoidRead(expected, "expected", cnt, expLen, message);
+
+      // Compare bytes read
+      for (int i = 0; i < a.length; i++) {
+        cnt++;
+        if (a[i] != b[i]) { // Avoid building fail message unless necessary
+          assertEquals(a[i], b[i],
+              buildPrefix(message) + "at byte position " + cnt);
+        }
+      }
     }
 
-    int ch2 = paranoidRead(actual, "actual", cnt, expLen, message);
-    if (-1 != ch2) {
-      fail(buildPrefix(message) +
-           "expected stream ran out early, at byte position " + cnt);
-    }
     if (expLen >= 0) {
       assertEquals(expLen, cnt, "Both streams were wrong length");
     }
   }
-  
+
   static String buildPrefix(String message) {
     return (StringUtils.isNotBlank(message) ? message + " ==> " : "");
   }
