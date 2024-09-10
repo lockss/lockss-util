@@ -29,25 +29,52 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  */
+
 package org.lockss.util.rest.repo.model;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import org.springframework.validation.annotation.Validated;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 
 /**
- * A page of artifact results.
+ * A display page of artifacts
  */
-public class ArtifactPageInfo {
+@Schema(description = "A display page of artifacts")
+@Validated
+
+
+
+public class ArtifactPageInfo   {
+  @JsonProperty("artifacts")
+  @Valid
   private List<Artifact> artifacts = new ArrayList<>();
+
+  @JsonProperty("pageInfo")
   private PageInfo pageInfo = null;
 
+  public ArtifactPageInfo artifacts(List<Artifact> artifacts) {
+    this.artifacts = artifacts;
+    return this;
+  }
+
+  public ArtifactPageInfo addArtifactsItem(Artifact artifactsItem) {
+    this.artifacts.add(artifactsItem);
+    return this;
+  }
+
   /**
-   * Provides the artifacts included in the page.
-   * 
-   * @return a List<Artifact> with the artifacts included in the page.
-   */
-  public List<Artifact> getArtifacts() {
+   * The artifacts included in the page
+   * @return artifacts
+   **/
+  @Schema(required = true, description = "The artifacts included in the page")
+      @NotNull
+    @Valid
+    public List<Artifact> getArtifacts() {
     return artifacts;
   }
 
@@ -59,23 +86,32 @@ public class ArtifactPageInfo {
     this.artifacts = artifacts;
   }
 
+  public ArtifactPageInfo pageInfo(PageInfo pageInfo) {
+    this.pageInfo = pageInfo;
+    return this;
+  }
+
   /**
-   * Provides the pagination information.
-   * 
-   * @return a PageInfo with the pagination information.
-   */
-  public PageInfo getPageInfo() {
+   * Get pageInfo
+   * @return pageInfo
+   **/
+  @Schema(required = true, description = "")
+      @NotNull
+
+    @Valid
+    public PageInfo getPageInfo() {
     return pageInfo;
   }
 
   /**
    * Saves the pagination information.
-   * 
+   *
    * @param pageInfo A PageInfo with the pagination information.
    */
   public void setPageInfo(PageInfo pageInfo) {
     this.pageInfo = pageInfo;
   }
+
 
   @Override
   public boolean equals(java.lang.Object o) {
@@ -97,7 +133,23 @@ public class ArtifactPageInfo {
 
   @Override
   public String toString() {
-    return "[ArtifactPageInfo artifacts=" + artifacts
-	+ ", pageInfo=" + pageInfo + "]";
+    StringBuilder sb = new StringBuilder();
+    sb.append("ArtifactPageInfo [\n");
+
+    sb.append("    artifacts: ").append(toIndentedString(artifacts)).append("\n");
+    sb.append("    pageInfo: ").append(toIndentedString(pageInfo)).append("\n");
+    sb.append("]");
+    return sb.toString();
+  }
+
+  /**
+   * Convert the given object to string with each line indented by 4 spaces
+   * (except the first line).
+   */
+  private String toIndentedString(java.lang.Object o) {
+    if (o == null) {
+      return "null";
+    }
+    return o.toString().replace("\n", "\n    ");
   }
 }

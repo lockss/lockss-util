@@ -94,7 +94,7 @@ public class PlatformUtil {
     "org.lockss.platform." + "diskSpaceSource";
 
   public static final DiskSpaceSource DEFAULT_DISK_SPACE_SOURCE =
-    DiskSpaceSource.DF;
+    DiskSpaceSource.Java;
 
   private static final DecimalFormat percentFmt = new DecimalFormat("0%");
 
@@ -197,13 +197,16 @@ public class PlatformUtil {
   }
 
   /** Request a thread dump of this JVM using the default method, which is
-   * currently {@link #threadDumpJcmd(boolean)}.  Dump is output to
+   * currently {@link #threadDumpSignal(boolean)}.  Dump is output to
    * System.out.  If unsupported on this platform, logs an info message.
+   * The alpine jvm does not support jcmd so we use #threadDum
    * @param wait if true will attempt to wait until dump is complete before
    * returning
    */
   public void threadDump(boolean wait) {
-    threadDumpJcmd(wait, System.out);
+    // replace jcmd with signal call since alpine doesn't support jcmd
+    //threadDumpJcmd(wait, System.out);
+    threadDumpSignal(wait);
   }
 
   /** Request a thread dump of this JVM by sending it SIGQUIT.  Dump is
@@ -254,7 +257,7 @@ public class PlatformUtil {
 
   /** Request a thread dump of this JVM by invoking jcmd and capturing the
    * output.  Logs a message if unsupported on this platform or fails.
-   * @param outStream PrintStream to which the thread dump is printed 
+   * @param ostrm PrintStream to which the thread dump is printed
    * @param wait if true will attempt to wait until dump is complete before
    * returning
    */
@@ -267,6 +270,7 @@ public class PlatformUtil {
       return;
     }
     ostrm.println("Thread dump at " + new Date());
+    // TODO - change this if jcmd does not work
     String cmd = "jcmd " + pid + " Thread.print";
     try {
       Process p = rt().exec(cmd);
@@ -770,7 +774,7 @@ public class PlatformUtil {
 
 
   public static class MacOS extends PlatformUtil {
-    public String dfArgs = "-k";
+    public String dfArgs = "-k -I";
 
     /**
      * Determines whether file system is case-sensitive for operations that

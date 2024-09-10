@@ -31,7 +31,7 @@
  */
 package org.lockss.ws.entities;
 
-import javax.activation.DataHandler;
+import jakarta.activation.DataHandler;
 
 /*
  * @author Ahmed AlSum

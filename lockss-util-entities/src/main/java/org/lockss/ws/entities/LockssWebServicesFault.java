@@ -28,7 +28,7 @@
 
 package org.lockss.ws.entities;
 
-import javax.xml.ws.WebFault;
+import jakarta.xml.ws.WebFault;
 
 /**
  * Exception specific to the processing of web services.

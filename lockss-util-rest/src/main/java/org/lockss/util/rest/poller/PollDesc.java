@@ -1,32 +1,32 @@
 /*
 
-Copyright (c) 2020 Board of Trustees of Leland Stanford Jr. University,
-all rights reserved.
+Copyright (c) 2000-2024, Board of Trustees of Leland Stanford Jr. University
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-1. Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer.
+1. Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
 
 2. Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation and/or
-other materials provided with the distribution.
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
 
 3. Neither the name of the copyright holder nor the names of its contributors
 may be used to endorse or promote products derived from this software without
 specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
 
  */
 package org.lockss.util.rest.poller;
@@ -35,17 +35,18 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.validation.annotation.Validated;
-import javax.validation.Valid;
-import javax.validation.constraints.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 
 /**
  * The Poller Services poll spec used to define a poll.
  */
-@ApiModel(description = "The Poller Services poll spec used to define a poll.")
+@Schema(description = "The Poller Services poll spec used to define a poll.")
 @Validated
+
+
 
 public class PollDesc   {
   @JsonProperty("auId")
@@ -68,11 +69,11 @@ public class PollDesc   {
    */
   public enum VariantEnum {
     POR("PoR"),
-    
+
     POP("PoP"),
-    
+
     LOCAL("Local"),
-    
+
     NOPOLL("NoPoll");
 
     private String value;
@@ -97,7 +98,6 @@ public class PollDesc   {
       return null;
     }
   }
-
   @JsonProperty("variant")
   private VariantEnum variant = null;
 
@@ -112,12 +112,11 @@ public class PollDesc   {
   /**
    * The id which defines the poll
    * @return auId
-  **/
-  @ApiModelProperty(required = true, value = "The id which defines the poll")
-  @NotNull
+   **/
+  @Schema(required = true, description = "The id which defines the poll")
+      @NotNull
 
-
-  public String getAuId() {
+    public String getAuId() {
     return auId;
   }
 
@@ -133,12 +132,11 @@ public class PollDesc   {
   /**
    * Get cuSetSpec
    * @return cuSetSpec
-  **/
-  @ApiModelProperty(value = "")
+   **/
+  @Schema(description = "")
 
-  @Valid
-
-  public CachedUriSetSpec getCuSetSpec() {
+    @Valid
+    public CachedUriSetSpec getCuSetSpec() {
     return cuSetSpec;
   }
 
@@ -155,11 +153,10 @@ public class PollDesc   {
    * The type of poll to run. Only V3 is supported.
    * minimum: 3
    * @return pollType
-  **/
-  @ApiModelProperty(value = "The type of poll to run. Only V3 is supported.")
+   **/
+  @Schema(description = "The type of poll to run. Only V3 is supported.")
 
-@Min(3)
-  public Integer getPollType() {
+  @Min(3)  public Integer getPollType() {
     return pollType;
   }
 
@@ -175,11 +172,10 @@ public class PollDesc   {
   /**
    * The version of polling protocol.
    * @return protocol
-  **/
-  @ApiModelProperty(value = "The version of polling protocol.")
+   **/
+  @Schema(description = "The version of polling protocol.")
 
-
-  public Integer getProtocol() {
+    public Integer getProtocol() {
     return protocol;
   }
 
@@ -195,11 +191,10 @@ public class PollDesc   {
   /**
    * The version of the polling features needed by the plugin.
    * @return pluginPollVersion
-  **/
-  @ApiModelProperty(value = "The version of the polling features needed by the plugin.")
+   **/
+  @Schema(description = "The version of the polling features needed by the plugin.")
 
-
-  public String getPluginPollVersion() {
+    public String getPluginPollVersion() {
     return pluginPollVersion;
   }
 
@@ -215,11 +210,10 @@ public class PollDesc   {
   /**
    * The V3 poll variation.
    * @return variant
-  **/
-  @ApiModelProperty(value = "The V3 poll variation.")
+   **/
+  @Schema(description = "The V3 poll variation.")
 
-
-  public VariantEnum getVariant() {
+    public VariantEnum getVariant() {
     return variant;
   }
 
@@ -235,11 +229,10 @@ public class PollDesc   {
   /**
    * Poll on every 'n'th url.
    * @return modulus
-  **/
-  @ApiModelProperty(value = "Poll on every 'n'th url.")
+   **/
+  @Schema(description = "Poll on every 'n'th url.")
 
-
-  public Integer getModulus() {
+    public Integer getModulus() {
     return modulus;
   }
 
@@ -275,7 +268,7 @@ public class PollDesc   {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class PollDesc {\n");
-    
+
     sb.append("    auId: ").append(toIndentedString(auId)).append("\n");
     sb.append("    cuSetSpec: ").append(toIndentedString(cuSetSpec)).append("\n");
     sb.append("    pollType: ").append(toIndentedString(pollType)).append("\n");

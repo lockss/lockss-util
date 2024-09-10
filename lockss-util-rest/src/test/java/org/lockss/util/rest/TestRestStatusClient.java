@@ -148,7 +148,7 @@ public class TestRestStatusClient extends LockssTestCase5 {
       ApiStatus as = rsc.getStatus();
       fail("Expected read timeout to throw but returned: " + as);
     } catch (LockssRestNetworkException e) {
-      assertMatchesRE("Can't get status.*connect timed out", e.getMessage());
+      assertMatchesRE("Can't get status.*Connect timed out", e.getMessage());
     } catch (LockssRestException e) {
       fail("Should have thrown LockssRestNetworkException but threw LockssRestException: " + e);
     }

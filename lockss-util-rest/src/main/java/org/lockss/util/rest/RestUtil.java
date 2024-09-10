@@ -27,28 +27,39 @@
  */
 package org.lockss.util.rest;
 
-import java.io.File;
-import java.net.ConnectException;
-import java.net.UnknownHostException;
-import java.net.URI;
-import java.util.*;
-import org.lockss.util.rest.multipart.*;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.lockss.log.L4JLogger;
+import org.lockss.util.io.DeferredTempFileOutputStream;
+import org.lockss.util.lang.ExceptionUtil;
 import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.rest.exception.LockssRestHttpException;
 import org.lockss.util.rest.exception.LockssRestNetworkException;
-import org.lockss.util.lang.*;
-import org.lockss.util.time.*;
-import org.lockss.log.L4JLogger;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.http.converter.*;
-import org.springframework.web.client.*;
+import org.lockss.util.rest.multipart.MultipartMessageHttpMessageConverter;
+import org.lockss.util.time.TimerUtil;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.*;
+import org.springframework.http.converter.FormHttpMessageConverter;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.http.converter.ResourceHttpMessageConverter;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.ConnectException;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Utility methods used for invoking REST services.
@@ -212,9 +223,10 @@ public class RestUtil {
       ResponseEntity<T> response = restTemplate.exchange(uri, method, requestEntity, responseType);
 
       // Get the response status.
-      HttpStatus statusCode = response.getStatusCode();
+      HttpStatusCode statusCode = response.getStatusCode();
+      HttpStatus status = HttpStatus.valueOf(statusCode.value());
 
-      log.trace("statusCode = {}", statusCode);
+      log.trace("status = {}", status);
 
       // Check whether the call status code indicated failure.
       // Q: It's possible that this is never taken because 1xx and 3xx series of errors also cause
@@ -222,7 +234,7 @@ public class RestUtil {
       if (!isSuccess(statusCode)) {
         // Yes: Report it back to the caller.
         LockssRestHttpException lrhe = new LockssRestHttpException(clientExceptionMessage);
-        lrhe.setHttpStatus(statusCode);
+        lrhe.setHttpStatus(status);
         lrhe.setHttpResponseHeaders(response.getHeaders());
 
         log.trace("lrhe = {}", lrhe, (Exception) null);
@@ -258,7 +270,8 @@ public class RestUtil {
 
       // Report the problem back to the caller.
       LockssRestNetworkException lrne =
-          new LockssRestNetworkException(clientExceptionMessage + ": " + ExceptionUtils.getRootCauseMessage(cause), cause);
+          new LockssRestNetworkException("Client exception: " +
+              clientExceptionMessage + ": " + ExceptionUtils.getRootCauseMessage(cause), cause);
 
       log.trace("lrne = {}", lrne);
 
@@ -275,6 +288,25 @@ public class RestUtil {
    */
   public static RestTemplate getRestTemplate() {
     return getRestTemplate(0, 0);
+  }
+
+  public static RestTemplateBuilder getRestTemplateBuilder(long connectTimeout,
+                                                           long readTimeout) {
+    log.debug2("connectTimeout = {}", connectTimeout);
+    log.debug2("readTimeout = {}", readTimeout);
+
+    if (connectTimeout > 0 && connectTimeout < 1000) {
+      log.warn("connectTimeout < 1 sec: {}", connectTimeout);
+    }
+
+    if (readTimeout > 0 && readTimeout < 1000) {
+      log.warn("readTimeout < 1 sec: {}", readTimeout);
+    }
+
+    return new RestTemplateBuilder()
+        .setConnectTimeout(Duration.ofMillis(connectTimeout))
+        .setReadTimeout(Duration.ofMillis(readTimeout))
+        .errorHandler(new LockssResponseErrorHandler(new RestTemplate().getMessageConverters()));
   }
 
   /**
@@ -299,27 +331,71 @@ public class RestUtil {
       log.warn("readTimeout < 1 sec: {}", readTimeout);
     }
 
-    // It's necessary to specify this factory to get Spring support for PATCH
-    // operations.
-    HttpComponentsClientHttpRequestFactory requestFactory =
-	new HttpComponentsClientHttpRequestFactory();
+    RestTemplateBuilder builder = new RestTemplateBuilder()
+        .setConnectTimeout(Duration.ofMillis(connectTimeout))
+        .setReadTimeout(Duration.ofMillis(readTimeout))
+        .errorHandler(new LockssResponseErrorHandler(new RestTemplate().getMessageConverters()));
 
-    // Specify the timeouts.
-    requestFactory.setConnectTimeout((int)connectTimeout);
-    requestFactory.setReadTimeout((int)readTimeout);
-
-    // Do not buffer the request body internally, to avoid running out of
-    // memory, or other failures, when sending large amounts of data.
-    requestFactory.setBufferRequestBody(false);
-
-    // Get the template.
-    RestTemplate restTemplate =	new RestTemplate(requestFactory);
-
-    // Set a default LockssResponseErrorHandler from the default set of message converters
-    restTemplate.setErrorHandler(new LockssResponseErrorHandler(restTemplate.getMessageConverters()));
+    RestTemplate restTemplate =	builder.build();
 
     log.debug2("restTemplate = {}", restTemplate);
     return restTemplate;
+  }
+
+  public static RestTemplate getRestTemplate(long connectTimeout,
+                                             long readTimeout,
+                                             int sizeThreshold,
+                                             File tmpDir) {
+
+    log.debug2("connectTimeout = {}", connectTimeout);
+    log.debug2("readTimeout = {}", readTimeout);
+    log.debug2("sizeThreshold = {}", sizeThreshold);
+    log.debug2("tmpDir = {}", tmpDir);
+
+    List<HttpMessageConverter<?>> msgConverters = new RestTemplate().getMessageConverters()
+        .stream()
+        .map(msgConv -> msgConv instanceof ResourceHttpMessageConverter ?
+            getResourceHttpMessageConverter(sizeThreshold, tmpDir) : msgConv)
+        .toList();
+
+    RestTemplateBuilder builder = new RestTemplateBuilder()
+        .setConnectTimeout(Duration.ofMillis(connectTimeout))
+        .setReadTimeout(Duration.ofMillis(readTimeout))
+        .messageConverters(msgConverters)
+        .errorHandler(new LockssResponseErrorHandler(new RestTemplate().getMessageConverters()));
+
+    return builder.build();
+  }
+
+  private static HttpMessageConverter<?> getResourceHttpMessageConverter(int sizeThreshold, File tmpDir) {
+    return new ResourceHttpMessageConverter(true) {
+      @Override
+      protected Resource readInternal(Class<? extends Resource> clazz, HttpInputMessage inputMessage)
+          throws IOException, HttpMessageNotReadableException {
+
+        return super.readInternal(clazz, new HttpInputMessage() {
+          @Override
+          public InputStream getBody() throws IOException {
+            if (InputStreamResource.class == clazz) {
+              DeferredTempFileOutputStream dtfos =
+                  new DeferredTempFileOutputStream(sizeThreshold, tmpDir);
+
+              IOUtils.copy(inputMessage.getBody(), dtfos);
+              dtfos.close();
+
+              return dtfos.getDeleteOnCloseInputStream();
+            } else {
+              return inputMessage.getBody();
+            }
+          }
+
+          @Override
+          public HttpHeaders getHeaders() {
+            return inputMessage.getHeaders();
+          }
+        });
+      }
+    };
   }
 
   /**
@@ -415,7 +491,7 @@ public class RestUtil {
    * @return a boolean with <code>true</code> if a successful response has been
    *         obtained, <code>false</code> otherwise.
    */
-  public static boolean isSuccess(HttpStatus statusCode) {
+  public static boolean isSuccess(HttpStatusCode statusCode) {
     return statusCode.is2xxSuccessful();
   }
 }

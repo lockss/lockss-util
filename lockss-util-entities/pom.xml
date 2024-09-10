@@ -38,13 +38,13 @@ POSSIBILITY OF SUCH DAMAGE.
   <parent>
     <groupId>org.lockss</groupId>
     <artifactId>lockss-parent-pom</artifactId>
-    <version>1.16.0</version>
+    <version>1.17.0-SNAPSHOT</version>
     <relativePath />
   </parent>
   
   <groupId>org.lockss</groupId>
   <artifactId>lockss-util-entities</artifactId>
-  <version>1.5.0</version>
+  <version>1.6.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>lockss-util-entities</name>
@@ -63,11 +63,35 @@ POSSIBILITY OF SUCH DAMAGE.
     </dependency>
 
     <dependency>
+      <groupId>jakarta.activation</groupId>
+      <artifactId>jakarta.activation-api</artifactId>
+      <version>2.1.2</version>
+    </dependency>
+
+    <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
       <version>${version.group.jackson}</version>
     </dependency>
 
+    <dependency>
+      <groupId>javax.xml.ws</groupId>
+      <artifactId>jaxws-api</artifactId>
+      <version>2.3.1</version>
+    </dependency>
+
+    <!-- See https://issues.apache.org/jira/browse/CXF-8813 -->
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <version>3.0.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>jakarta.xml.ws</groupId>
+      <artifactId>jakarta.xml.ws-api</artifactId>
+      <version>3.0.1</version>
+    </dependency>
   </dependencies>
 
 </project>

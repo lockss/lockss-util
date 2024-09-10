@@ -32,7 +32,7 @@
 package org.lockss.ws.entities;
 
 import java.util.Arrays;
-import javax.activation.DataHandler;
+import jakarta.activation.DataHandler;
 
 /**
  * A wrapper for the parameters used to perform an import operation.

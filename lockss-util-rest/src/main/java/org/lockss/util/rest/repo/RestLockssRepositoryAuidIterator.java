@@ -270,7 +270,8 @@ public class RestLockssRepositoryAuidIterator implements Iterator<String> {
     }
 
     // Determine the response status.
-    HttpStatus status = response.getStatusCode();
+    HttpStatusCode statusCode = response.getStatusCode();
+    HttpStatus status = HttpStatus.valueOf(statusCode.value());
     log.trace("status = {}", status);
 
     // Check whether the response status indicates success.

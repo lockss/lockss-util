@@ -44,6 +44,7 @@ import org.lockss.util.rest.exception.LockssRestHttpException;
 import org.lockss.log.L4JLogger;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 
 /**
@@ -52,7 +53,7 @@ import org.springframework.http.ResponseEntity;
 public class MultipartResponse {
   private static L4JLogger log = L4JLogger.getLogger();
 
-  private HttpStatus statusCode;
+  private HttpStatusCode statusCode;
   private String statusMessage;
   private HttpHeaders responseHeaders;
   private LinkedHashMap<String, Part> parts = new LinkedHashMap<String, Part>();
@@ -167,7 +168,7 @@ public class MultipartResponse {
 	  HttpResponseStatusAndHeaders.fromLockssRestException(lre);
 
     // Populate the status code and message.
-    statusCode = HttpStatus.valueOf(status.getCode());
+    statusCode = HttpStatus.valueOf(status.getStatusCode());
     statusMessage = status.getMessage();
     if (log.isTraceEnabled()) log.trace(DEBUG_HEADER + "statusCode = " + statusCode);
 
@@ -184,7 +185,7 @@ public class MultipartResponse {
    *
    * @return an HttpStatus with the response status code.
    */
-  public HttpStatus getStatusCode() {
+  public HttpStatusCode getStatusCode() {
     return statusCode;
   }
 

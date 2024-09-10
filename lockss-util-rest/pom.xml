@@ -38,12 +38,12 @@ POSSIBILITY OF SUCH DAMAGE.
   <parent>
     <groupId>org.lockss</groupId>
     <artifactId>lockss-parent-pom</artifactId>
-    <version>1.16.0</version>
+    <version>1.17.0-SNAPSHOT</version>
     <relativePath />
   </parent>
 
   <artifactId>lockss-util-rest</artifactId>
-  <version>1.5.0</version>
+  <version>1.6.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>lockss-util-rest</name>
@@ -103,15 +103,21 @@ POSSIBILITY OF SUCH DAMAGE.
     <dependency>
       <groupId>org.mock-server</groupId>
       <artifactId>mockserver-netty</artifactId>
-      <version>5.6.1</version>
+      <version>${version.group.mockserver}</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>javax.validation</groupId>
-      <artifactId>validation-api</artifactId>
-      <version>1.1.0.Final</version>
-      <scope>provided</scope>
+      <groupId>org.mock-server</groupId>
+      <artifactId>mockserver-junit-rule</artifactId>
+      <version>${version.group.mockserver}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
+      <version>3.0.2</version>
     </dependency>
 
     <dependency>
@@ -123,13 +129,19 @@ POSSIBILITY OF SUCH DAMAGE.
     <dependency>
       <groupId>org.apache.cxf</groupId>
       <artifactId>cxf-core</artifactId>
-      <version>3.2.7</version>
+      <version>4.0.3</version>
     </dependency>
 
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
       <version>${version.group.httpclient}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.httpcomponents.client5</groupId>
+      <artifactId>httpclient5</artifactId>
+      <version>5.3</version>
     </dependency>
 
     <dependency>
@@ -149,6 +161,17 @@ POSSIBILITY OF SUCH DAMAGE.
       <groupId>org.springframework</groupId>
       <artifactId>spring-test</artifactId>
       <version>${version.group.spring}</version><!-- FIXME is this needed in test scope only? -->
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot</artifactId>
+      <version>${version.group.spring-boot}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.swagger.core.v3</groupId>
+      <artifactId>swagger-annotations</artifactId>
+      <version>2.2.16</version>
     </dependency>
   </dependencies>
 

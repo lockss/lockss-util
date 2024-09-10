@@ -45,11 +45,7 @@ import org.lockss.util.LockssUncheckedIOException;
 import org.lockss.util.rest.RestUtil;
 import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.rest.exception.LockssRestHttpException;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -270,7 +266,8 @@ implements Iterator<Artifact> {
     }
 
     // Determine the response status.
-    HttpStatus status = response.getStatusCode();
+    HttpStatusCode statusCode = response.getStatusCode();
+    HttpStatus status = HttpStatus.valueOf(statusCode.value());
     log.trace("status = {}", status);
 
     // Check whether the response status indicates success.

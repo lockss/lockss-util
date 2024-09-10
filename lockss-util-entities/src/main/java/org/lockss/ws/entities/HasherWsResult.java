@@ -28,7 +28,7 @@
 package org.lockss.ws.entities;
 
 import java.util.Arrays;
-import javax.activation.DataHandler;
+import jakarta.activation.DataHandler;
 import com.fasterxml.jackson.annotation.*;
 
 /**

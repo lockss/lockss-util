@@ -70,8 +70,6 @@ public class ZipUtil {
     in.mark(4);
     IOUtils.read(in, buf, 0, buf.length);
     in.reset();
-    log.fatal("file: {}", Arrays.toString(buf));
-    log.fatal("magic: {}", Arrays.toString(ZIP_MAGIC));
     return Arrays.equals(ZIP_MAGIC, buf);
   }
 
