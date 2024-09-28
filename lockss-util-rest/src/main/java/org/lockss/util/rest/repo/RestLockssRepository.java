@@ -98,6 +98,7 @@ public class RestLockssRepository implements LockssRepository {
 
   public static final boolean DEFAULT_USE_MULTIPART_ENDPOINT = false;
   private boolean useMultipartEndpoint = DEFAULT_USE_MULTIPART_ENDPOINT;
+  private List<Integer> artIterPageSizes;
 
   // These must match the LOCKSS Repository swagger specification:
   public static final String MULTIPART_ARTIFACT_PROPS = "artifactProps";
@@ -874,7 +875,8 @@ public class RestLockssRepository implements LockssRepository {
    */
   private Iterator<Artifact> getArtifactIterator(UriComponentsBuilder builder) throws IOException {
     return new RestLockssRepositoryArtifactIterator(restTemplate, builder,
-        authHeaderValue);
+        authHeaderValue)
+      .setPageSizes(artIterPageSizes);
   }
 
   /**
@@ -1599,8 +1601,14 @@ public class RestLockssRepository implements LockssRepository {
     return restTemplate;
   }
 
-  public void setUseMultipartEndpoint(boolean useMultipartEndpoint) {
+  public RestLockssRepository setUseMultipartEndpoint(boolean useMultipartEndpoint) {
     this.useMultipartEndpoint = useMultipartEndpoint;
+    return this;
+  }
+
+  public RestLockssRepository setArtifactIteratorPageSizes(List<Integer> sizes) {
+    this.artIterPageSizes = sizes;
+    return this;
   }
 
   //
