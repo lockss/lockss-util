@@ -71,7 +71,7 @@ public class RestLockssRepositoryArtifactIterator
    * long that a process using the iterator hangs unreasonably if the repo
    * hangs.  Not currently configurable.
    */
-  public static final long DEFAULT_QUEUE_GET_TIMEOUT = Constants.MINUTE;
+  public static final long DEFAULT_QUEUE_GET_TIMEOUT = 30 * Constants.MINUTE;
 
   /** Time the producer thread will wait attempting to add to a full page
    * queue.  This should be very long as there is no way to predict how
@@ -94,6 +94,7 @@ public class RestLockssRepositoryArtifactIterator
   // The iterator for the current page of Artifacts
   private Iterator<Artifact> curIter = null;
   private boolean done = false;
+  private boolean error = false;
 
   protected ThreadData tdata = new ThreadData();
 
@@ -223,6 +224,9 @@ public class RestLockssRepositoryArtifactIterator
   @Override
   public boolean hasNext() throws RuntimeException {
     if (done) return false;
+    if (error) {
+      throw new IllegalStateException("Iterator previously threw");
+    }
     if (curIter == null || !curIter.hasNext()) {
       try {
         long start = System.currentTimeMillis();
@@ -230,10 +234,12 @@ public class RestLockssRepositoryArtifactIterator
           tdata.pageQueue.poll(tdata.queueGetTimeout, TimeUnit.MILLISECONDS);
         tdata.iterWaitTime += System.currentTimeMillis() - start;
         if (nextIterPage == null) {
+          error = true;
           throw new IteratorTimeoutException("Nothing added to queue for " +
                                              TimeUtil.timeIntervalToString(tdata.queueGetTimeout));
         }
         if (nextIterPage.error() != null) {
+          error = true;
           throw new LockssUncheckedException(nextIterPage.error());
         }
         if (nextIterPage.artifacts() == null ||
@@ -246,6 +252,7 @@ public class RestLockssRepositoryArtifactIterator
         log.trace("Stored new iter ({}) from {}", nextIterPage.artifacts().size(),
                   nextIterPage);
       } catch (InterruptedException e) {
+          error = true;
         throw new IteratorTimeoutException("Queue.poll interrupted");
       }
     }
@@ -299,6 +306,9 @@ public class RestLockssRepositoryArtifactIterator
         }
         tdata.queuePutWaitTime += System.currentTimeMillis() - queuePutStart;
         if (isLastBatch()) {
+          // Extra "end-of-pages" queue item is slightly awkward here
+          // but replacing it with a "lastPage" indicator in the last
+          // page is even more awkward to handle in hasNext()
           try {
             tdata.pageQueue.offer(new IterPage(null, null),
                             tdata.queuePutTimeout, TimeUnit.MILLISECONDS);
