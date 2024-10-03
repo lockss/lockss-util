@@ -98,7 +98,7 @@ public class TestRestLockssRepositoryArtifactIterator extends LockssTestCase5 {
     assertThrowsMatch(RuntimeException.class, "400", 
                       () -> {repoIterator.hasNext();});
     mockServer.verify();
-    assertThrows(NoSuchElementException.class, () -> {repoIterator.next();});
+    assertThrows(IllegalStateException.class, () -> {repoIterator.next();});
   }
 
   @Test
