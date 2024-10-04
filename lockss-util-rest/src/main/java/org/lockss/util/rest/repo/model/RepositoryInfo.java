@@ -33,6 +33,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.lockss.util.storage.StorageInfo;
+import org.lockss.util.storage.RepositoryStatistics;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -46,6 +47,9 @@ public class RepositoryInfo implements Serializable {
 
   @JsonProperty("indexInfo")
   private StorageInfo indexInfo = null;
+
+  @JsonProperty("repositoryStatistics")
+  private RepositoryStatistics repoStats = null;
 
   /**
    * Default constructor.
@@ -124,4 +128,12 @@ public class RepositoryInfo implements Serializable {
     return "[RepositoryInfo store: " + storeInfo + " index: " + indexInfo + "]";
   }
 
+  public RepositoryStatistics getRepositoryStatistics() {
+    return repoStats;
+  }
+
+  public RepositoryInfo setRepositoryStatistics(RepositoryStatistics repoStats) {
+    this.repoStats = repoStats;
+    return this;
+  }
 }
