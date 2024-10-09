@@ -662,7 +662,7 @@ public class ArtifactSpec implements Comparable<Object> {
     StringBuilder sb = new StringBuilder();
     sb.append(String.format("[ArtifactSpec: (%s,%s,%s,%d)", url, ns, auid, fixedVer));
     if (isCommitted()) {
-      sb.append("C");
+      sb.append(", commmitted");
     }
     if (hasContent()) {
       if (len >= 0 || content != null) {
