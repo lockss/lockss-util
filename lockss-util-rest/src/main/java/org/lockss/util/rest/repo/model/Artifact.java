@@ -74,8 +74,6 @@ public class Artifact implements Serializable {
     private String auid;
   @JsonProperty("uri")
     private String uri;
-  @JsonProperty("sortUri")
-    private String sortUri;
   @JsonProperty("version")
     private Integer version;
   @JsonProperty("committed")
@@ -335,7 +333,6 @@ public class Artifact implements Serializable {
       ", namespace='" + namespace + '\'' +
       ", auid='" + auid + '\'' +
       ", uri='" + uri + '\'' +
-//                 ", sortUri='" + sortUri + '\'' +
       ", version='" + version + '\'' +
       ", committed=" + committed +
       ", storageUrl='" + storageUrl + '\'' +
