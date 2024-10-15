@@ -29,8 +29,7 @@
  */
 package org.lockss.util.rest.repo;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.*;
 import org.lockss.util.rest.RestUtil;
 import org.lockss.util.test.LockssTestCase5;
 import org.springframework.http.HttpMethod;
@@ -60,7 +59,7 @@ public class TestRestLockssRepositoryAuidIterator extends LockssTestCase5 {
   /**
    * Set up code to be run before each test.
    */
-  @Before
+  @BeforeEach
   public void makeRepoIterator() {
     restTemplate = RestUtil.getRestTemplate();
     mockServer = MockRestServiceServer.createServer(restTemplate);

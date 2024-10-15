@@ -29,11 +29,13 @@ package org.lockss.util.rest;
 
 import java.net.*;
 import java.util.concurrent.TimeUnit;
-import org.junit.*;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.*;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.mockserver.junit.*;
 import org.mockserver.client.*;
+import org.mockserver.junit.*;
+import org.mockserver.junit.jupiter.*;
 import static org.mockserver.model.HttpRequest.*;
 import static org.mockserver.model.HttpResponse.*;
 import org.mockserver.model.Header;
@@ -52,6 +54,7 @@ import static org.lockss.util.Constants.MINUTE;
 // Use MockServer, which starts a real server, rather than Spring's
 // MockRestServiceServer because we want to test timeouts, etc., which the
 // latter ignores.
+@ExtendWith(MockServerExtension.class)
 public class TestRestStatusClient extends LockssTestCase5 {
   private static L4JLogger log = L4JLogger.getLogger();
 
@@ -64,12 +67,11 @@ public class TestRestStatusClient extends LockssTestCase5 {
     return "http://localhost:" + port;
   }
 
-  @Rule
-  public MockServerRule msRule = new MockServerRule(this);
-
-  @Before
-  public void getPort() {
-    port = msRule.getPort();
+  @BeforeEach
+  public void getPort(MockServerClient client) throws LockssRestException {
+    msClient = client;
+    port = client.getPort();
+    client.reset();
   }
 
   String toJson(ApiStatus as) {

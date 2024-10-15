@@ -114,6 +114,20 @@ POSSIBILITY OF SUCH DAMAGE.
       <scope>test</scope>
     </dependency>
 
+    <!-- https://mvnrepository.com/artifact/org.mock-server/mockserver-spring-test-listener -->
+    <dependency>
+      <groupId>org.mock-server</groupId>
+      <artifactId>mockserver-spring-test-listener</artifactId>
+      <version>${version.group.mockserver}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mock-server</groupId>
+      <artifactId>mockserver-junit-jupiter-no-dependencies</artifactId>
+      <version>${version.group.mockserver}</version>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>jakarta.validation</groupId>
       <artifactId>jakarta.validation-api</artifactId>

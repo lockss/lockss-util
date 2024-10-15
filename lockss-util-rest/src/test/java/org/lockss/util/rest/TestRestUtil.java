@@ -34,7 +34,8 @@ import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.UnknownHostException;
 import org.apache.hc.client5.http.ConnectTimeoutException;
-import org.junit.*;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.*;
 import org.lockss.util.*;
 import org.lockss.util.rest.exception.*;
 import org.lockss.util.rest.multipart.*;
@@ -48,8 +49,9 @@ import org.springframework.http.*;
 import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-import org.mockserver.junit.*;
 import org.mockserver.client.*;
+import org.mockserver.junit.*;
+import org.mockserver.junit.jupiter.*;
 import org.mockserver.model.Header;
 import static org.mockserver.model.HttpRequest.*;
 import static org.mockserver.model.HttpResponse.*;
@@ -57,6 +59,7 @@ import static org.mockserver.model.HttpResponse.*;
 /**
  * Test class for org.lockss.util.rest.RestUtil.
  */
+@ExtendWith(MockServerExtension.class)
 public class TestRestUtil extends LockssTestCase5 {
   private static L4JLogger log = L4JLogger.getLogger();
 
@@ -64,12 +67,11 @@ public class TestRestUtil extends LockssTestCase5 {
 
   int port;
 
-  @Rule
-  public MockServerRule msRule = new MockServerRule(this);
-
-  @Before
-  public void getPort() throws LockssRestException {
-    port = msRule.getPort();
+  @BeforeEach
+  public void getPort(MockServerClient client) throws LockssRestException {
+    msClient = client;
+    port = client.getPort();
+    client.reset();
   }
 
   private MockServerClient msClient;
@@ -265,7 +267,7 @@ public class TestRestUtil extends LockssTestCase5 {
       ResponseEntity<RestResponseErrorBody.RestResponseError> resp =
           doCallRestService("http://localhost:" + port + "/foo", "bar",
 			  RestResponseErrorBody.RestResponseError.class);
-      Assert.fail("Should have thrown, but returned: " + resp);
+      fail("Should have thrown, but returned: " + resp);
     } catch (LockssRestHttpException e) {
       assertEquals(HttpStatus.UNAUTHORIZED, e.getHttpStatus());
       assertEquals(error, e.getRestResponseError());
@@ -289,7 +291,7 @@ public class TestRestUtil extends LockssTestCase5 {
       ResponseEntity<RestResponseErrorBody.RestResponseError> resp =
           doCallRestService("http://localhost:" + port + "/foo", "bar",
 			  RestResponseErrorBody.RestResponseError.class);
-      Assert.fail("Should have thrown, but returned: " + resp);
+      fail("Should have thrown, but returned: " + resp);
     } catch (LockssRestHttpException e) {
       assertEquals(HttpStatus.NOT_FOUND, e.getHttpStatus());
       assertEquals("Error body", e.getServerErrorMessage());
@@ -328,7 +330,7 @@ public class TestRestUtil extends LockssTestCase5 {
       ResponseEntity<Map> resp =
 	doCallRestService("http://localhost:" + port + "/foo", "bar",
 			  hdrs, Map.class);
-      Assert.fail("Should have thrown, but returned: " + resp);
+      fail("Should have thrown, but returned: " + resp);
     } catch (LockssRestHttpException e) {
       assertEquals(HttpStatus.UNAUTHORIZED, e.getHttpStatus());
     }

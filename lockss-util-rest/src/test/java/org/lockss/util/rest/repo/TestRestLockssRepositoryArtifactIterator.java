@@ -29,17 +29,17 @@
  */
 package org.lockss.util.rest.repo;
 
-import java.util.NoSuchElementException;
+import java.util.*;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.*;
+import org.lockss.log.L4JLogger;
 import org.lockss.util.rest.RestUtil;
 import org.lockss.util.rest.repo.model.Artifact;
 import org.lockss.util.test.LockssTestCase5;
 import org.springframework.http.*;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.test.web.client.*;
 import org.springframework.test.web.client.match.MockRestRequestMatchers;
 import org.springframework.test.web.client.response.MockRestResponseCreators;
 import org.springframework.web.client.RestTemplate;
@@ -64,7 +64,7 @@ public class TestRestLockssRepositoryArtifactIterator extends LockssTestCase5 {
   /**
    * Set up code to be run before each test.
    */
-  @Before
+  @BeforeEach
   public void setupMock() {
     restTemplate = RestUtil.getRestTemplate();
     mockServer = MockRestServiceServer.createServer(restTemplate);
