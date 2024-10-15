@@ -32,7 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 package org.lockss.util.rest.status;
 
-import org.junit.*;
+import org.junit.jupiter.api.*;
 
 import org.lockss.util.rest.status.ApiStatus.StartupStatus;
 import org.lockss.util.test.*;
