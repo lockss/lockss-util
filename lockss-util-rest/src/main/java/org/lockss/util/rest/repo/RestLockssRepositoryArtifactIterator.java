@@ -45,31 +45,27 @@ import org.lockss.util.rest.repo.model.ArtifactPageInfo;
 import org.lockss.log.L4JLogger;
 import org.lockss.util.rest.RestUtil;
 import org.lockss.util.rest.exception.*;
+import org.apache.commons.lang3.*;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-
-// Currently reports timing info only when end reached, so never
-// reported for abandoned iterators
 
 /**
  * Iterator over Artifacts returned by any of the Artifact list-returning
  * REST endpoints of Lockss Repository Service.  Pages of Artifacts are
  * fetched by a background thread and added to a Queue, to avoid a
- * synchronous wait for each page.  {@link #setPageSizes(List<Integer>)}
- * can be used to cause the initial request(s) to be for small page(s), to
- * reduce startup latency, followed by large pages to efficiently keep the
- * queue filled.
+ * synchronous wait for each page.  The initial page sizes can be
+ * controlled, to provide faster startup - see {@link #Params}.
  */
 public class RestLockssRepositoryArtifactIterator
   implements Iterator<Artifact> {
 
   private final static L4JLogger log = L4JLogger.getLogger();
 
-  /** Time the iterator will wait on an empty page queue.  This should be
-   * as long as the max time the repo might take to respond, but not so
-   * long that a process using the iterator hangs unreasonably if the repo
-   * hangs.  Not currently configurable.
+  /** Default time the iterator will wait for the next page of
+   * Artifacts to show up on the queue.  This should be as long as the
+   * max time the repo might take to respond, but not so long that a
+   * process using the iterator hangs unreasonably if the repo hangs.
    */
   public static final long DEFAULT_QUEUE_GET_TIMEOUT = 30 * Constants.MINUTE;
 
@@ -80,23 +76,29 @@ public class RestLockssRepositoryArtifactIterator
    */
   public static final long DEFAULT_QUEUE_PUT_TIMEOUT = Long.MAX_VALUE;
 
-  /** The page queue length.  Should be long enough to avoid starvation,
+  /** Default page queue length.  Should be long enough to avoid starvation,
    * but the only case where that would be a problem is if the producer
    * can't keep up with the consumer.  If that's the case overall,
    * increasing the queue length won't help.  If the consumer's consumption
    * rate is highly variable over numbers of iterations approaching the
-   * queue capacity, increaing the queue length could help decrease
-   * starvation during period of rapid consumption.. Not currently
-   * configurable.
+   * queue capacity, increasing the queue length could help decrease
+   * starvation during periods of rapid consumption.
    */
-  public static final int DEFAULT_QUEUE_LENGTH = 3;
+  public static final int DEFAULT_QUEUE_LENGTH = 2;
+
+  /** Param values used if no Params is supplied to constructor */
+  static Params DEFAULT_PARAMS = new Params()
+    .setQueueLen(DEFAULT_QUEUE_LENGTH)
+    .setQueueGetTimeout(DEFAULT_QUEUE_GET_TIMEOUT);
 
   // The iterator for the current page of Artifacts
   private Iterator<Artifact> curIter = null;
-  private boolean done = false;
-  private boolean error = false;
 
-  protected ThreadData tdata = new ThreadData();
+  private boolean done = false;
+  private RuntimeException prevError;
+
+  // Data block shared by iterator and producer thread
+  protected ThreadData tdata;
 
   // Infrastructure to invoke Cleaner
   private static final Cleaner cleaner = Cleaner.create();
@@ -104,58 +106,52 @@ public class RestLockssRepositoryArtifactIterator
   private ProducerCleaner pCleaner;
 
   /**
-   * Constructor with default batch size and no Authorization header.
+   * Constructor with default params size and no Authorization header.
    * 
-   * @param restTemplate A RestTemplate with the REST service template.
-   * @param builder      An UriComponentsBuilder with the REST service URI
-   *                     builder.
+   * @param restTemplate    A RestTemplate with the REST service template.
+   * @param builder         An UriComponentsBuilder initialized with the
+   *                        REST endpoint IRU.  Query params will be added
+   *                        as needed
+   *                        builder.
    */
   RestLockssRepositoryArtifactIterator(RestTemplate restTemplate,
       UriComponentsBuilder builder) {
-    this(restTemplate, builder, null, null);
+    this(restTemplate, builder, null);
   }
 
   /**
-   * Constructor with default batch size.
+   * Constructor with default params size and an Authorization header.
    * 
    * @param restTemplate    A RestTemplate with the REST service template.
-   * @param builder         An UriComponentsBuilder with the REST service URI
+   * @param builder         An UriComponentsBuilder initialized with the
+   *                        REST endpoint IRU.  Query params will be added
+   *                        as needed
    *                        builder.
    * @param authHeaderValue A String with the Authorization header to be used
    *                        when calling the REST service.
    */
-  public RestLockssRepositoryArtifactIterator(RestTemplate restTemplate,
-      UriComponentsBuilder builder, String authHeaderValue) {
-    this(restTemplate, builder, authHeaderValue, null);
-  }
-
-  /**
-   * Constructor with no Authorization header.
-   * 
-   * @param restTemplate A RestTemplate with the REST service template.
-   * @param builder      An UriComponentsBuilder with the REST service URI
-   *                     builder.
-   * @param limit        An Integer with the number of artifacts to request on
-   *                     each REST service request.
-   */
   RestLockssRepositoryArtifactIterator(RestTemplate restTemplate,
-      UriComponentsBuilder builder, Integer limit) {
-    this(restTemplate, builder, null, limit);
+      UriComponentsBuilder builder, String authHeaderValue) {
+    this(restTemplate, builder, authHeaderValue, DEFAULT_PARAMS);
   }
 
   /**
    * Full constructor.
    * 
    * @param restTemplate    A RestTemplate with the REST service template.
-   * @param builder         An UriComponentsBuilder with the REST service URI
+   * @param builder         An UriComponentsBuilder initialized with the
+   *                        REST endpoint IRU.  Query params will be added
+   *                        as needed
    *                        builder.
    * @param authHeaderValue A String with the Authorization header to be used
    *                        when calling the REST service.
-   * @param limit           An Integer with the number of artifacts to request
-   *                        on each REST service request.
+   * @param params          Parameters controlling queue length, page sizes,
+   *                        timeouts
    */
   RestLockssRepositoryArtifactIterator(RestTemplate restTemplate,
-      UriComponentsBuilder builder, String authHeaderValue, Integer limit) {
+                                       UriComponentsBuilder builder,
+                                       String authHeaderValue,
+                                       Params params) {
     // Validation.
     if (restTemplate == null) {
       throw new IllegalArgumentException(
@@ -167,47 +163,32 @@ public class RestLockssRepositoryArtifactIterator
 	  "REST service URI builder cannot be null");
     }
 
-    if (limit != null && limit.intValue() < 1) {
-      throw new IllegalArgumentException("Limit must be at least 1");
-    }
-
     // Initialization.
+    tdata = new ThreadData(params);
     tdata.restTemplate = restTemplate;
-
-    if (limit != null) {
-      builder = builder.replaceQueryParam("limit", limit);
-    }
-
     tdata.builder = builder;
     tdata.authHeaderValue = authHeaderValue;
+
+    // Start producer thread in constructor so that first request is
+    // made as early as possible
     startProducerThread();
   }
 
-  /**
-   * Allows variable page size requests from the server.  If the list is
-   * non-empty, the first element will be the page size of the first
-   * request, the second element will be used for the second request, etc.
-   * When the list runs out the last element will continue to be used for
-   * all successive requests.
-   */
-  public RestLockssRepositoryArtifactIterator setPageSizes(List<Integer> sizes) {
-    if (sizes == null || sizes.isEmpty()) {
-      tdata.pageSizes = null;
-    } else {
-      tdata.pageSizes = new LinkedList(sizes);
-    }
-    return this;
-  }
+  static int threadCounter = 1;
 
   private void startProducerThread() {
     PageProducer pp = new PageProducer(tdata);
     Thread th = new Thread(pp);
-    th.setName("ArtIter Producer");
+    th.setName("ArtIter Producer " + threadCounter++);
+    th.setPriority(Thread.NORM_PRIORITY + 2);
     pCleaner = new ProducerCleaner(pp, th);
     cleanable = cleaner.register(this, pCleaner);
     th.start();
   }
 
+  /** Report the total wait times for this iterator.  Currently called
+   * only when end reached.  Stats for abandoned iterators would be
+   * misleading anyway */
   private void report() {
     log.debug2("Iter wait: {}, fetch wait: {}, queue put wait {}",
                TimeUtil.timeIntervalToString(tdata.iterWaitTime),
@@ -224,8 +205,8 @@ public class RestLockssRepositoryArtifactIterator
   @Override
   public boolean hasNext() throws RuntimeException {
     if (done) return false;
-    if (error) {
-      throw new IllegalStateException("Iterator previously threw");
+    if (prevError != null) {
+      throw new IllegalStateException("Iterator previously threw", prevError);
     }
     if (curIter == null || !curIter.hasNext()) {
       try {
@@ -234,13 +215,13 @@ public class RestLockssRepositoryArtifactIterator
           tdata.pageQueue.poll(tdata.queueGetTimeout, TimeUnit.MILLISECONDS);
         tdata.iterWaitTime += System.currentTimeMillis() - start;
         if (nextIterPage == null) {
-          error = true;
-          throw new IteratorTimeoutException("Nothing added to queue for " +
-                                             TimeUtil.timeIntervalToString(tdata.queueGetTimeout));
+          prevError = new IteratorTimeoutException("Nothing added to queue for " +
+                                                   TimeUtil.timeIntervalToString(tdata.queueGetTimeout));
+          throw prevError;
         }
         if (nextIterPage.error() != null) {
-          error = true;
-          throw new LockssUncheckedException(nextIterPage.error());
+          prevError = new LockssUncheckedException(nextIterPage.error());
+          throw prevError;
         }
         if (nextIterPage.artifacts() == null ||
             nextIterPage.artifacts().isEmpty()) {
@@ -252,8 +233,8 @@ public class RestLockssRepositoryArtifactIterator
         log.trace("Stored new iter ({}) from {}", nextIterPage.artifacts().size(),
                   nextIterPage);
       } catch (InterruptedException e) {
-          error = true;
-        throw new IteratorTimeoutException("Queue.poll interrupted");
+        prevError = new IteratorTimeoutException("Queue.poll interrupted");;
+        throw prevError;
       }
     }
     return curIter.hasNext();
@@ -293,18 +274,25 @@ public class RestLockssRepositoryArtifactIterator
         long fetchStart = System.currentTimeMillis();
         IterPage page = getNextPage();
         tdata.fetchWaitTime += System.currentTimeMillis() - fetchStart;
-        long queuePutStart = System.currentTimeMillis();
 
         if (tdata.terminated) {
           break;
         }
         try {
+          long queuePutStart = System.currentTimeMillis();
           tdata.pageQueue.offer(page, tdata.queuePutTimeout, TimeUnit.MILLISECONDS);
+          tdata.queuePutWaitTime += System.currentTimeMillis() - queuePutStart;
+          // If this is an error page, exit
+          if (page.error() != null) {
+            return;
+          }
         } catch (InterruptedException e) {
           log.debug("Producer thread interrupted, exiting");
+          // Try to ensure we put a terminating element in the queue
+          forceAddTerminatingQueueItem(e);
           return;
         }
-        tdata.queuePutWaitTime += System.currentTimeMillis() - queuePutStart;
+        // Data page added.  If this was the last, add termination item
         if (isLastBatch()) {
           // Extra "end-of-pages" queue item is slightly awkward here
           // but replacing it with a "lastPage" indicator in the last
@@ -314,6 +302,7 @@ public class RestLockssRepositoryArtifactIterator
                             tdata.queuePutTimeout, TimeUnit.MILLISECONDS);
           } catch (InterruptedException e) {
             log.debug("Producer thread interrupted putting final page, exiting");
+            forceAddTerminatingQueueItem(e);
             return;
           }
           log.debug2("Producer thread exiting after last page");
@@ -322,6 +311,15 @@ public class RestLockssRepositoryArtifactIterator
       }
       if (tdata.terminated) {
         log.debug("Producer thread forcibly terminated");
+      }
+    }
+
+    private void forceAddTerminatingQueueItem(Exception e) {
+      tdata.pageQueue.clear();
+      try {
+        tdata.pageQueue.offer(new IterPage(e, null), 10, TimeUnit.MILLISECONDS);
+      } catch (InterruptedException e2) {
+        // ignore
       }
     }
 
@@ -334,9 +332,10 @@ public class RestLockssRepositoryArtifactIterator
      * service.
      */
     private IterPage getNextPage() {
-      setPageSize();
+      setReqPageSize();
+
       // Check whether a previous response provided a continuation token.
-      if (continuationToken != null) {
+      if (!StringUtils.isEmpty(continuationToken)) {
         // Yes: Incorporate it to the next request.
         tdata.builder.replaceQueryParam("continuationToken", continuationToken);
       }
@@ -367,11 +366,17 @@ public class RestLockssRepositoryArtifactIterator
           continuationToken = null;
           return new IterPage(null, null);
         }
-        log.error("Could not fetch artifacts: Exception caught", e);
+        log.error("Could not fetch artifact page: Exception caught", e);
         return new IterPage(e, null);
       } catch (LockssRestException e) {
-        log.error("Could not fetch artifacts: Exception caught", e);
+        log.error("Could not fetch artifact page: Exception caught", e);
         return new IterPage(e, null);
+      } catch (Exception e) {
+        log.error("Unexpected exception fetching artifact page", e);
+        return new IterPage(e, null);
+      } catch (Throwable e) {
+        log.error("Unexpected exception fetching artifact page", e);
+        return new IterPage(new RuntimeException("Throwable", e), null);
       }
 
       // Determine the response status.
@@ -415,18 +420,13 @@ public class RestLockssRepositoryArtifactIterator
       }
     }
 
-    /** If a page size list has been provided, set the page size for
-     * the next request (query param in builder). */
-    void setPageSize() {
-      if (tdata.pageSizes != null && !tdata.pageSizes.isEmpty()) {
-        tdata.builder = tdata.builder.replaceQueryParam("limit",
-                                                        nextPageSize(tdata.pageSizes));
+    /** Set the next page size from the pageSizes list */
+    void setReqPageSize() {
+      LinkedList<Integer> lst = tdata.pageSizes;
+      if (lst != null && !lst.isEmpty()) {
+        int limit = (lst.size() > 1) ? lst.pop() : lst.get(0);
+        tdata.builder.replaceQueryParam("limit", limit);
       }
-    }
-
-    /** Return the next page size from the pageSizes list */
-    int nextPageSize(LinkedList<Integer> lst) {
-      return (lst.size() > 1) ? lst.pop() : lst.get(0);
     }
 
     /** Inform the producer that it should stop */
@@ -436,22 +436,13 @@ public class RestLockssRepositoryArtifactIterator
   }
 
   /** Data (mostly) shared by the iterator and producer.  (The
-   * producer thread can't reference the Iterator, else the Cleaner
-   * will never run, so at least some of the data must be elsewhere.
-   * Easiest to put it all in a single object). */
+   * producer thread can't reference the Iterator, else the Iterator's
+   * Cleaner will never run.  Not all of thise data needs to be in a
+   * common object, but easiest to put it all here). */
   static class ThreadData {
     // Queue of received Artifact pages
     BlockingQueue<IterPage> pageQueue =
       new ArrayBlockingQueue<>(DEFAULT_QUEUE_LENGTH);
-
-    // Iterator timeout pulling pages from queue
-    long queueGetTimeout = DEFAULT_QUEUE_GET_TIMEOUT;
-
-    // Producer timeout adding pages to queue
-    long queuePutTimeout = DEFAULT_QUEUE_PUT_TIMEOUT;
-
-    // List of progressive page sizes to request.  The last one is repeated
-    LinkedList<Integer> pageSizes;
 
     // The REST service URI builder.
     UriComponentsBuilder builder;
@@ -462,6 +453,17 @@ public class RestLockssRepositoryArtifactIterator
     // REST service template.
     RestTemplate restTemplate;
 
+    // Iterator params
+    LinkedList<Integer> pageSizes;
+    int queueLen = DEFAULT_QUEUE_LENGTH;
+
+    // Iterator timeout pulling pages from queue
+    long queueGetTimeout = DEFAULT_QUEUE_GET_TIMEOUT;
+
+    // Producer timeout adding pages to queue
+    long queuePutTimeout = DEFAULT_QUEUE_PUT_TIMEOUT;
+
+
     // Stats
     long iterWaitTime = 0;
     long fetchWaitTime = 0;
@@ -470,12 +472,77 @@ public class RestLockssRepositoryArtifactIterator
     // Flag set by Cleaner to force the thread to terminate.  Here so
     // test class can access it
     boolean terminated = false;
+
+    private ThreadData(Params params) {
+      if (params.pageSizes != null && !params.pageSizes.isEmpty()) {
+        this.pageSizes = new LinkedList<>(params.pageSizes);
+      }
+      if (params.queueLen > 0) {
+        this.queueLen = params.queueLen;
+      }
+      if (params.queueGetTimeout > 0) {
+        this.queueGetTimeout = params.queueGetTimeout;
+      }
+      pageQueue = new ArrayBlockingQueue<>(queueLen);
+    }
+
   }
 
   /** The Queue object, contains either a list of Artifacts, an error for
    * the iterator to throw, or noll, null, indicating no more objects
    */
   record IterPage(Exception error, List<Artifact> artifacts) {};
+
+  /** Iterator parameters controlling queue length, requested page
+   * sizes, timeouts */
+  public static class Params {
+    /** Initial page sizes to request; the last value in the list is used
+     * for all remaining pages. */
+    List<Integer> pageSizes;
+    /** Length of page queue. */
+    int queueLen;
+    long queueGetTimeout;
+
+    List<Integer> getPageSizes() {
+      return pageSizes;
+    }
+
+    int getQueueLen() {
+      return queueLen;
+    }
+
+    long getQueueGetTimeout() {
+      return queueGetTimeout;
+    }
+
+    /**
+     * Allows variable page size requests from the server.  If the list is
+     * non-empty, the first element will be the page size of the first
+     * request, the second element will be used for the second request, etc.
+     * When the list runs out the last element will continue to be used for
+     * all successive requests.
+     */
+    public Params setPageSizes(List<Integer> pageSizes) {
+      this.pageSizes = pageSizes;
+      return this;
+    }
+
+    /** Set a page size for all pages */
+    public Params setPageSize(int size) {
+      this.pageSizes = List.of(size);
+      return this;
+    }
+
+    public Params setQueueLen(int len) {
+      this.queueLen = len;
+      return this;
+    }
+
+    public Params setQueueGetTimeout(long timeout) {
+      this.queueGetTimeout = timeout;
+      return this;
+    }
+  }
 
   /** Exception thrown if {@link #hasNext()} waits for a queue item to
    * appear for longer than {@value #DEFAULT_QUEUE_GET_TIMEOUT} ms
@@ -486,7 +553,7 @@ public class RestLockssRepositoryArtifactIterator
     }
   }
 
-  /** Cleaner runs when Iterator is discarded, signals producer thread
+  /** Cleaner runs when Iterator becomes GCable, signals producer thread
    * to exit */
   private static class ProducerCleaner implements Runnable {
     private PageProducer pp;
