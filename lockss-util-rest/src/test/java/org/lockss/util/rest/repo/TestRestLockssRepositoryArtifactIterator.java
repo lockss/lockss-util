@@ -33,8 +33,10 @@ import java.util.*;
 
 import org.junit.jupiter.api.*;
 import org.lockss.log.L4JLogger;
+import org.lockss.util.*;
 import org.lockss.util.rest.RestUtil;
 import org.lockss.util.rest.repo.model.Artifact;
+import org.lockss.util.rest.repo.RestLockssRepositoryArtifactIterator.Params;
 import org.lockss.util.test.LockssTestCase5;
 import org.springframework.http.*;
 import org.springframework.http.HttpMethod;
@@ -53,6 +55,8 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
  * @author Fernando García-Loygorri
  */
 public class TestRestLockssRepositoryArtifactIterator extends LockssTestCase5 {
+  private final static L4JLogger log = L4JLogger.getLogger();
+
   private final static String BASEURL = "http://localhost:24610";
   private final static String NS1 = "ns1";
   private final static String AUID1 = "auId";
@@ -61,9 +65,6 @@ public class TestRestLockssRepositoryArtifactIterator extends LockssTestCase5 {
   private String endpoint;
   private UriComponentsBuilder builder;
 
-  /**
-   * Set up code to be run before each test.
-   */
   @BeforeEach
   public void setupMock() {
     restTemplate = RestUtil.getRestTemplate();
@@ -71,6 +72,81 @@ public class TestRestLockssRepositoryArtifactIterator extends LockssTestCase5 {
     endpoint = String.format("%s/aus/%s/artifacts", BASEURL, AUID1);
     builder = UriComponentsBuilder.fromHttpUrl(endpoint)
         .queryParam("namespace", NS1);
+  }
+
+  /** Retuen json string for Artifact */
+  String jsonArt(String uuid, String uri, int version) {
+    return String.format("{\"uuid\":\"%s\",\"uri\":\"%s\",\"version\":%s}",
+                         uuid, uri, version);
+  }
+
+  /** Set up a series of mock server expectations and responses for a
+   * sequence of requests for artifact iterator pages.  The client is
+   * expected to request pages of the sizes specified in pageSizes, the
+   * length of which determines the number of expected requests.
+   * Negative sizes mean not to expect &limit= in the request.  Each
+   * request but the first is expected to have a continuationToken, each
+   * response but the last includes a continuationToken.  Artifact UUIDs,
+   * URIs, versions, and continuationTokens are numbered sequentially.
+   *
+   * The setup (now obscured by this templated code) looks like<code>
+   *     mockServer.expect(MockRestRequestMatchers.requestTo(endpoint
+   * 	?namespace=ns1&limit=<LLL>[&continuationToken=ns1:auId:<UUU>:<PS>:<CNT>"))
+   *     .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
+   *     .andRespond(MockRestResponseCreators.withSuccess({"artifacts":[
+   * 	  {"uuid":"<UUU>","uri":"<URI>","version":<VVV},
+   *      ...
+   * 	  ], "pageInfo":{[CCC]}})
+   * 	MediaType.APPLICATION_JSON));
+   */
+  void mockNPages(String prefix, int ... pageSizes) {
+    int cnt = 0;             // sequantially number UUIDs, URIs, versions
+    // length of pageSizes determines number of responses
+    String lastContTok = null;
+    for (int ix = 0; ix < pageSizes.length; ix++) {
+      int size = pageSizes[ix]; // number of artifacts expected in this req
+      String reqUrl;
+      if (size > 0) {
+        reqUrl = String.format("%s?namespace=%s&limit=%s", endpoint, NS1, size);
+      } else {
+        reqUrl = String.format("%s?namespace=%s", endpoint, NS1);
+        size = -size;
+      }
+      if (lastContTok != null) {
+        reqUrl +=  "&continuationToken=" + lastContTok;
+      }
+      ResponseActions m =
+        mockServer.expect(MockRestRequestMatchers.requestTo(reqUrl));
+      m.andExpect(MockRestRequestMatchers.method(HttpMethod.GET));
+      String pageInfo;
+      if (ix < pageSizes.length - 1) {
+        lastContTok = String.format("ns1:auId:uriB:%s:%s", size, cnt);
+        pageInfo =
+          String.format("{\"continuationToken\":\"ns1:auId:uriB:%s:%s\"}",
+                        size, cnt);
+      } else {
+        pageInfo = "{}";
+      }
+      List<String> jArts = new ArrayList<>();
+      for (int aix = 1; aix <= size; aix++) {
+        cnt++;
+        jArts.add(jsonArt("UUID" + prefix + "_" + cnt, "URI" + prefix + "_" + cnt, cnt));
+      }
+
+      log.trace("Adding response: {}",
+                "{\"artifacts\":[" + String.join(",", jArts) + "], "
+                + "\"pageInfo\":" + pageInfo + "}");
+
+      m.andRespond(MockRestResponseCreators
+                   .withSuccess("{\"artifacts\":["
+                                + String.join(",", jArts) + "], "
+                                + "\"pageInfo\":" + pageInfo + "}",
+                                MediaType.APPLICATION_JSON));
+    }
+  }
+
+  void mockNPages(int ... pageSizes) {
+    mockNPages("", pageSizes);
   }
 
   @Test
@@ -115,28 +191,24 @@ public class TestRestLockssRepositoryArtifactIterator extends LockssTestCase5 {
   }
 
   @Test
-  public void testPopulatedRepository() throws Exception {
-    mockServer.expect(MockRestRequestMatchers.requestTo(endpoint + "?namespace="+ NS1)).andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-    .andRespond(MockRestResponseCreators.withSuccess("{\"artifacts\":["
-	+ "{\"uuid\":\"1\",\"version\":3},{\"uuid\":\"2\",\"version\":2},"
-	+ "{\"uuid\":\"3\",\"version\":1}], \"pageInfo\":{}}",
-	MediaType.APPLICATION_JSON));
+  public void testSinglePage() throws Exception {
+    mockNPages(-3);
 
     RestLockssRepositoryArtifactIterator repoIterator =
 	new RestLockssRepositoryArtifactIterator(restTemplate, builder);
 
     assertTrue(repoIterator.hasNext());
     Artifact artifact = repoIterator.next();
-    assertEquals("1", artifact.getUuid());
-    assertEquals(3, artifact.getVersion().intValue());
+    assertEquals("UUID_1", artifact.getUuid());
+    assertEquals(1, artifact.getVersion());
     assertTrue(repoIterator.hasNext());
     artifact = repoIterator.next();
-    assertEquals("2", artifact.getUuid());
-    assertEquals(2, artifact.getVersion().intValue());
+    assertEquals("UUID_2", artifact.getUuid());
+    assertEquals(2, artifact.getVersion());
     assertTrue(repoIterator.hasNext());
     artifact = repoIterator.next();
-    assertEquals("3", artifact.getUuid());
-    assertEquals(1, artifact.getVersion().intValue());
+    assertEquals("UUID_3", artifact.getUuid());
+    assertEquals(3, artifact.getVersion());
     assertFalse(repoIterator.hasNext());
     mockServer.verify();
     assertThrows(NoSuchElementException.class, () -> {repoIterator.next();});
@@ -144,115 +216,125 @@ public class TestRestLockssRepositoryArtifactIterator extends LockssTestCase5 {
 
   @Test
   public void testPagination() throws Exception {
-    // First server call.
-    mockServer.expect(MockRestRequestMatchers.requestTo(endpoint + "?namespace="+ NS1 +"&limit=2"))
-    .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-    .andRespond(MockRestResponseCreators.withSuccess("{\"artifacts\":["
-	+ "{\"uuid\":\"1\",\"uri\":\"uriA\",\"version\":3},"
-	+ "{\"uuid\":\"2\",\"uri\":\"uriB\",\"version\":2}], "
-	+ "\"pageInfo\":{\"continuationToken\":\"ns1:auId:uriB:2:123456\"}}",
-	MediaType.APPLICATION_JSON));
-
-    // Second server call.
-    mockServer.expect(MockRestRequestMatchers.requestTo(endpoint
-	+ "?namespace="+ NS1 +"&limit=2&continuationToken=ns1:auId:uriB:2:123456"))
-    .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-    .andRespond(MockRestResponseCreators.withSuccess("{\"artifacts\":["
-	+ "{\"uuid\":\"3\",\"uri\":\"uriC\",\"version\":9},"
-	+ "{\"uuid\":\"4\",\"uri\":\"uriC\",\"version\":1}], "
-	+ "\"pageInfo\":{}}",
-	MediaType.APPLICATION_JSON));
+    mockNPages(2, 2);
 
     RestLockssRepositoryArtifactIterator repoIterator =
-	new RestLockssRepositoryArtifactIterator(restTemplate, builder, 2);
+      new RestLockssRepositoryArtifactIterator(restTemplate, builder, null,
+                                               new Params().setPageSize(2));
 
     assertTrue(repoIterator.hasNext());
     Artifact artifact = repoIterator.next();
-    assertEquals("1", artifact.getUuid());
-    assertEquals("uriA", artifact.getUri());
-    assertEquals(3, artifact.getVersion().intValue());
+    assertEquals("UUID_1", artifact.getUuid());
+    assertEquals("URI_1", artifact.getUri());
+    assertEquals(1, artifact.getVersion());
     assertTrue(repoIterator.hasNext());
     artifact = repoIterator.next();
-    assertEquals("2", artifact.getUuid());
-    assertEquals("uriB", artifact.getUri());
-    assertEquals(2, artifact.getVersion().intValue());
+    assertEquals("UUID_2", artifact.getUuid());
+    assertEquals("URI_2", artifact.getUri());
+    assertEquals(2, artifact.getVersion());
     assertTrue(repoIterator.hasNext());
 
     artifact = repoIterator.next();
-    assertEquals("3", artifact.getUuid());
-    assertEquals("uriC", artifact.getUri());
-    assertEquals(9, artifact.getVersion().intValue());
+    assertEquals("UUID_3", artifact.getUuid());
+    assertEquals("URI_3", artifact.getUri());
+    assertEquals(3, artifact.getVersion());
     assertTrue(repoIterator.hasNext());
     artifact = repoIterator.next();
-    assertEquals("4", artifact.getUuid());
-    assertEquals("uriC", artifact.getUri());
-    assertEquals(1, artifact.getVersion().intValue());
+    assertEquals("UUID_4", artifact.getUuid());
+    assertEquals("URI_4", artifact.getUri());
+    assertEquals(4, artifact.getVersion());
     assertFalse(repoIterator.hasNext());
     mockServer.verify();
     assertThrows(NoSuchElementException.class, () -> {repoIterator.next();});
   }
 
   @Test
+  public void testPageSizes() throws Exception {
+    mockNPages(2, 7, 20, 20, 20);
+    int total = 2 + 7 + 20 + 20 + 20;
+
+    RestLockssRepositoryArtifactIterator repoIterator =
+      new RestLockssRepositoryArtifactIterator(restTemplate, builder, null,
+                                               new Params()
+                                               .setPageSizes(ListUtil.list(2, 7, 20)));
+
+    for (int cnt = 1; cnt <= total; cnt++) {
+      assertTrue(repoIterator.hasNext());
+      Artifact artifact = repoIterator.next();
+      assertEquals("UUID_"+cnt, artifact.getUuid());
+      assertEquals("URI_"+cnt, artifact.getUri());
+      assertEquals(cnt, artifact.getVersion());
+    }
+    assertFalse(repoIterator.hasNext());
+    mockServer.verify();
+    assertThrows(NoSuchElementException.class, () -> {repoIterator.next();});
+  }
+
+  @Test
+  public void testParams() throws Exception {
+    long getTime = 17 * Constants.MINUTE;
+
+    // Just checking param values, but thread will fetch so Keep mock happy
+    mockNPages(2, 7, 20);
+
+    MyRestLockssRepositoryArtifactIterator repoIterator =
+      new MyRestLockssRepositoryArtifactIterator(restTemplate, builder, null,
+                                               new RestLockssRepositoryArtifactIterator.Params()
+                                                 .setQueueLen(5)
+                                                 .setQueueGetTimeout(getTime)
+                                                 .setPageSizes(ListUtil.list(2, 7, 20)));
+
+
+    RestLockssRepositoryArtifactIterator.ThreadData td = repoIterator.getTD();
+    assertEquals(ListUtil.list(2, 7, 20), td.pageSizes);
+
+    // This is a race condition, as the producer thread may add an item
+    // between the remainingCapacity() and size() calls.  There's no
+    // better way to find the queue capacity and I don't want to add
+    // synchronization to all queue accesses just for tests, but if it
+    // fails in practice will need to adopt some fix.  (Some way to
+    // precent the producer from adding an error to the queue?)
+    assertEquals(5, td.pageQueue.remainingCapacity() + td.pageQueue.size());
+    assertEquals(getTime, td.queueGetTimeout);
+  }
+
+  @Test
+  public void testDefaultParams() throws Exception {
+    // Just checking default param values, but thread will fetch so Keep
+    // mock happy
+    mockNPages(0);
+
+    MyRestLockssRepositoryArtifactIterator repoIterator =
+      new MyRestLockssRepositoryArtifactIterator(restTemplate, builder, null);
+
+    RestLockssRepositoryArtifactIterator.ThreadData td = repoIterator.getTD();
+    assertNull(td.pageSizes);
+
+    // This is a race condition, as the producer thread may add an item
+    // between the remainingCapacity() and size() calls.  There's no
+    // better way to find the queue capacity and I don't want to add
+    // synchronization to all queue accesses just for tests, but if it
+    // fails in practice will need to adopt some fix.  (Some way to
+    // precent the producer from adding an error to the queue?)
+    assertEquals(RestLockssRepositoryArtifactIterator.DEFAULT_QUEUE_LENGTH,
+                 td.pageQueue.remainingCapacity() + td.pageQueue.size());
+    assertEquals(RestLockssRepositoryArtifactIterator.DEFAULT_QUEUE_GET_TIMEOUT,
+                 td.queueGetTimeout);
+  }
+
+  @Test
   public void testCleaner() throws Exception {
-
-    // Mos enough server responses to cause the queue to fill and the
+    // Mock enough server responses to cause the queue to fill and the
     // producer thread to be waiting on queue.offer()
-
-    // 1st server call.
-    mockServer.expect(MockRestRequestMatchers.requestTo(endpoint + "?namespace="+ NS1 +"&limit=2"))
-    .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-    .andRespond(MockRestResponseCreators.withSuccess("{\"artifacts\":["
-	+ "{\"uuid\":\"1\",\"uri\":\"uriA\",\"version\":3},"
-	+ "{\"uuid\":\"2\",\"uri\":\"uriB\",\"version\":2}], "
-	+ "\"pageInfo\":{\"continuationToken\":\"ns1:auId:uriB:2:123456\"}}",
-	MediaType.APPLICATION_JSON));
-
-    // 2nd server call.
-    mockServer.expect(MockRestRequestMatchers.requestTo(endpoint
-	+ "?namespace="+ NS1 +"&limit=2&continuationToken=ns1:auId:uriB:2:123456"))
-    .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-    .andRespond(MockRestResponseCreators.withSuccess("{\"artifacts\":["
-	+ "{\"uuid\":\"3\",\"uri\":\"uriC\",\"version\":9},"
-	+ "{\"uuid\":\"4\",\"uri\":\"uriC\",\"version\":1}], "
-	+ "\"pageInfo\":{\"continuationToken\":\"ns1:auId:uriB:2:123457\"}}",
-	MediaType.APPLICATION_JSON));
-
-    // 3rd server call.
-    mockServer.expect(MockRestRequestMatchers.requestTo(endpoint
-	+ "?namespace="+ NS1 +"&limit=2&continuationToken=ns1:auId:uriB:2:123457"))
-    .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-    .andRespond(MockRestResponseCreators.withSuccess("{\"artifacts\":["
-	+ "{\"uuid\":\"3\",\"uri\":\"uriC\",\"version\":9},"
-	+ "{\"uuid\":\"4\",\"uri\":\"uriC\",\"version\":1}], "
-	+ "\"pageInfo\":{\"continuationToken\":\"ns1:auId:uriB:2:123458\"}}",
-	MediaType.APPLICATION_JSON));
-
-    // 4th server call.
-    mockServer.expect(MockRestRequestMatchers.requestTo(endpoint
-	+ "?namespace="+ NS1 +"&limit=2&continuationToken=ns1:auId:uriB:2:123458"))
-    .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-    .andRespond(MockRestResponseCreators.withSuccess("{\"artifacts\":["
-	+ "{\"uuid\":\"3\",\"uri\":\"uriC\",\"version\":9},"
-	+ "{\"uuid\":\"4\",\"uri\":\"uriC\",\"version\":1}], "
-	+ "\"pageInfo\":{\"continuationToken\":\"ns1:auId:uriB:2:123459\"}}",
-	MediaType.APPLICATION_JSON));
-
-    // Last server call.
-    mockServer.expect(MockRestRequestMatchers.requestTo(endpoint
-	+ "?namespace="+ NS1 +"&limit=2&continuationToken=ns1:auId:uriB:2:123459"))
-    .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
-    .andRespond(MockRestResponseCreators.withSuccess("{\"artifacts\":["
-	+ "{\"uuid\":\"3\",\"uri\":\"uriC\",\"version\":9},"
-	+ "{\"uuid\":\"4\",\"uri\":\"uriC\",\"version\":1}], "
-	+ "\"pageInfo\":{}}",
-	MediaType.APPLICATION_JSON));
+    mockNPages(2, 2, 2, 2, 2, 2);
 
     MyRestLockssRepositoryArtifactIterator iter =
-	new MyRestLockssRepositoryArtifactIterator(restTemplate, builder, 2);
+      new MyRestLockssRepositoryArtifactIterator(restTemplate, builder, null,
+                                                 new Params().setPageSize(2));
 
     assertTrue(iter.hasNext());
     Artifact artifact = iter.next();
-    assertEquals("1", artifact.getUuid());
+    assertEquals("UUID_1", artifact.getUuid());
 
     // Discarding the Iterator and forcing a GC should cause the
     // producer thread to exit.  The assert below may not be reliable
@@ -275,9 +357,21 @@ public class TestRestLockssRepositoryArtifactIterator extends LockssTestCase5 {
     extends RestLockssRepositoryArtifactIterator {
 
     MyRestLockssRepositoryArtifactIterator(RestTemplate restTemplate,
+                                           UriComponentsBuilder builder) {
+      super(restTemplate, builder);
+    }
+
+    MyRestLockssRepositoryArtifactIterator(RestTemplate restTemplate,
                                            UriComponentsBuilder builder,
-                                           Integer limit) {
-      super(restTemplate, builder, limit);
+                                           String authHeaderValue) {
+      super(restTemplate, builder, authHeaderValue);
+    }
+
+    MyRestLockssRepositoryArtifactIterator(RestTemplate restTemplate,
+                                           UriComponentsBuilder builder,
+                                           String authHeaderValue,
+                                           Params params) {
+      super(restTemplate, builder, authHeaderValue, params);
     }
 
     ThreadData getTD() {
