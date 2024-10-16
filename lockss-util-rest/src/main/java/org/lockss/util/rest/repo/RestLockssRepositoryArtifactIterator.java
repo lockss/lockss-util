@@ -474,6 +474,9 @@ public class RestLockssRepositoryArtifactIterator
     boolean terminated = false;
 
     private ThreadData(Params params) {
+      if (params == null) {
+        params = DEFAULT_PARAMS;
+      }
       if (params.pageSizes != null && !params.pageSizes.isEmpty()) {
         this.pageSizes = new LinkedList<>(params.pageSizes);
       }
