@@ -40,6 +40,7 @@ import org.apache.http.*;
 import org.apache.http.entity.BasicHttpEntity;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.io.*;
+import org.apache.http.io.SessionInputBuffer;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicLineFormatter;
@@ -493,20 +494,28 @@ public class ArtifactDataUtil {
    * @throws IOException
    */
   public static HttpResponse getHttpResponseFromStream(InputStream inputStream) throws HttpException, IOException {
-    // Create a SessionInputBuffer from the InputStream containing a HTTP response
-    SessionInputBufferImpl buffer =
-      getSessionInputBuffer(inputStream);
+    // Create a SessionInputBuffer from the InputStream containing an HTTP response
+    SessionInputBuffer buffer = getSessionInputBuffer(inputStream);
 
     // Parse the InputStream to a HttpResponse object
-    HttpResponse response = (new DefaultHttpResponseParser(buffer)).parse();
-//        long len = (new LaxContentLengthStrategy()).determineLength(response);
+    HttpResponse response = new DefaultHttpResponseParser(buffer).parse();
+
+    // SessionInputBuffer is intended to parse "top-level" HTTP response sessions where the body input stream
+    // should not be closed because that would close the connection, and the connection wants to be drained 
+    // and returned to the pool. Here, the HTTP response is itself the body so that logic does not apply.
+    InputStream wrappedInputStream = new IdentityInputStream(buffer) {
+      @Override
+      public void close() throws IOException {
+        super.close();
+        inputStream.close();
+      }
+    };
 
     // Create and attach an HTTP entity to the HttpResponse
-    BasicHttpEntity responseEntity = new BasicHttpEntity();
-//        responseEntity.setContentLength(len);
-    responseEntity.setContent(new IdentityInputStream(buffer));
-    response.setEntity(responseEntity);
+    BasicHttpEntity entity = new BasicHttpEntity();
+    entity.setContent(wrappedInputStream);
 
+    response.setEntity(entity);
     return response;
   }
 

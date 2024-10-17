@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2000-2019 Board of Trustees of Leland Stanford Jr. University,
+Copyright (c) 2000-2024 Board of Trustees of Leland Stanford Jr. University,
 all rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -102,6 +102,7 @@ public class TestDeferredTempFileOutputStream extends LockssTestCase5 {
     assertArrayEquals(testBytes, dfos.getData());
     verifyResultStream(dfos.getInputStream());
     verifyResultStream(dfos.getDeleteOnCloseInputStream());
+    dfos.deleteTempFile();
   }
 
   /**
@@ -181,6 +182,32 @@ public class TestDeferredTempFileOutputStream extends LockssTestCase5 {
     assertTrue(testFile.exists());
     verifyResultStream(dfos.getDeleteOnCloseInputStream());
     assertFalse(testFile.exists());
+  }
+
+  /**
+   * Cause a DeferredTempFileOutputStream to become unreferences
+   * without having been deleted.  Should cause a "Never deleted"
+   * stacktrace to be logger.
+   */
+  @Test
+  public void testNoDeleteTrace() throws Exception {
+    makeDFOS();
+    System.gc();
+    Thread.sleep(1000);   // Not really needed w/ Cleaner
+  }
+
+  private void makeDFOS() throws IOException {
+    DeferredTempFileOutputStream dfos =
+      new MyDeferredTempFileOutputStream(testBytes.length / 2);
+    int chunkSize = testBytes.length / 3;
+
+    dfos.write(testBytes, 0, chunkSize);
+    dfos.write(testBytes, chunkSize, chunkSize);
+    dfos.write(testBytes, chunkSize * 2,
+	       testBytes.length - chunkSize * 2);
+    dfos.close();
+    assertFalse(dfos.isInMemory());
+    assertNull(dfos.getData());
   }
 
   /**
