@@ -328,9 +328,9 @@ public class ArtifactSpec implements Comparable<Object> {
         throw new IllegalArgumentException("Refusing to generate content > 2GB: "
             + len);
       }
-      setContent(RandomStringUtils.randomAlphabetic((int) len));
+      setContent(RandomStringUtils.insecure().randomAlphabetic((int) len));
     } else {
-      setContent(RandomStringUtils.randomAlphabetic(0, MAX_RANDOM_FILE));
+      setContent(RandomStringUtils.insecure().randomAlphabetic(0, MAX_RANDOM_FILE));
     }
 
     // Set an artificial collection date if not set

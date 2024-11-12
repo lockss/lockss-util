@@ -38,12 +38,12 @@ POSSIBILITY OF SUCH DAMAGE.
   <parent>
     <groupId>org.lockss</groupId>
     <artifactId>lockss-parent-pom</artifactId>
-    <version>1.17.0</version>
+    <version>1.17.1</version>
     <relativePath />
   </parent>
 
   <artifactId>lockss-util-rest</artifactId>
-  <version>1.6.0</version>
+  <version>1.6.1</version>
   <packaging>jar</packaging>
 
   <name>lockss-util-rest</name>
@@ -129,7 +129,7 @@ POSSIBILITY OF SUCH DAMAGE.
     <dependency>
       <groupId>org.apache.cxf</groupId>
       <artifactId>cxf-core</artifactId>
-      <version>4.0.3</version>
+      <version>4.0.4</version>
     </dependency>
 
     <dependency>
