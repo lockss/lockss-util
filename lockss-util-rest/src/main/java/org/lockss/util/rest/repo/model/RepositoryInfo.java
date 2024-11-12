@@ -33,7 +33,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.lockss.util.storage.StorageInfo;
-import org.lockss.util.storage.RepositoryStatistics;
 
 import java.io.Serializable;
 import java.util.Objects;
