@@ -299,7 +299,7 @@ public class RestLockssRepository implements LockssRepository {
               HttpMethod.POST,
               multipartEntity,
               // TODO: Change this to Artifact and remove OjectMapper below
-              String.class, "addArtifact");
+              String.class, "Could not add artifact to remote repository");
 
       // Handle response
       checkStatusOk(response);
@@ -313,8 +313,11 @@ public class RestLockssRepository implements LockssRepository {
       artCache.putArtifactData(res.getNamespace(), res.getIdentifier().getUuid(), artifactData);
 
       return res;
-    } catch (LockssRestException e) {
+    } catch (LockssRestHttpException e) {
       log.error("Could not add artifact", e);
+      if (e.getHttpStatus() == HttpStatus.CONFLICT) {
+        throw new LockssArtifactAlreadyExistsException();
+      }
       throw e;
     }
   }
