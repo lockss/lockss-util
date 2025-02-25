@@ -1266,7 +1266,7 @@ public class RestLockssRepository implements LockssRepository {
       return null;
 
     } catch (LockssRestException e) {
-      log.error("Could not fetch versioned artifact", e);
+      log.warn("Could not fetch versioned artifact: {}", e.getMessage());
       return null;
     }
   }
