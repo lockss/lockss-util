@@ -255,5 +255,5 @@ public interface Constants {
   public static String FORM_ENCODING_PLAIN = "text/plain";
 
   /** Buffer size for WARC file reads */
-  public static int WARC_READ_BUFFER_SIZE = 1024 * 1024 *1024; // One MB
+  public static int WARC_READ_BUFFER_SIZE = 1024 * 1024; // One MB
 }
