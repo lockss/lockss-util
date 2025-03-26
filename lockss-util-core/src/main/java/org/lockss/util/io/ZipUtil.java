@@ -110,9 +110,6 @@ public class ZipUtil {
       ZipEntry entry;
 
       while ((entry = zip.getNextEntry()) != null) {
-	if (entry.isDirectory()) {
-	  continue;
-	}
 	String relpath = entry.getName();
 	if (relpath.startsWith("/")) {
 	  throw new IOException("Absolute paths in zip not allowed:" + relpath);
@@ -121,6 +118,10 @@ public class ZipUtil {
 	if (!file.getCanonicalPath().startsWith(toDir.getCanonicalPath())) {
 	  throw new IOException("Illegal path traversal");
 	}
+        if (entry.isDirectory()) {
+          file.mkdirs();
+          continue;
+        }
 	File parent = file.getParentFile();
 	if (parent != null) {
 	  if (!parent.exists()) {

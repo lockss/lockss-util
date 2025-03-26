@@ -74,8 +74,6 @@ public class Artifact implements Serializable {
     private String auid;
   @JsonProperty("uri")
     private String uri;
-  @JsonProperty("sortUri")
-    private String sortUri;
   @JsonProperty("version")
     private Integer version;
   @JsonProperty("committed")
@@ -198,29 +196,9 @@ public class Artifact implements Serializable {
           throw new IllegalArgumentException("Cannot set null or empty URI");
         }
       this.uri = uri;
-      this.setSortUri(uri.replaceAll("/", "\u0000"));
   }
   public Artifact uri(String uri) {
     setUri(uri);
-    return this;
-  }
-
-  public String getSortUri() {
-    if ((sortUri == null) && (uri != null)) {
-      this.setSortUri(uri.replaceAll("/", "\u0000"));
-    }
-    return sortUri;
-  }
-
-  public void setSortUri(String sortUri) {
-    if (StringUtils.isEmpty(sortUri)) {
-      throw new IllegalArgumentException("Cannot set null or empty SortURI");
-    }
-    this.sortUri = sortUri;
-  }
-
-  public Artifact sortUri(String uri) {
-    setSortUri(uri);
     return this;
   }
 
@@ -355,7 +333,6 @@ public class Artifact implements Serializable {
       ", namespace='" + namespace + '\'' +
       ", auid='" + auid + '\'' +
       ", uri='" + uri + '\'' +
-//                 ", sortUri='" + sortUri + '\'' +
       ", version='" + version + '\'' +
       ", committed=" + committed +
       ", storageUrl='" + storageUrl + '\'' +

@@ -32,6 +32,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 package org.lockss.util;
 
+import java.nio.file.Files;
 import java.util.*;
 
 import org.lockss.util.lang.EncodingUtil;
@@ -253,5 +254,6 @@ public interface Constants {
   /** Form Encoding type string for plain "post" ({@value}). */
   public static String FORM_ENCODING_PLAIN = "text/plain";
 
-
+  /** Buffer size for WARC file reads */
+  public static int WARC_READ_BUFFER_SIZE = 1024 * 1024 *1024; // One MB
 }

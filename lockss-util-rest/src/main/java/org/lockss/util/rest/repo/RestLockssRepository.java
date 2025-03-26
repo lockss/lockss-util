@@ -105,6 +105,7 @@ public class RestLockssRepository implements LockssRepository {
   public static final String MULTIPART_ARTIFACT_HTTP_RESPONSE_HEADER = "httpResponseHeader";
   public static final String MULTIPART_ARTIFACT_PAYLOAD = "payload";
 
+  private File clientTmpDir;
   private RestTemplate restTemplate;
   private URL repositoryUrl;
 
@@ -146,9 +147,6 @@ public class RestLockssRepository implements LockssRepository {
   public RestLockssRepository(URL repositoryUrl, RestTemplate restTemplate, String userName, String password)
       throws IOException {
 
-    // Set RestTemplate used by RestLockssRepository
-    this.restTemplate = restTemplate;
-
     // Set remote Repository service URL
     this.repositoryUrl = repositoryUrl;
 
@@ -159,13 +157,25 @@ public class RestLockssRepository implements LockssRepository {
 
     log.trace("authHeaderValue = {}", authHeaderValue);
 
-    // Install our custom ResponseErrorHandler in the RestTemplate used by this RestLockssRepository
+    setRestTemplate(restTemplate);
+
+    clientTmpDir = FileUtil.createTempDir("repo-client", null);
+  }
+
+  /** Set the RestTemplate for use by RestLockssRepository.  This may
+   * be called after construction to change parameters such as
+   * timeouts.  A ResponseErrorHandler and a MultipartConverter will
+   * be added to the template.
+   * @param restTemplate  Instance of {@code RestTemplate} to use internally for
+   *                      remote REST calls.
+   */
+  public void setRestTemplate(RestTemplate restTemplate) {
+    // Install our custom ResponseErrorHandler in the RestTemplate
+    // used by this RestLockssRepository
     restTemplate.setErrorHandler(new LockssResponseErrorHandler(restTemplate.getMessageConverters()));
-
-    File tmpDir = FileUtil.createTempDir("repo-client", null);
-
     // Add the multipart/form-data converter to the RestTemplate
-    RestUtil.addMultipartConverter(restTemplate, tmpDir);
+    RestUtil.addMultipartConverter(restTemplate, clientTmpDir);
+    this.restTemplate = restTemplate;
   }
 
   /**
@@ -300,7 +310,7 @@ public class RestLockssRepository implements LockssRepository {
               HttpMethod.POST,
               multipartEntity,
               // TODO: Change this to Artifact and remove OjectMapper below
-              String.class, "addArtifact");
+              String.class, "Could not add artifact to remote repository");
 
       // Handle response
       checkStatusOk(response);
@@ -314,8 +324,11 @@ public class RestLockssRepository implements LockssRepository {
       artCache.putArtifactData(res.getNamespace(), res.getIdentifier().getUuid(), artifactData);
 
       return res;
-    } catch (LockssRestException e) {
+    } catch (LockssRestHttpException e) {
       log.error("Could not add artifact", e);
+      if (e.getHttpStatus() == HttpStatus.CONFLICT) {
+        throw new LockssArtifactAlreadyExistsException();
+      }
       throw e;
     }
   }
@@ -1265,7 +1278,7 @@ public class RestLockssRepository implements LockssRepository {
       return null;
 
     } catch (LockssRestException e) {
-      log.error("Could not fetch versioned artifact", e);
+      log.warn("Could not fetch versioned artifact: {}", e.getMessage());
       return null;
     }
   }
