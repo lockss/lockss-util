@@ -119,6 +119,7 @@ POSSIBILITY OF SUCH DAMAGE.
       <groupId>org.mock-server</groupId>
       <artifactId>mockserver-spring-test-listener</artifactId>
       <version>${version.group.mockserver}</version>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
