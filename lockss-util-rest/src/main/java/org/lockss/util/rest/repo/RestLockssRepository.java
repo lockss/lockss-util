@@ -1289,41 +1289,43 @@ public class RestLockssRepository implements LockssRepository {
    * #finishBulkStore(String, String)} completes) */
   public void startBulkStore(String namespace, String auid)
       throws IOException {
-    doBulkOp(namespace, auid, "start");
+    callBulkOp(namespace, auid, "start");
   }
 
   /** Finish a bulk store operation for the namespace/auid.  Blocks
    * until the Artifacts have been moved to the permanent ArtifactIndex. */
   public void finishBulkStore(String namespace, String auid)
       throws IOException {
-    doBulkOp(namespace, auid, "finish");
+    callBulkOp(namespace, auid, "finish");
   }
 
-  void doBulkOp(String namespace, String auid, String op) throws IOException {
-    if (auid == null) {
+  void callBulkOp(String namespace, String auid, String op) throws IOException {
+    if (StringUtils.isEmpty(namespace)) {
       throw new IllegalArgumentException("Null AUID");
     }
 
-    String endpoint = String.format("%s/aus/%s/bulk", repositoryUrl, auid);
-    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
-        .queryParam("op", op);
+    Map<String, String> queryParams = new HashMap<>();
+    queryParams.put("namespace", namespace);
+    queryParams.put("op", op);
 
-    if (namespace != null) {
-      builder.queryParam("namespace", namespace);
-    }
+    Map<String, String> uriParams = new HashMap<>();
+    uriParams.put("auid", auid);
 
-    // Required by REST API specification
-    HttpHeaders headers = getInitializedHttpHeaders();
-    headers.setContentType(MediaType.valueOf("multipart/form-data"));
+    URI endpointUri =
+        RestUtil.getRestUri(repositoryUrl + "/aus/{auid}/bulk", uriParams, queryParams);
+
+    HttpHeaders requestHeaders = getInitializedHttpHeaders();
+    HttpEntity<Void> requestEntity = new HttpEntity<>(null, requestHeaders);
 
     try {
       ResponseEntity<String> response =
           RestUtil.callRestService(restTemplate,
-              builder.build().encode().toUri(),
-              HttpMethod.PUT,
-              new HttpEntity<>(null, headers),
+              endpointUri,
+              HttpMethod.POST,
+              requestEntity,
               String.class,
-              "startBulk");
+              "doBulkOp failed");
+
       checkStatusOk(response);
     } catch (LockssRestException e) {
       log.error("Could not start bulk for: {}", auid, e);
