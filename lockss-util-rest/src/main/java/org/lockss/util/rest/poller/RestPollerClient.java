@@ -31,7 +31,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.lockss.util.rest.poller;
 
+import static org.lockss.ws.entities.HasherWsResult.BLOCK_FILE_TYPE;
+import static org.lockss.ws.entities.HasherWsResult.RECORD_FILE_TYPE;
+
 import com.fasterxml.jackson.core.type.TypeReference;
+import jakarta.activation.DataHandler;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 import org.apache.cxf.attachment.AttachmentDataSource;
 import org.lockss.log.L4JLogger;
 import org.lockss.util.rest.RestBaseClient;
@@ -41,14 +48,6 @@ import org.lockss.util.rest.multipart.MultipartResponse;
 import org.lockss.util.rest.multipart.MultipartResponse.Part;
 import org.lockss.ws.entities.*;
 import org.springframework.http.*;
-
-import jakarta.activation.DataHandler;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
-
-import static org.lockss.ws.entities.HasherWsResult.BLOCK_FILE_TYPE;
-import static org.lockss.ws.entities.HasherWsResult.RECORD_FILE_TYPE;
 
 /**
  * A client of the Poller REST service.
@@ -464,6 +463,51 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
     return result;
   }
 
+  public PollerSummary getPollStatus(String auId) throws LockssRestException {
+    try {
+      try {
+        // Prepare the URI path variables.
+        Map<String, String> uriVariables = new HashMap<>();
+        uriVariables.put("psId", auId);
+        log.trace("uriVariables = {}", uriVariables);
+        // Make the REST call.
+        log.trace("Calling RestUtil.callRestService");
+        ResponseEntity<PollerSummary> response = callRestService("/polls/{psId}", uriVariables,
+            null, HttpMethod.GET, null, null, PollerSummary.class,
+            "Can't get Poll status");
+        log.trace("Back from RestUtil.callRestService");
+        // Get the Response Body
+        PollerSummary result = response.getBody();
+        log.debug2("result = {}", result);
+        return result;
+      } catch (RuntimeException e) {
+        throw new LockssRestException(e);
+      }
+    } catch (RuntimeException e) {
+      throw new LockssRestException(e);
+    }
+  }
+
+  public void cancelPoll(String auId) throws LockssRestException {
+    try {
+
+        // Prepare the URI path variables.
+        Map<String, String> uriVariables = new HashMap<>();
+        uriVariables.put("psId", auId);
+        log.trace("uriVariables = {}", uriVariables);
+        // Make the REST call.
+        log.trace("Calling RestUtil.callRestService");
+        ResponseEntity<Void> response = callRestService("/polls/{psId}", uriVariables,
+            null, HttpMethod.DELETE, null, null, Void.class,
+            "Attempt to cancel Poll failed.");
+        log.trace("Back from RestUtil.callRestService");
+        // Get the Response Body
+        return;
+      } catch (RuntimeException e) {
+        throw new LockssRestException(e);
+      }
+  }
+  
   /**
    * Extracts a single hash result from a multi-part response.
    * 
@@ -665,4 +709,7 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
     log.debug2("wsResults = {}", wsResults);
     return wsResults;
   }
+
+
 }
+
