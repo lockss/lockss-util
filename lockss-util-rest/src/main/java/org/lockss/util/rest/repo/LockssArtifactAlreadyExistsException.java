@@ -33,7 +33,17 @@ POSSIBILITY OF SUCH DAMAGE.
 package org.lockss.util.rest.repo;
 
 import java.io.IOException;
+import org.lockss.util.rest.repo.model.ArtifactIdentifier;
 
 public class LockssArtifactAlreadyExistsException extends IOException  {
-  // Intentionally left blank
+  private ArtifactIdentifier artifactId;
+
+  public LockssArtifactAlreadyExistsException(ArtifactIdentifier artifactId) {
+    super();
+    this.artifactId = artifactId;
+  }
+
+  public ArtifactIdentifier getArtifactId() {
+    return artifactId;
+  }
 }

@@ -327,7 +327,7 @@ public class RestLockssRepository implements LockssRepository {
     } catch (LockssRestHttpException e) {
       log.error("Could not add artifact", e);
       if (e.getHttpStatus() == HttpStatus.CONFLICT) {
-        throw new LockssArtifactAlreadyExistsException();
+        throw new LockssArtifactAlreadyExistsException(artifactId);
       }
       throw e;
     }
