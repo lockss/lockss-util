@@ -2,62 +2,205 @@ package org.lockss.util;
 
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
-import io.kubernetes.client.openapi.Configuration;
-import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.apis.NetworkingV1Api;
-import io.kubernetes.client.openapi.models.V1NetworkPolicyList;
+import io.kubernetes.client.openapi.models.*;
 import io.kubernetes.client.util.ClientBuilder;
 
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.*;
+import java.nio.charset.*;
+
 import java.util.Collections;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.introspector.Property;
+import org.yaml.snakeyaml.nodes.*;
+import org.yaml.snakeyaml.representer.*;
 
 public class K8sClientUtils {
-  private String includeIps;
-  private String excludeIps;
 
-  public static CoreV1Api getCoreV1Api() throws IOException {
-    ApiClient client = ClientBuilder.cluster().build();
-    Configuration.setDefaultApiClient(client);
-    return new CoreV1Api(client);
+  private static volatile ApiClient defaultApiClient;
+  private static volatile NetworkingV1Api cachedNetworkingApi;
+
+  private K8sClientUtils() {
+    // utility class
   }
 
-  public static ApiClient initClusterClient() throws IOException {
-    ApiClient client = ClientBuilder.cluster().build();
-    Configuration.setDefaultApiClient(client);
-    return client;
+  /**
+   * Lazily obtains a memoized NetworkingV1Api instance using the default Kubernetes client.
+   */
+  private static NetworkingV1Api networkingApi() throws java.io.IOException {
+    if (cachedNetworkingApi == null) {
+      synchronized (K8sClientUtils.class) {
+        if (cachedNetworkingApi == null) {
+          ApiClient client = defaultApiClient;
+          if (client == null) {
+            client = io.kubernetes.client.util.Config.defaultClient();
+            io.kubernetes.client.openapi.Configuration.setDefaultApiClient(client);
+            defaultApiClient = client;
+          }
+          cachedNetworkingApi = new io.kubernetes.client.openapi.apis.NetworkingV1Api(client);
+        }
+      }
+    }
+    return cachedNetworkingApi;
   }
 
-  public V1NetworkPolicyList getNetworkPolicies(String namespace) throws ApiException, IOException {
-    // Get the API client
-    ApiClient client = ClientBuilder.cluster().build();
-    Configuration.setDefaultApiClient(client);
-
-    // Create NetworkingV1Api instance
-    NetworkingV1Api networkingV1Api = new NetworkingV1Api(client);
-
+  /**
+   * Reads a NetworkPolicy by name/namespace. Returns null if not found (404).
+   */
+  public static V1NetworkPolicy readNetworkPolicyOrNull(String name, String namespace)
+      throws ApiException, IOException {
     try {
-      // List network policies in the specified namespace
-      V1NetworkPolicyList networkPolicyList = networkingV1Api.listNamespacedNetworkPolicy(
-          namespace,     // namespace
-          null,         // pretty
-          null,         // allowWatchBookmarks
-          null,         // _continue
-          null,         // fieldSelector
-          null,         // labelSelector
-          null,         // limit
-          null,         // resourceVersion
-          null,         // resourceVersionMatch
-          null,         // timeoutSeconds
-          false        // watch
-      );
-
-      return networkPolicyList;
-    } catch (ApiException e) {
-      System.err.println("Exception when calling NetworkingV1Api#listNamespacedNetworkPolicy");
-      System.err.println("Status code: " + e.getCode());
-      System.err.println("Response body: " + e.getResponseBody());
-      throw e;
+      // client-java 24.x uses request builders that require execute()
+      return networkingApi().readNamespacedNetworkPolicy(name, namespace).execute();
+    } catch (ApiException ae) {
+      if (ae.getCode() == 404) {
+        return null;
+      }
+      throw ae;
     }
   }
 
+  /**
+   * Creates a NetworkPolicy in the given namespace.
+   */
+  public static V1NetworkPolicy createNetworkPolicy(V1NetworkPolicy policy)
+      throws ApiException, IOException {
+    validatePolicyMeta(policy);
+    ensureGvk(policy);
+    return networkingApi()
+        .createNamespacedNetworkPolicy(policy.getMetadata().getNamespace(), policy)
+        .execute();
+  }
+
+  /**
+   * Replaces an existing NetworkPolicy by name/namespace with the provided object.
+   * Ensures resourceVersion is set to avoid 409 conflicts.
+   */
+  public static V1NetworkPolicy replaceNetworkPolicy(V1NetworkPolicy policy)
+      throws ApiException, IOException {
+    validatePolicyMeta(policy);
+    ensureGvk(policy);
+
+    String name = policy.getMetadata().getName();
+    String ns = policy.getMetadata().getNamespace();
+
+    // Ensure resourceVersion is present; if not, read current and copy it
+    String rv = policy.getMetadata().getResourceVersion();
+    if (rv == null || rv.isEmpty()) {
+      V1NetworkPolicy current = networkingApi().readNamespacedNetworkPolicy(name, ns).execute();
+      if (current == null || current.getMetadata() == null ||
+          current.getMetadata().getResourceVersion() == null) {
+        throw new ApiException("Cannot determine current resourceVersion for NetworkPolicy " + ns + "/" + name);
+      }
+      policy.getMetadata().setResourceVersion(current.getMetadata().getResourceVersion());
+    }
+
+    return networkingApi()
+        .replaceNamespacedNetworkPolicy(name, ns,policy)
+        .execute();
+  }
+
+  public enum ApplyResult {
+    CREATED,
+    REPLACED,
+    UNCHANGED
+  }
+
+  /**
+   * Creates the NetworkPolicy if it does not exist, otherwise replaces it.
+   * Returns CREATED or REPLACED accordingly.
+   */
+  public static ApplyResult createOrReplaceNetworkPolicy(V1NetworkPolicy policy)
+      throws ApiException, IOException {
+    validatePolicyMeta(policy);
+    String name = policy.getMetadata().getName();
+    String namespace = policy.getMetadata().getNamespace();
+
+    try {
+      // Read to determine existence; do not pass extra params
+      V1NetworkPolicy existing =
+          networkingApi().readNamespacedNetworkPolicy(name, namespace).execute();
+
+      // Copy resourceVersion from existing before replace to avoid 409
+      if (existing != null && existing.getMetadata() != null &&
+          existing.getMetadata().getResourceVersion() != null) {
+        policy.getMetadata().setResourceVersion(existing.getMetadata().getResourceVersion());
+      }
+      replaceNetworkPolicy(policy);
+      return ApplyResult.REPLACED;
+    } catch (ApiException ae) {
+      if (ae.getCode() == 404) {
+        createNetworkPolicy(policy);
+        return ApplyResult.CREATED;
+      }
+      throw ae;
+    }
+  }
+
+  public static void writeNetworkPolicyToFile(V1NetworkPolicy policy, String filename) throws IOException {
+    validatePolicyMeta(policy);
+    ensureGvk(policy);
+
+    Path path = Paths.get(filename);
+    Path parent = path.getParent();
+    if (parent != null) {
+      Files.createDirectories(parent);
+    }
+
+    // Ensure UTF-8 and pretty-printed YAML using SnakeYAML directly
+    try (Writer writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
+      DumperOptions options = new DumperOptions();
+      options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+      options.setPrettyFlow(true);
+      options.setIndent(2);
+      options.setIndicatorIndent(1);
+      options.setSplitLines(false);
+
+      Representer representer = new Representer(options) {
+        protected NodeTuple representJavaBeanProperty(Object javaBean, Property property, Object propertyValue, Tag customTag) {
+          // Omit null properties for cleaner YAML
+          if (propertyValue == null) {
+            return null;
+          }
+          return super.representJavaBeanProperty(javaBean, property, propertyValue, customTag);
+        }
+      };
+      representer.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+
+      Yaml yaml = new Yaml(representer, options);
+      String yamlStr = yaml.dump(policy);
+      writer.write(yamlStr);
+      // Normalize to a single trailing newline (LF) for portability
+      if (!yamlStr.endsWith("\n")) {
+        writer.write("\n");
+      }
+    } catch (Exception ex) {
+      throw new IOException("Failed to write NetworkPolicy YAML to " + filename, ex);
+    }
+  }
+
+  private static void validatePolicyMeta(V1NetworkPolicy policy) {
+    if (policy == null || policy.getMetadata() == null) {
+      throw new IllegalArgumentException(
+          "NetworkPolicy and its metadata must be non-null");
+    }
+    String name = policy.getMetadata().getName();
+    String ns = policy.getMetadata().getNamespace();
+    if (name == null || name.isEmpty() || ns == null || ns.isEmpty()) {
+      throw new IllegalArgumentException(
+          "NetworkPolicy metadata (name, namespace) must be non-empty");
+    }
+  }
+
+  // Ensure required apiVersion/kind for serialization and server validation
+  private static void ensureGvk(V1NetworkPolicy policy) {
+    if (policy.getApiVersion() == null || policy.getApiVersion().isEmpty()) {
+      policy.setApiVersion("networking.k8s.io/v1");
+    }
+    if (policy.getKind() == null || policy.getKind().isEmpty()) {
+      policy.setKind("NetworkPolicy");
+    }
+  }
 }
