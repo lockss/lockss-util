@@ -50,8 +50,8 @@ public class PageInfo   {
   @JsonProperty("totalCount")
   private Integer totalCount = null;
 
-  @JsonProperty("resultsPerPage")
-  private Integer resultsPerPage = null;
+  @JsonProperty("itemsInPage")
+  private Integer itemsInPage = null;
 
   @JsonProperty("continuationToken")
   private String continuationToken = null;
@@ -87,30 +87,30 @@ public class PageInfo   {
     this.totalCount = totalCount;
   }
 
-  public PageInfo resultsPerPage(Integer resultsPerPage) {
-    this.resultsPerPage = resultsPerPage;
+  public PageInfo itemsInPage(Integer itemsInPage) {
+    this.itemsInPage = itemsInPage;
     return this;
   }
 
   /**
-   * The number of results per page
-   * @return resultsPerPage
+   * The number of items in page
+   * @return itemsInPage
    **/
-  @Schema(required = true, description = "The number of results per page")
+  @Schema(required = true, description = "The number of items in page")
       @NotNull
-    public Integer getResultsPerPage() {
-    return resultsPerPage;
+    public Integer getItemsInPage() {
+    return itemsInPage;
   }
 
   /**
-   * Saves the number of results per page.
+   * Saves the number of items in page.
    *
-   * @param resultsPerPage An Integer with the number of results per page.
+   * @param itemsInPage An Integer with the number of items in page.
    */
-  @Schema(required = true, description = "The number of results per page")
+  @Schema(required = true, description = "The number of items in page")
       @NotNull
-  public void setResultsPerPage(Integer resultsPerPage) {
-    this.resultsPerPage = resultsPerPage;
+  public void setItemsInPage(Integer itemsInPage) {
+    this.itemsInPage = itemsInPage;
   }
 
   public PageInfo continuationToken(String continuationToken) {
@@ -195,7 +195,7 @@ public class PageInfo   {
     }
     PageInfo pageInfo = (PageInfo) o;
     return Objects.equals(this.totalCount, pageInfo.totalCount) &&
-	Objects.equals(this.resultsPerPage, pageInfo.resultsPerPage) &&
+	Objects.equals(this.itemsInPage, pageInfo.itemsInPage) &&
         Objects.equals(this.continuationToken, pageInfo.continuationToken) &&
         Objects.equals(this.curLink, pageInfo.curLink) &&
         Objects.equals(this.nextLink, pageInfo.nextLink);
@@ -203,7 +203,7 @@ public class PageInfo   {
 
   @Override
   public int hashCode() {
-    return Objects.hash(totalCount, resultsPerPage, continuationToken, curLink,
+    return Objects.hash(totalCount, itemsInPage, continuationToken, curLink,
 	nextLink);
   }
 
@@ -213,7 +213,7 @@ public class PageInfo   {
     sb.append("PageInfo [\n");
 
     sb.append("    totalCount: ").append(toIndentedString(totalCount)).append("\n");
-    sb.append("    resultsPerPage: ").append(toIndentedString(resultsPerPage)).append("\n");
+    sb.append("    itemsInPage: ").append(toIndentedString(itemsInPage)).append("\n");
     sb.append("    continuationToken: ").append(toIndentedString(continuationToken)).append("\n");
     sb.append("    curLink: ").append(toIndentedString(curLink)).append("\n");
     sb.append("    nextLink: ").append(toIndentedString(nextLink)).append("\n");
