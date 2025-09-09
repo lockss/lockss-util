@@ -130,7 +130,7 @@ public class K8sClientUtils {
     }
 
     return networkingApi()
-        .replaceNamespacedNetworkPolicy(name, ns,policy)
+        .replaceNamespacedNetworkPolicy(name, ns, policy)
         .execute();
   }
 
