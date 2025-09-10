@@ -32,27 +32,17 @@ POSSIBILITY OF SUCH DAMAGE.
 
 package org.lockss.util;
 
-import io.kubernetes.client.openapi.ApiClient;
-import io.kubernetes.client.openapi.ApiException;
-import io.kubernetes.client.openapi.apis.NetworkingV1Api;
+import io.kubernetes.client.openapi.*;
+import io.kubernetes.client.openapi.apis.*;
 import io.kubernetes.client.openapi.models.*;
-import io.kubernetes.client.util.ClientBuilder;
-
 import java.io.*;
-import java.nio.file.*;
 import java.nio.charset.*;
-
-import java.util.Collections;
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.introspector.Property;
-import org.yaml.snakeyaml.nodes.*;
-import org.yaml.snakeyaml.representer.*;
+import java.nio.file.*;
 
 public class K8sClientUtils {
 
-  private static volatile ApiClient defaultApiClient;
-  private static volatile NetworkingV1Api cachedNetworkingApi;
+  private static  ApiClient defaultApiClient;
+  private static  NetworkingV1Api cachedNetworkingApi;
 
   private K8sClientUtils() {
     // utility class
@@ -84,7 +74,6 @@ public class K8sClientUtils {
   public static V1NetworkPolicy readNetworkPolicyOrNull(String name, String namespace)
       throws ApiException, IOException {
     try {
-      // client-java 24.x uses request builders that require execute()
       return networkingApi().readNamespacedNetworkPolicy(name, namespace).execute();
     } catch (ApiException ae) {
       if (ae.getCode() == 404) {
@@ -171,41 +160,31 @@ public class K8sClientUtils {
     }
   }
 
-  public static void writeNetworkPolicyToFile(V1NetworkPolicy policy, String filename) throws IOException {
+
+  public static void writeNetworkPolicyToFile(V1NetworkPolicy policy, String filename)
+      throws IOException {
     validatePolicyMeta(policy);
     ensureGvk(policy);
 
     Path path = Paths.get(filename);
-    Path parent = path.getParent();
-    if (parent != null) {
-      Files.createDirectories(parent);
+    Path parentDir = path.getParent();
+    if (parentDir != null) {
+      Files.createDirectories(parentDir);
     }
 
-    // Ensure UTF-8 and pretty-printed YAML using SnakeYAML directly
     try (Writer writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
-      DumperOptions options = new DumperOptions();
-      options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-      options.setPrettyFlow(true);
-      options.setIndent(2);
-      options.setIndicatorIndent(1);
-      options.setSplitLines(false);
+      // Get the ApiClient to use its serialization capabilities
+      ApiClient apiClient = defaultApiClient;
+      if (apiClient == null) {
+        apiClient = io.kubernetes.client.util.Config.defaultClient();
+      }
 
-      Representer representer = new Representer(options) {
-        protected NodeTuple representJavaBeanProperty(Object javaBean, Property property, Object propertyValue, Tag customTag) {
-          // Omit null properties for cleaner YAML
-          if (propertyValue == null) {
-            return null;
-          }
-          return super.representJavaBeanProperty(javaBean, property, propertyValue, customTag);
-        }
-      };
-      representer.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+      // Use the Kubernetes client's YAML serializer
+      String yamlContent = io.kubernetes.client.util.Yaml.dump(policy);
 
-      Yaml yaml = new Yaml(representer, options);
-      String yamlStr = yaml.dump(policy);
-      writer.write(yamlStr);
-      // Normalize to a single trailing newline (LF) for portability
-      if (!yamlStr.endsWith("\n")) {
+      // Write the content and ensure a trailing newline
+      writer.write(yamlContent);
+      if (!yamlContent.endsWith("\n")) {
         writer.write("\n");
       }
     } catch (Exception ex) {
