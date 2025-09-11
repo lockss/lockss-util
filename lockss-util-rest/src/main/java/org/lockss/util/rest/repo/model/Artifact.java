@@ -38,6 +38,8 @@ import org.lockss.log.L4JLogger;
 import org.lockss.util.StringPool;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -340,6 +342,43 @@ public class Artifact implements Serializable {
       ", contentDigest='" + contentDigest + '\'' +
       ", collectionDate='" + collectionDate + '\'' +
       '}';
+  }
+
+  public String toStringShort(String style) {
+    List<String> lst = new ArrayList<>();
+
+    if (style.indexOf("uuid") >= 0) {
+      lst.add("uuid="+uuid);
+    }
+    if (style.indexOf("namespace") >= 0) {
+      lst.add("namespace="+namespace);
+    }
+    if (style.indexOf("auid") >= 0) {
+      lst.add("auid="+auid);
+    }
+    if (style.indexOf("uri") >= 0) {
+      lst.add("uri="+uri);
+    }
+    if (style.indexOf("version") >= 0) {
+      lst.add("version="+version);
+    }
+    if (style.indexOf("committed") >= 0) {
+      lst.add("committed="+committed);
+    }
+    if (style.indexOf("storageUrl") >= 0) {
+      lst.add("storageUrl="+storageUrl);
+    }
+    if (style.indexOf("contentLength") >= 0) {
+      lst.add("contentLength="+contentLength);
+    }
+    if (style.indexOf("contentDigest") >= 0) {
+      lst.add("contentDigest="+contentDigest);
+    }
+    if (style.indexOf("collectionDate") >= 0) {
+      lst.add("collectionDate="+collectionDate);
+    }
+
+    return "Artifact{" + String.join(", ", lst.toArray(new String[0])) + "}";
   }
 
     @Override
