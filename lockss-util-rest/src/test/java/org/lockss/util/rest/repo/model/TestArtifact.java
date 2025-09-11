@@ -289,4 +289,14 @@ public class TestArtifact extends LockssTestCase5 {
       assertEquals("aa:bb:uuu:123", Artifact.makeKey("aa", "bb", "uuu", 123));
       assertEquals("aa:bb:uuu:-1", Artifact.makeLatestKey("aa", "bb", "uuu"));
     }
+
+    @Test
+    public void testToString() {
+      Artifact art =
+	new Artifact("aidid", NS1, "auid", "uri", 123, true, "surl", 0, null);
+      assertEquals("Artifact{uuid='aidid', namespace='ns1', auid='auid', uri='uri', version='123', committed=true, storageUrl='surl', contentLength='0', contentDigest='null', collectionDate='0'}",
+                   art.toString());
+      assertEquals("Artifact{uuid=aidid, auid=auid, uri=uri}",
+                   art.toStringShort("uri,auid,uuid"));
+    }
 }
