@@ -107,17 +107,6 @@ public class K8sClientUtils {
     String name = policy.getMetadata().getName();
     String ns = policy.getMetadata().getNamespace();
 
-    // Ensure resourceVersion is present; if not, read current and copy it
-    String rv = policy.getMetadata().getResourceVersion();
-    if (rv == null || rv.isEmpty()) {
-      V1NetworkPolicy current = networkingApi().readNamespacedNetworkPolicy(name, ns).execute();
-      if (current == null || current.getMetadata() == null ||
-          current.getMetadata().getResourceVersion() == null) {
-        throw new ApiException("Cannot determine current resourceVersion for NetworkPolicy " + ns + "/" + name);
-      }
-      policy.getMetadata().setResourceVersion(current.getMetadata().getResourceVersion());
-    }
-
     return networkingApi()
         .replaceNamespacedNetworkPolicy(name, ns, policy)
         .execute();
