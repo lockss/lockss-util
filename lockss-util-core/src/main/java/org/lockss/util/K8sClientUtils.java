@@ -32,12 +32,18 @@ POSSIBILITY OF SUCH DAMAGE.
 
 package org.lockss.util;
 
-import io.kubernetes.client.openapi.*;
-import io.kubernetes.client.openapi.apis.*;
-import io.kubernetes.client.openapi.models.*;
-import java.io.*;
-import java.nio.charset.*;
-import java.nio.file.*;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.apis.NetworkingV1Api;
+import io.kubernetes.client.openapi.models.V1NetworkPolicy;
+import io.kubernetes.client.util.ClientBuilder;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class K8sClientUtils {
 
@@ -57,7 +63,7 @@ public class K8sClientUtils {
         if (cachedNetworkingApi == null) {
           ApiClient client = defaultApiClient;
           if (client == null) {
-            client = io.kubernetes.client.util.Config.defaultClient();
+            client = ClientBuilder.cluster().build();
             io.kubernetes.client.openapi.Configuration.setDefaultApiClient(client);
             defaultApiClient = client;
           }
@@ -67,6 +73,7 @@ public class K8sClientUtils {
     }
     return cachedNetworkingApi;
   }
+
 
   /**
    * Reads a NetworkPolicy by name/namespace. Returns null if not found (404).
