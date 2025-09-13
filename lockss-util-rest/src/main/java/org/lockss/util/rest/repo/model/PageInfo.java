@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2000-2019 Board of Trustees of Leland Stanford Jr. University,
+Copyright (c) 2000-2025 Board of Trustees of Leland Stanford Jr. University,
 all rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -33,6 +33,7 @@ package org.lockss.util.rest.repo.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.validation.annotation.Validated;
 
@@ -41,11 +42,9 @@ import java.util.Objects;
 /**
  * The information related to pagination of content.
  */
-@Schema(description = "The information related to pagination of content")
+@Schema(title = "Page Information",
+        description = "The information related to pagination of content")
 @Validated
-
-
-
 public class PageInfo   {
   @JsonProperty("totalCount")
   private Integer totalCount = null;
@@ -68,13 +67,15 @@ public class PageInfo   {
   }
 
   /**
-   * The total number of results
+   * The total number of items
    * @return totalCount
    **/
-  @Schema(required = true, description = "The total number of results")
-      @NotNull
-
-    public Integer getTotalCount() {
+  @Schema(requiredMode = RequiredMode.REQUIRED,
+          nullable = true,
+          title = "Total Count",
+          description = "The total number of items")
+  @NotNull
+  public Integer getTotalCount() {
     return totalCount;
   }
 
@@ -93,12 +94,15 @@ public class PageInfo   {
   }
 
   /**
-   * The number of items in page
+   * The number of items in the page
    * @return itemsInPage
    **/
-  @Schema(required = true, description = "The number of items in page")
-      @NotNull
-    public Integer getItemsInPage() {
+  @Schema(requiredMode = RequiredMode.REQUIRED,
+          nullable = false,
+          title = "Items in Page",
+          description = "The number of items in the page")
+  @NotNull
+  public Integer getItemsInPage() {
     return itemsInPage;
   }
 
@@ -107,8 +111,6 @@ public class PageInfo   {
    *
    * @param itemsInPage An Integer with the number of items in page.
    */
-  @Schema(required = true, description = "The number of items in page")
-      @NotNull
   public void setItemsInPage(Integer itemsInPage) {
     this.itemsInPage = itemsInPage;
   }
@@ -122,9 +124,12 @@ public class PageInfo   {
    * The continuation token
    * @return continuationToken
    **/
-  @Schema(required = true, description = "The continuation token")
-      @NotNull
-    public String getContinuationToken() {
+  @Schema(requiredMode = RequiredMode.REQUIRED,
+          nullable = true,
+          title = "Continuation Token",
+          description = "The continuation token")
+  @NotNull
+  public String getContinuationToken() {
     return continuationToken;
   }
 
@@ -146,9 +151,12 @@ public class PageInfo   {
    * The link of the current request
    * @return curLink
    **/
-  @Schema(required = true, description = "The link of the current request")
-      @NotNull
-    public String getCurLink() {
+  @Schema(requiredMode = RequiredMode.REQUIRED,
+          nullable = false,
+          title = "Current Request",
+          description = "The link of the current request")
+  @NotNull
+  public String getCurLink() {
     return curLink;
   }
 
@@ -170,9 +178,12 @@ public class PageInfo   {
    * The link of the next request
    * @return nextLink
    **/
-  @Schema(required = true, description = "The link of the next request")
-      @NotNull
-    public String getNextLink() {
+  @Schema(requiredMode = RequiredMode.REQUIRED,
+          nullable = true,
+          title = "Next Request",
+          description = "The link of the next request")
+  @NotNull
+  public String getNextLink() {
     return nextLink;
   }
 
