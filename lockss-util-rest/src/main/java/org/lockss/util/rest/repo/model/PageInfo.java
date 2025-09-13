@@ -28,7 +28,8 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- */
+*/
+
 package org.lockss.util.rest.repo.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -70,10 +71,10 @@ public class PageInfo   {
    * The total number of items
    * @return totalCount
    **/
-  @Schema(requiredMode = RequiredMode.REQUIRED,
-          nullable = true,
-          title = "Total Count",
-          description = "The total number of items")
+  @Schema(title = "Total Count",
+      description = "The total number of items",
+      requiredMode = RequiredMode.REQUIRED,
+      nullable = true)
   @NotNull
   public Integer getTotalCount() {
     return totalCount;
@@ -97,10 +98,10 @@ public class PageInfo   {
    * The number of items in the page
    * @return itemsInPage
    **/
-  @Schema(requiredMode = RequiredMode.REQUIRED,
-          nullable = false,
-          title = "Items in Page",
-          description = "The number of items in the page")
+  @Schema(title = "Items in Page",
+          description = "The number of items in the page",
+          requiredMode = RequiredMode.REQUIRED,
+          nullable = false)
   @NotNull
   public Integer getItemsInPage() {
     return itemsInPage;
@@ -124,10 +125,10 @@ public class PageInfo   {
    * The continuation token
    * @return continuationToken
    **/
-  @Schema(requiredMode = RequiredMode.REQUIRED,
-          nullable = true,
-          title = "Continuation Token",
-          description = "The continuation token")
+  @Schema(title = "Continuation Token",
+          description = "The continuation token",
+          requiredMode = RequiredMode.REQUIRED,
+          nullable = true)
   @NotNull
   public String getContinuationToken() {
     return continuationToken;
@@ -151,10 +152,10 @@ public class PageInfo   {
    * The link of the current request
    * @return curLink
    **/
-  @Schema(requiredMode = RequiredMode.REQUIRED,
-          nullable = false,
-          title = "Current Request",
-          description = "The link of the current request")
+  @Schema(title = "Current Request",
+          description = "The link of the current request",
+          requiredMode = RequiredMode.REQUIRED,
+          nullable = false)
   @NotNull
   public String getCurLink() {
     return curLink;
@@ -178,10 +179,10 @@ public class PageInfo   {
    * The link of the next request
    * @return nextLink
    **/
-  @Schema(requiredMode = RequiredMode.REQUIRED,
-          nullable = true,
-          title = "Next Request",
-          description = "The link of the next request")
+  @Schema(title = "Next Request",
+          description = "The link of the next request",
+          requiredMode = RequiredMode.REQUIRED,
+          nullable = true)
   @NotNull
   public String getNextLink() {
     return nextLink;
