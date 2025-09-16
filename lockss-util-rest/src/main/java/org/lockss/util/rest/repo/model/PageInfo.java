@@ -72,9 +72,9 @@ public class PageInfo   {
    * @return totalCount
    **/
   @Schema(title = "Total Count",
-      description = "The total number of items",
-      requiredMode = RequiredMode.REQUIRED,
-      nullable = true)
+          description = "The total number of items",
+          requiredMode = RequiredMode.REQUIRED,
+          nullable = true)
   @NotNull
   public Integer getTotalCount() {
     return totalCount;
