@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2000-2019 Board of Trustees of Leland Stanford Jr. University,
+Copyright (c) 2000-2025 Board of Trustees of Leland Stanford Jr. University,
 all rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -37,6 +37,8 @@ import java.util.List;
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
+
 import org.springframework.validation.annotation.Validated;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -71,10 +73,13 @@ public class ArtifactPageInfo   {
    * The artifacts included in the page
    * @return artifacts
    **/
-  @Schema(required = true, description = "The artifacts included in the page")
-      @NotNull
-    @Valid
-    public List<Artifact> getArtifacts() {
+  @Schema(title = "Artifacts",
+          description = "The artifacts included in the page",
+          requiredMode = RequiredMode.REQUIRED,
+          nullable = false)
+  @NotNull
+  @Valid
+  public List<Artifact> getArtifacts() {
     return artifacts;
   }
 
@@ -92,14 +97,16 @@ public class ArtifactPageInfo   {
   }
 
   /**
-   * Get pageInfo
+   * Information about the page
    * @return pageInfo
    **/
-  @Schema(required = true, description = "")
-      @NotNull
-
-    @Valid
-    public PageInfo getPageInfo() {
+  @Schema(title = "Page Information",
+          description = "Information about the page",
+          requiredMode = RequiredMode.REQUIRED,
+          nullable = false)
+  @NotNull
+  @Valid
+  public PageInfo getPageInfo() {
     return pageInfo;
   }
 
