@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2000-2019 Board of Trustees of Leland Stanford Jr. University,
+Copyright (c) 2000-2025 Board of Trustees of Leland Stanford Jr. University,
 all rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,7 +28,8 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- */
+*/
+
 package org.lockss.util.rest.repo.model;
 
 import java.util.ArrayList;
@@ -37,8 +38,8 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.ArrayList;
-import java.util.List;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
+
 import org.springframework.validation.annotation.Validated;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -70,13 +71,15 @@ public class AuidPageInfo   {
   }
 
   /**
-   * The Archival Unit identifiers included in the page
+   * The AUIDs included in the page
    * @return auids
    **/
-  @Schema(required = true, description = "The Archival Unit identifiers included in the page")
-      @NotNull
-
-    public List<String> getAuids() {
+  @Schema(title = "AUIDs",
+          description = "The AUIDs included in the page",
+          requiredMode = RequiredMode.REQUIRED,
+          nullable = false)
+  @NotNull
+  public List<String> getAuids() {
     return auids;
   }
 
@@ -96,14 +99,16 @@ public class AuidPageInfo   {
   }
 
   /**
-   * Get pageInfo
+   * Information about the page
    * @return pageInfo
    **/
-  @Schema(required = true, description = "")
-      @NotNull
-
-    @Valid
-    public PageInfo getPageInfo() {
+  @Schema(title = "Page Information",
+          description = "Information about the page",
+          requiredMode = RequiredMode.REQUIRED,
+          nullable = false)
+  @NotNull
+  @Valid
+  public PageInfo getPageInfo() {
     return pageInfo;
   }
 
