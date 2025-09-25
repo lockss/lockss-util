@@ -44,6 +44,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Iterator;
+import java.util.List;
 
 public class K8sClientUtils {
 
@@ -157,10 +159,12 @@ public class K8sClientUtils {
   }
 
 
-  public static void writeNetworkPolicyToFile(V1NetworkPolicy policy, String filename)
+  public static void writeNetworkPolicyToFile(String filename, V1NetworkPolicy... policies)
       throws IOException {
-    validatePolicyMeta(policy);
-    ensureGvk(policy);
+    for (V1NetworkPolicy policy : policies) {
+      validatePolicyMeta(policy);
+      ensureGvk(policy);
+    }
 
     Path path = Paths.get(filename);
     Path parentDir = path.getParent();
@@ -175,13 +179,23 @@ public class K8sClientUtils {
         apiClient = io.kubernetes.client.util.Config.defaultClient();
       }
 
-      // Use the Kubernetes client's YAML serializer
-      String yamlContent = io.kubernetes.client.util.Yaml.dump(policy);
+      Iterator<V1NetworkPolicy> itr = List.of(policies).iterator();
 
-      // Write the content and ensure a trailing newline
-      writer.write(yamlContent);
-      if (!yamlContent.endsWith("\n")) {
-        writer.write("\n");
+      while (itr.hasNext()) {
+        V1NetworkPolicy policy = itr.next();
+        // Use the Kubernetes client's YAML serializer
+        String yamlContent = io.kubernetes.client.util.Yaml.dump(policy);
+
+        // Write the content and ensure a trailing newline
+        writer.write(yamlContent);
+        if (!yamlContent.endsWith("\n")) {
+          writer.write("\n");
+        }
+
+        // Write a separator if there are more policies to write
+        if (itr.hasNext()) {
+          writer.write("---\n");
+        }
       }
     } catch (Exception ex) {
       throw new IOException("Failed to write NetworkPolicy YAML to " + filename, ex);
