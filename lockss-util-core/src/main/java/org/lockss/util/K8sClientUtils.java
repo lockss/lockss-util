@@ -173,12 +173,6 @@ public class K8sClientUtils {
     }
 
     try (Writer writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
-      // Get the ApiClient to use its serialization capabilities
-      ApiClient apiClient = defaultApiClient;
-      if (apiClient == null) {
-        apiClient = io.kubernetes.client.util.Config.defaultClient();
-      }
-
       Iterator<V1NetworkPolicy> itr = List.of(policies).iterator();
 
       while (itr.hasNext()) {
