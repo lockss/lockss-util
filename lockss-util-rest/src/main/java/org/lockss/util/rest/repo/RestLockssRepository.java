@@ -124,6 +124,7 @@ public class RestLockssRepository implements LockssRepository {
    * @param password      A String with the password of the user used to access
    *                      the remote LOCKSS Repository service.
    */
+  @Deprecated
   public RestLockssRepository(URL repositoryUrl, String userName, String password) throws IOException {
     this(repositoryUrl,
         RestUtil.getRestTemplate(0, 0, (int) (16 * FileUtils.ONE_MB), null),
