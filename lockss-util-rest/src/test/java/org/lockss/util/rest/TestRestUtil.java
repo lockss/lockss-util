@@ -27,34 +27,45 @@
  */
 package org.lockss.util.rest;
 
-import java.io.*;
-import java.util.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.hc.client5.http.ConnectTimeoutException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.lockss.log.L4JLogger;
+import org.lockss.util.ListUtil;
+import org.lockss.util.MapUtil;
+import org.lockss.util.rest.RestUtil.LockssRestTemplateSettings;
+import org.lockss.util.rest.RestUtil.LockssRestTemplateSettingsBuilder;
+import org.lockss.util.rest.exception.LockssRestException;
+import org.lockss.util.rest.exception.LockssRestHttpException;
+import org.lockss.util.rest.multipart.MultipartMessage;
+import org.lockss.util.rest.multipart.MultipartMessageHttpMessageConverter;
+import org.lockss.util.rest.multipart.MultipartResponse;
+import org.lockss.util.test.LockssTestCase5;
+import org.mockserver.client.MockServerClient;
+import org.mockserver.configuration.Configuration;
+import org.mockserver.junit.jupiter.MockServerExtension;
+import org.mockserver.model.Header;
+import org.springframework.http.*;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.io.IOException;
 import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.UnknownHostException;
-import org.apache.hc.client5.http.ConnectTimeoutException;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.*;
-import org.lockss.util.*;
-import org.lockss.util.rest.exception.*;
-import org.lockss.util.rest.multipart.*;
-import org.lockss.util.test.*;
-import org.lockss.log.*;
-import com.fasterxml.jackson.core.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.*;
-import org.springframework.http.converter.FormHttpMessageConverter;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
-import org.mockserver.client.*;
-import org.mockserver.junit.*;
-import org.mockserver.junit.jupiter.*;
-import org.mockserver.model.Header;
-import static org.mockserver.model.HttpRequest.*;
-import static org.mockserver.model.HttpResponse.*;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import static org.mockserver.model.HttpError.error;
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
 
 /**
  * Test class for org.lockss.util.rest.RestUtil.
@@ -333,6 +344,42 @@ public class TestRestUtil extends LockssTestCase5 {
       fail("Should have thrown, but returned: " + resp);
     } catch (LockssRestHttpException e) {
       assertEquals(HttpStatus.UNAUTHORIZED, e.getHttpStatus());
+    }
+  }
+
+  @Test
+  public void testConnectionTimeout() throws Exception {
+    RestTemplate template = RestUtil.getRestTemplate(1, 1000);
+
+    try {
+      ResponseEntity<String> resp =
+          template.exchange("http://10.255.255.1/foo", HttpMethod.GET, null, String.class);
+      fail("Should have thrown, but returned: " + resp);
+    } catch (ResourceAccessException e) {
+      assertMatchesRE(".*Connect to .* timed out", e.getMessage());
+    }
+  }
+
+  @Test
+  public void testReadTimeout() throws Exception {
+    msClient
+        .when(request()
+            .withMethod("GET")
+            .withPath("/foo"))
+        .respond(response()
+            .withDelay(TimeUnit.SECONDS, 1)
+            .withStatusCode(200)
+            .withHeaders(new Header("Content-Type", "text/plain"))
+            .withBody("Hello"));
+
+    RestTemplate template = RestUtil.getRestTemplate(1000, 1);
+
+    try {
+      ResponseEntity<String> resp =
+          template.exchange("http://localhost:" + port + "/foo", HttpMethod.GET, null, String.class);
+      fail("Should have thrown, but returned: " + resp);
+    } catch (ResourceAccessException e) {
+      assertMatchesRE(".*Read timed out", e.getMessage());
     }
   }
 
