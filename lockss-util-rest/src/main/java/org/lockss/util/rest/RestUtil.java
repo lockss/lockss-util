@@ -30,6 +30,7 @@ package org.lockss.util.rest;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
@@ -361,7 +362,8 @@ public class RestUtil {
 
   private static HttpClient createHttpClient(LockssRestTemplateSettings settings) {
     PoolingHttpClientConnectionManager connectionManager = createPoolingConnectionManager(settings);
-    return HttpClientBuilder.create().useSystemProperties().setConnectionManager(connectionManager).build();
+    return HttpClientBuilder.create().useSystemProperties().setConnectionManager(connectionManager)
+        .build();
   }
 
   private static PoolingHttpClientConnectionManager createPoolingConnectionManager(LockssRestTemplateSettings settings) {
@@ -375,6 +377,12 @@ public class RestUtil {
         .setSoTimeout((int) settings.readTimeout(), TimeUnit.MILLISECONDS)
         .build();
     connectionManagerBuilder.setDefaultSocketConfig(socketConfig);
+
+    ConnectionConfig connectionConfig = ConnectionConfig.custom()
+        .setConnectTimeout((int) settings.connectTimeout(), TimeUnit.MILLISECONDS)
+        .setSocketTimeout((int) settings.readTimeout(), TimeUnit.MILLISECONDS)
+        .build();
+    connectionManagerBuilder.setDefaultConnectionConfig(connectionConfig);
 
     if (settings.sslBundle() != null) {
       SslOptions options = settings.sslBundle().getOptions();
@@ -449,8 +457,12 @@ public class RestUtil {
     SslBundle sslBundle) {
 
     public static LockssRestTemplateSettings withTimeouts(long connectTimeout, long readTimeout) {
-      return new LockssRestTemplateSettings(connectTimeout, readTimeout,
-          DEFAULT_MAX_CONNECTIONS, DEFAULT_MAX_CONNECTIONS_PER_ROUTE, 0, null, null);
+      return new LockssRestTemplateSettingsBuilder()
+          .setConnectTimeout(connectTimeout)
+          .setReadTimeout(readTimeout)
+          .setMaxConnections(DEFAULT_MAX_CONNECTIONS)
+          .setMaxConnectionsPerRoute(DEFAULT_MAX_CONNECTIONS_PER_ROUTE)
+          .build();
     }
   }
 
