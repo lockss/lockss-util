@@ -44,6 +44,7 @@ import org.lockss.util.rest.multipart.MultipartMessage;
 import org.lockss.util.rest.multipart.MultipartMessageHttpMessageConverter;
 import org.lockss.util.rest.multipart.MultipartResponse;
 import org.lockss.util.test.LockssTestCase5;
+import org.lockss.util.time.TimeBase;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.junit.jupiter.MockServerExtension;
@@ -367,18 +368,23 @@ public class TestRestUtil extends LockssTestCase5 {
             .withMethod("GET")
             .withPath("/foo"))
         .respond(response()
-            .withDelay(TimeUnit.SECONDS, 1)
+            .withDelay(TimeUnit.SECONDS, 10)
             .withStatusCode(200)
             .withHeaders(new Header("Content-Type", "text/plain"))
             .withBody("Hello"));
 
-    RestTemplate template = RestUtil.getRestTemplate(1000, 1);
+    RestTemplate template = RestUtil.getRestTemplate(1000, 1000);
 
+    long startMs = TimeBase.nowMs();
     try {
       ResponseEntity<String> resp =
           template.exchange("http://localhost:" + port + "/foo", HttpMethod.GET, null, String.class);
       fail("Should have thrown, but returned: " + resp);
     } catch (ResourceAccessException e) {
+      if (TimeBase.msSince(startMs) < 1000) {
+        fail("Should have taken at least 1 second to throw a read timeout exception, but took " +
+             TimeBase.msSince(startMs) + " ms");
+      }
       assertMatchesRE(".*Read timed out", e.getMessage());
     }
   }
