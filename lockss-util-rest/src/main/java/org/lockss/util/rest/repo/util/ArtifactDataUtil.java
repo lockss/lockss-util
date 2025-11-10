@@ -51,10 +51,7 @@ import org.lockss.util.rest.multipart.MultipartMessage;
 import org.lockss.util.rest.multipart.MultipartResponse;
 import org.lockss.util.rest.repo.LockssRepository;
 import org.lockss.util.rest.repo.RestLockssRepository;
-import org.lockss.util.rest.repo.model.Artifact;
-import org.lockss.util.rest.repo.model.ArtifactData;
-import org.lockss.util.rest.repo.model.ArtifactIdentifier;
-import org.lockss.util.rest.repo.model.ArtifactProperties;
+import org.lockss.util.rest.repo.model.*;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
@@ -308,7 +305,7 @@ public class ArtifactDataUtil {
     }
 
   public static MultiValueMap<String, Object> generateMultipartMapFromArtifactData(
-      ArtifactData artifactData, LockssRepository.IncludeContent includeContent, long smallContentThreshold)
+      ArtifactData artifactData, IncludeContentEnum includeContent, long smallContentThreshold)
       throws IOException {
 
     String artifactUuid = artifactData.getIdentifier().getUuid();
@@ -352,9 +349,8 @@ public class ArtifactDataUtil {
     }
 
     //// Add artifact content part if requested or if small enough
-    if ((includeContent == LockssRepository.IncludeContent.ALWAYS) ||
-        (includeContent == LockssRepository.IncludeContent.IF_SMALL
-            && artifactData.getContentLength() <= smallContentThreshold)) {
+    if ((includeContent == IncludeContentEnum.ALWAYS) ||
+        (includeContent == IncludeContentEnum.IF_SMALL && artifactData.getContentLength() <= smallContentThreshold)) {
 
       // Create content part headers
       HttpHeaders partHeaders = new HttpHeaders();
