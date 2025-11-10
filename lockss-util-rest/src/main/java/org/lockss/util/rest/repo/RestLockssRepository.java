@@ -195,11 +195,11 @@ public class RestLockssRepository implements LockssRepository {
    *
    * @param namespace A {@code String} containing the namespace.
    * @param artifactUuid A {@code String} containing the artifact UUID.
-   * @param includeContent An {@link IncludeContent} indicating whether the artifact content part can or should be
-   *                       included in the multipart response. Default is {@link IncludeContent#ALWAYS}.
+   * @param includeContent An {@link IncludeContentEnum} indicating whether the artifact content part can or should be
+   *                       included in the multipart response. Default is {@link IncludeContentEnum#ALWAYS}.
    * @return A {@code URI} containing the REST endpoint to an artifact in the repository.
    */
-  private URI artifactEndpoint(String namespace, String artifactUuid, IncludeContent includeContent) {
+  private URI artifactEndpoint(String namespace, String artifactUuid, IncludeContentEnum includeContent) {
     Map<String, String> uriParams = new HashMap<>();
     uriParams.put("uuid", artifactUuid);
 
@@ -233,7 +233,7 @@ public class RestLockssRepository implements LockssRepository {
   }
 
   private URI artifactDataEndpoint(String namespace, String artifactUuid, ArtifactDataType type,
-                                   IncludeContent includeContent) {
+                                   IncludeContentEnum includeContent) {
 
     Map<String, String> uriParams = new HashMap<>();
     Map<String, String> queryParams = new HashMap<>();
@@ -293,7 +293,7 @@ public class RestLockssRepository implements LockssRepository {
 
     // Transform ArtifactData into multiparts
     MultiValueMap<String, Object> parts =
-        ArtifactDataUtil.generateMultipartMapFromArtifactData(artifactData, IncludeContent.ALWAYS, 0);
+        ArtifactDataUtil.generateMultipartMapFromArtifactData(artifactData, IncludeContentEnum.ALWAYS, 0);
 
     // POST request body
     HttpEntity<MultiValueMap<String, Object>> multipartEntity =
@@ -423,13 +423,13 @@ public class RestLockssRepository implements LockssRepository {
    * Retrieves an artifact from a remote REST LOCKSS Repository server.
    *
    * @param artifact The {@link Artifact} of the {@link ArtifactData} to return.
-   * @param includeContent A {@link IncludeContent} indicating whether the artifact content should be included in the
+   * @param includeContent A {@link IncludeContentEnum} indicating whether the artifact content should be included in the
    *                       {@link ArtifactData} returned by this method.
    * @return The {@link ArtifactData} of the {@link Artifact}.
    * @throws IOException
    */
   @Override
-  public ArtifactData getArtifactData(Artifact artifact, IncludeContent includeContent)
+  public ArtifactData getArtifactData(Artifact artifact, IncludeContentEnum includeContent)
       throws IOException {
 
     if (artifact == null) {
@@ -440,7 +440,7 @@ public class RestLockssRepository implements LockssRepository {
     String artifactUuid = artifact.getUuid();
 
     // Check ArtifactCache first
-    boolean needInputStream = (includeContent != IncludeContent.NEVER);
+    boolean needInputStream = (includeContent != IncludeContentEnum.NEVER);
     ArtifactData cached = artCache.getArtifactData(namespace, artifactUuid, needInputStream);
     if (cached != null) {
       return cached;
@@ -541,7 +541,7 @@ public class RestLockssRepository implements LockssRepository {
     }
   }
 
-  public ArtifactData getArtifactDataByPayload(Artifact artifact, IncludeContent includeContent)
+  public ArtifactData getArtifactDataByPayload(Artifact artifact, IncludeContentEnum includeContent)
       throws IOException {
 
     if (artifact == null) {
@@ -552,7 +552,7 @@ public class RestLockssRepository implements LockssRepository {
     String artifactUuid = artifact.getUuid();
 
     // Check ArtifactCache first
-    boolean needInputStream = (includeContent != IncludeContent.NEVER);
+    boolean needInputStream = (includeContent != IncludeContentEnum.NEVER);
     ArtifactData cached = artCache.getArtifactData(namespace, artifactUuid, needInputStream);
     if (cached != null) {
       return cached;
@@ -634,14 +634,16 @@ public class RestLockssRepository implements LockssRepository {
     }
   }
 
-  public ArtifactData getArtifactDataByMultipart(String namespace, String artifactUuid, IncludeContent includeContent)
+  public ArtifactData getArtifactDataByMultipart(String namespace,
+                                                 String artifactUuid,
+                                                 IncludeContentEnum includeContent)
     throws IOException {
     if (artifactUuid == null) {
       throw new IllegalArgumentException("Null artifact UUID");
     }
 
     // Cache policy: Include cache content unless IncludeContent.NEVER
-    boolean includeCachedContent = (includeContent != IncludeContent.NEVER);
+    boolean includeCachedContent = (includeContent != IncludeContentEnum.NEVER);
 
     // Get ArtifactData from cache
     ArtifactData cached = artCache.getArtifactData(namespace, artifactUuid, includeCachedContent);
