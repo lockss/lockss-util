@@ -32,6 +32,11 @@ POSSIBILITY OF SUCH DAMAGE.
 
 package org.lockss.util;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.*;
 
@@ -411,6 +416,35 @@ public class ListUtil {
    **/
   public static List<String> fromCSV(String csv) {
     return CollectionUtil2.fromCsvStringTokenizer(ArrayList::new, csv);
+  }
+
+  /**
+   * Reads the given {@link InputStream} line‑by‑line, skips lines that:
+   * <ul>
+   *     <li>start with a '#' character (comments)</li>
+   *     <li>are empty or contain only whitespace</li>
+   * </ul>
+   * <p>All other lines are trimmed and added to the result list.
+   *
+   * @param in the {@link InputStream} to read
+   * @return a {@link List} of the non‑comment, non‑blank lines
+   * @throws IOException if an I/O error occurs
+   */
+  public static List<String> fromInputStream(InputStream in) throws IOException {
+    List<String> items = new ArrayList<>();
+
+    try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        if (line.isEmpty() || line.startsWith("#")) {
+          continue;
+        }
+        items.add(line);
+      }
+    }
+
+    return items;
   }
 
   /**
