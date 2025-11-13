@@ -1051,7 +1051,7 @@ public class RestLockssRepository implements LockssRepository {
    */
   @Override
   public Iterable<Artifact> getArtifactsWithUrlPrefixFromAllAus(String namespace, String prefix,
-                                                                ArtifactVersions versions) throws IOException {
+                                                                VersionsEnum versions) throws IOException {
 
     if (prefix == null) {
       throw new IllegalArgumentException("Null URL prefix");
@@ -1106,7 +1106,7 @@ public class RestLockssRepository implements LockssRepository {
    * @return An {@code Iterator<Artifact>} containing the committed artifacts of all versions of a given URL.
    */
   @Override
-  public Iterable<Artifact> getArtifactsWithUrlFromAllAus(String namespace, String url, ArtifactVersions versions) throws IOException {
+  public Iterable<Artifact> getArtifactsWithUrlFromAllAus(String namespace, String url, VersionsEnum versions) throws IOException {
     if (url == null) {
       throw new IllegalArgumentException("Null URL");
     }
