@@ -1061,7 +1061,7 @@ public class RestLockssRepository implements LockssRepository {
 
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
         .queryParam("urlPrefix", prefix)
-        .queryParam("versions", versions);
+        .queryParam("versions", String.valueOf(versions).toUpperCase());
 
     if (namespace != null) {
       builder.queryParam("namespace", namespace);
@@ -1115,7 +1115,7 @@ public class RestLockssRepository implements LockssRepository {
 
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
         .queryParam("url", url)
-        .queryParam("versions", versions);
+        .queryParam("versions", String.valueOf(versions).toUpperCase());
 
     if (namespace != null) {
       builder.queryParam("namespace", namespace);
@@ -1292,24 +1292,24 @@ public class RestLockssRepository implements LockssRepository {
    * #finishBulkStore(String, String)} completes) */
   public void startBulkStore(String namespace, String auid)
       throws IOException {
-    callBulkOp(namespace, auid, "start");
+    callBulkOp(namespace, auid, BulkAuOpEnum.START);
   }
 
   /** Finish a bulk store operation for the namespace/auid.  Blocks
    * until the Artifacts have been moved to the permanent ArtifactIndex. */
   public void finishBulkStore(String namespace, String auid)
       throws IOException {
-    callBulkOp(namespace, auid, "finish");
+    callBulkOp(namespace, auid, BulkAuOpEnum.FINISH);
   }
 
-  void callBulkOp(String namespace, String auid, String op) throws IOException {
+  void callBulkOp(String namespace, String auid, BulkAuOpEnum op) throws IOException {
     if (StringUtils.isEmpty(namespace)) {
       throw new IllegalArgumentException("Null AUID");
     }
 
     Map<String, String> queryParams = new HashMap<>();
     queryParams.put("namespace", namespace);
-    queryParams.put("op", op);
+    queryParams.put("op", String.valueOf(op).toUpperCase());
 
     Map<String, String> uriParams = new HashMap<>();
     uriParams.put("auid", auid);
