@@ -74,7 +74,7 @@ public class CrawlDesc   {
   private Integer refetchDepth = -1;
 
   @JsonProperty("priority")
-  private Integer priority = 0;
+  private Integer priority = null;
 
   @JsonProperty("crawlList")
   @Valid
