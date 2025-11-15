@@ -1061,7 +1061,7 @@ public class RestLockssRepository implements LockssRepository {
 
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
         .queryParam("urlPrefix", prefix)
-        .queryParam("versions", String.valueOf(versions).toUpperCase());
+        .queryParam("versions", versions.toString());
 
     if (namespace != null) {
       builder.queryParam("namespace", namespace);
@@ -1115,7 +1115,7 @@ public class RestLockssRepository implements LockssRepository {
 
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
         .queryParam("url", url)
-        .queryParam("versions", String.valueOf(versions).toUpperCase());
+        .queryParam("versions", versions.toString());
 
     if (namespace != null) {
       builder.queryParam("namespace", namespace);
@@ -1309,7 +1309,7 @@ public class RestLockssRepository implements LockssRepository {
 
     Map<String, String> queryParams = new HashMap<>();
     queryParams.put("namespace", namespace);
-    queryParams.put("op", String.valueOf(op).toUpperCase());
+    queryParams.put("op", op.toString());
 
     Map<String, String> uriParams = new HashMap<>();
     uriParams.put("auid", auid);
