@@ -1,0 +1,273 @@
+/*
+
+Copyright (c) 2000-2025 Board of Trustees of Leland Stanford Jr. University,
+all rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors
+may be used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+*/
+
+package org.lockss.util.rest.poller;
+
+import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
+import org.springframework.validation.annotation.Validated;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
+
+/**
+ * A summary of a poll in which we are acting just as a voter.
+ */
+@Schema(description = "A summary of a poll in which we are acting just as a voter.")
+@Validated
+
+public class VoterSummary   {
+  @JsonProperty("auId")
+  private String auId = null;
+
+  @JsonProperty("caller")
+  private String caller = null;
+
+  @JsonProperty("start")
+  private Long start = null;
+
+  @JsonProperty("status")
+  private String status = null;
+
+  @JsonProperty("deadline")
+  private Long deadline = null;
+
+  @JsonProperty("pollKey")
+  private String pollKey = null;
+
+  @JsonProperty("detailLink")
+  private LinkDesc detailLink = null;
+
+  public VoterSummary auId(String auId) {
+    this.auId = auId;
+    return this;
+  }
+
+  /**
+   * The id for the au being polled.
+   * @return auId
+   **/
+  @Schema(title = "AU ID",
+          description = "The id for the au being polled.",
+          requiredMode = RequiredMode.REQUIRED,
+          nullable = false)
+  @NotNull
+  public String getAuId() {
+    return auId;
+  }
+
+  public void setAuId(String auId) {
+    this.auId = auId;
+  }
+
+  public VoterSummary caller(String caller) {
+    this.caller = caller;
+    return this;
+  }
+
+  /**
+   * The id of who called the poll.
+   * @return caller
+   **/
+  @Schema(title = "Caller",
+          description = "The id of who called the poll.",
+          requiredMode = RequiredMode.REQUIRED,
+          nullable = false)
+  @NotNull
+  public String getCaller() {
+    return caller;
+  }
+
+  public void setCaller(String caller) {
+    this.caller = caller;
+  }
+
+  public VoterSummary start(Long start) {
+    this.start = start;
+    return this;
+  }
+
+  /**
+   * The timestamp for when the poll started.
+   * @return start
+   **/
+  @Schema(title = "Start",
+          description = "The timestamp for when the poll started.",
+          requiredMode = RequiredMode.REQUIRED,
+          nullable = false)
+  @NotNull
+  public Long getStart() {
+    return start;
+  }
+
+  public void setStart(Long start) {
+    this.start = start;
+  }
+
+  public VoterSummary status(String status) {
+    this.status = status;
+    return this;
+  }
+
+  /**
+   * The current status of the poll.
+   * @return status
+   **/
+  @Schema(title = "Status",
+          description = "The current status of the poll.",
+          requiredMode = RequiredMode.REQUIRED,
+          nullable = false)
+  @NotNull
+  public String getStatus() {
+    return status;
+  }
+
+  public void setStatus(String status) {
+    this.status = status;
+  }
+
+  public VoterSummary deadline(Long deadline) {
+    this.deadline = deadline;
+    return this;
+  }
+
+  /**
+   * The deadline for voting in this poll.
+   * @return deadline
+   **/
+  @Schema(title = "Deadline",
+          description = "The deadline for voting in this poll.",
+          requiredMode = RequiredMode.REQUIRED,
+          nullable = false)
+  @NotNull
+  public Long getDeadline() {
+    return deadline;
+  }
+
+  public void setDeadline(Long deadline) {
+    this.deadline = deadline;
+  }
+
+  public VoterSummary pollKey(String pollKey) {
+    this.pollKey = pollKey;
+    return this;
+  }
+
+  /**
+   * Key generated by poll manager when poll was created.
+   * @return pollKey
+   **/
+  @Schema(title = "Poll Key",
+          description = "Key generated by poll manager when poll was created.",
+          requiredMode = RequiredMode.REQUIRED,
+          nullable = false)
+  @NotNull
+  public String getPollKey() {
+    return pollKey;
+  }
+
+  public void setPollKey(String pollKey) {
+    this.pollKey = pollKey;
+  }
+
+  public VoterSummary detailLink(LinkDesc detailLink) {
+    this.detailLink = detailLink;
+    return this;
+  }
+
+  /**
+   * Get detailLink
+   * @return detailLink
+   **/
+  @Schema(title = "Detail Link",
+          description = "Link to detailed poll information")
+  @Valid
+  public LinkDesc getDetailLink() {
+    return detailLink;
+  }
+
+  public void setDetailLink(LinkDesc detailLink) {
+    this.detailLink = detailLink;
+  }
+
+
+  @Override
+  public boolean equals(java.lang.Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    VoterSummary voterSummary = (VoterSummary) o;
+    return Objects.equals(this.auId, voterSummary.auId) &&
+        Objects.equals(this.caller, voterSummary.caller) &&
+        Objects.equals(this.start, voterSummary.start) &&
+        Objects.equals(this.status, voterSummary.status) &&
+        Objects.equals(this.deadline, voterSummary.deadline) &&
+        Objects.equals(this.pollKey, voterSummary.pollKey) &&
+        Objects.equals(this.detailLink, voterSummary.detailLink);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(auId, caller, start, status, deadline, pollKey, detailLink);
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("VoterSummary [\n");
+
+    sb.append("    auId: ").append(toIndentedString(auId)).append("\n");
+    sb.append("    caller: ").append(toIndentedString(caller)).append("\n");
+    sb.append("    start: ").append(toIndentedString(start)).append("\n");
+    sb.append("    status: ").append(toIndentedString(status)).append("\n");
+    sb.append("    deadline: ").append(toIndentedString(deadline)).append("\n");
+    sb.append("    pollKey: ").append(toIndentedString(pollKey)).append("\n");
+    sb.append("    detailLink: ").append(toIndentedString(detailLink)).append("\n");
+    sb.append("]");
+    return sb.toString();
+  }
+
+  /**
+   * Convert the given object to string with each line indented by 4 spaces
+   * (except the first line).
+   */
+  private String toIndentedString(java.lang.Object o) {
+    if (o == null) {
+      return "null";
+    }
+    return o.toString().replace("\n", "\n    ");
+  }
+}
