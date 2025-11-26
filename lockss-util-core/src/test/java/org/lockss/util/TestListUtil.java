@@ -32,6 +32,8 @@ POSSIBILITY OF SUCH DAMAGE.
 
 package org.lockss.util;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.*;
 
 import org.apache.commons.collections4.*;
@@ -203,6 +205,32 @@ public class TestListUtil extends LockssTestCase5 {
 
     String[] arr = {"1", "2", "4"};
     assertThat(ListUtil.fromCSV(String.join(",", arr)), contains(arr));
+  }
+
+  @Test
+  public void testFromInputStream() throws Exception {
+    assertThrows(NullPointerException.class, () -> ListUtil.fromInputStream(null));
+
+    assertListFromInputStream("", Collections.EMPTY_LIST);
+    assertListFromInputStream("# Comment", Collections.EMPTY_LIST);
+    assertListFromInputStream("   # Comment", Collections.EMPTY_LIST);
+    assertListFromInputStream("   Item    ", ListUtil.list("Item"));
+
+    String txt = """
+        # This is comment
+        
+           Item1   
+        Item2
+          # Another comment
+        Item3   
+        Item4 # Not a comment
+        """;
+
+    assertListFromInputStream(txt, ListUtil.list("Item1", "Item2", "Item3", "Item4 # Not a comment"));
+  }
+
+  private void assertListFromInputStream(String txt, List<String> expected) throws Exception {
+    assertIterableEquals(expected, ListUtil.fromInputStream(new ByteArrayInputStream(txt.getBytes())));
   }
 
 //  @Test
