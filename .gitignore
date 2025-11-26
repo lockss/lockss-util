@@ -8,6 +8,10 @@ logs/
 .settings/
 /pom.xml.versionsBackup
 
+# IntelliJ IDEA artifacts
+.idea/
+*.iml
+
 # Old file versions
 *~
 
