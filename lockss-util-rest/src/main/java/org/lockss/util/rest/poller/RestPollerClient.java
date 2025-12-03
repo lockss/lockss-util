@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2020 Board of Trustees of Leland Stanford Jr. University,
+Copyright (c) 2020-2025 Board of Trustees of Leland Stanford Jr. University,
 all rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -110,6 +110,96 @@ public class RestPollerClient extends RestBaseClient<RestPollerClient> {
       ResponseEntity<Void> response = callRestService("/polls/{psId}", uriVariables, null, HttpMethod.DELETE, null, null, Void.class, "Attempt to cancel Poll failed.");
       log.trace("Back from RestUtil.callRestService");
       // Get the Response Body
+    } catch (RuntimeException e) {
+      throw new LockssRestException(e);
+    }
+  }
+
+  /**
+   * Retrieves a page of polls for which this peer is the poller.
+   *
+   * @param limit             The requested maximum number of poll summaries per response (may be null)
+   * @param continuationToken The continuation token of the next page of poll summaries to be returned (may be null)
+   * @return a {@code PollerPageInfo} with the page of poll summaries.
+   * @throws LockssRestException if there were problems retrieving the polls.
+   */
+  public PollerPageInfo getPollsAsPoller(Integer limit, String continuationToken) throws LockssRestException {
+    log.debug2("limit = {}, continuationToken = {}", limit, continuationToken);
+
+    try {
+      // Prepare the query parameters.
+      Map<String, String> queryParams = new HashMap<>();
+      if (limit != null) {
+        queryParams.put("limit", limit.toString());
+      }
+      if (continuationToken != null && !continuationToken.trim().isEmpty()) {
+        queryParams.put("continuationToken", continuationToken);
+      }
+      log.trace("queryParams = {}", queryParams);
+
+      // Make the REST call.
+      log.trace("Calling RestUtil.callRestService");
+      ResponseEntity<PollerPageInfo> response = callRestService(
+          "/polls/poller",
+          null,
+          queryParams.isEmpty() ? null : queryParams,
+          HttpMethod.GET,
+          null,
+          null,
+          PollerPageInfo.class,
+          "Can't get polls as poller"
+      );
+      log.trace("Back from RestUtil.callRestService");
+
+      // Get the Response Body
+      PollerPageInfo result = response.getBody();
+      log.debug2("result = {}", result);
+      return result;
+    } catch (RuntimeException e) {
+      throw new LockssRestException(e);
+    }
+  }
+
+  /**
+   * Retrieves a page of polls for which this peer is a voter.
+   *
+   * @param limit             The requested maximum number of poll summaries per response (may be null)
+   * @param continuationToken The continuation token of the next page of poll summaries to be returned (may be null)
+   * @return a {@code VoterPageInfo} with the page of poll summaries.
+   * @throws LockssRestException if there were problems retrieving the polls.
+   */
+  public VoterPageInfo getPollsAsVoter(Integer limit, String continuationToken) throws LockssRestException {
+    log.debug2("limit = {}, continuationToken = {}", limit, continuationToken);
+
+    try {
+      // Prepare the query parameters.
+      Map<String, String> queryParams = new HashMap<>();
+      if (limit != null) {
+        queryParams.put("limit", limit.toString());
+      }
+      if (continuationToken != null && !continuationToken.trim().isEmpty()) {
+        queryParams.put("continuationToken", continuationToken);
+      }
+      log.trace("queryParams = {}", queryParams);
+
+      // Make the REST call.
+      log.trace("Calling RestUtil.callRestService");
+      ResponseEntity<VoterPageInfo> response = callRestService(
+          "/polls/voter",
+          null,
+          queryParams.isEmpty() ? null : queryParams,
+          HttpMethod.GET,
+          null,
+          null,
+          VoterPageInfo.class,
+          "Can't get polls as voter"
+      );
+      log.trace("Back from RestUtil.callRestService");
+
+      // Get the Response Body
+      VoterPageInfo result = response.getBody();
+      log.debug2("result = {}", result);
+      return result;
     } catch (RuntimeException e) {
       throw new LockssRestException(e);
     }
