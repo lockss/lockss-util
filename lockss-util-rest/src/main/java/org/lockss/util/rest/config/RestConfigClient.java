@@ -147,7 +147,7 @@ public class RestConfigClient extends RestBaseClient<RestConfigClient> {
     log.trace("queryParams = {}", queryParams);
 
     ResponseEntity<List> response = callRestService(
-        "/utils/normalizeUrl", null, queryParams, HttpMethod.GET, null,
+        "/utils/normalizeurl", null, queryParams, HttpMethod.GET, null,
         null, List.class, "Could not normalize URL");
 
     List result = response.getBody();
