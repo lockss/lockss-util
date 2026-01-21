@@ -35,6 +35,7 @@ import org.lockss.util.test.LockssTestCase5;
 
 public class TestPatternFloatMap extends LockssTestCase5 {
 
+  @Test
   public void testToString() {
     PatternFloatMap ppm1 = PatternFloatMap.fromSpec("a.*b,2;ccc,4.3");
     assertEquals("[pm: [a.*b: 2.0], [ccc: 4.3]]", ppm1.toString());
@@ -51,6 +52,7 @@ public class TestPatternFloatMap extends LockssTestCase5 {
                                                         "ddd,5e2")));
   }
 
+  @Test
   public void testGetMatchDeprecated() {
     testGetMatch(new PatternFloatMap("a.*b,2.5;ccc,-4;ddd,5e2"));
     testGetMatch(new PatternFloatMap(ListUtil.list("a.*b,2.5", "ccc,-4",
