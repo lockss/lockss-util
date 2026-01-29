@@ -1194,10 +1194,12 @@ public class RestLockssRepository implements LockssRepository {
       return null;
 
     } catch (LockssRestHttpException e) {
-      if (!e.getHttpStatus().equals(HttpStatus.NOT_FOUND)) {
-        log.error("Could not fetch artifact", e);
+      if (e.getHttpStatus().equals(HttpStatus.NOT_FOUND)) {
+        log.debug("Artifact not found: " + url + " in " + auid);
+        return null;
       }
-      return null;
+      log.error("Could not fetch artifact", e);
+      throw e;
     } catch (LockssRestException e) {
       log.error("Could not fetch artifact", e);
       throw e;
