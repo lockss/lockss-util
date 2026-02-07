@@ -947,9 +947,10 @@ public class RestLockssRepository implements LockssRepository {
       throw new IllegalArgumentException("Null AUID");
     }
 
-    String endpoint = String.format("%s/aus/%s/artifacts", repositoryUrl, auid);
+    String endpoint = String.format("%s/artifacts", repositoryUrl);
 
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
+        .queryParam("auid", auid)
         .queryParam("version", "latest");
 
     if (namespace != null) {
@@ -972,9 +973,10 @@ public class RestLockssRepository implements LockssRepository {
       throw new IllegalArgumentException("Null AUID");
     }
 
-    String endpoint = String.format("%s/aus/%s/artifacts", repositoryUrl, auid);
+    String endpoint = String.format("%s/artifacts", repositoryUrl);
 
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
+        .queryParam("auid", auid)
         .queryParam("version", "all");
 
     if (namespace != null) {
@@ -1000,9 +1002,10 @@ public class RestLockssRepository implements LockssRepository {
       throw new IllegalArgumentException("Null AUID or URL prefix");
     }
 
-    String endpoint = String.format("%s/aus/%s/artifacts", repositoryUrl, auid);
+    String endpoint = String.format("%s/artifacts", repositoryUrl);
 
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
+        .queryParam("auid", auid)
         .queryParam("urlPrefix", prefix);
 
     if (namespace != null) {
@@ -1028,9 +1031,10 @@ public class RestLockssRepository implements LockssRepository {
       throw new IllegalArgumentException("Null AUID or URL prefix");
     }
 
-    String endpoint = String.format("%s/aus/%s/artifacts", repositoryUrl, auid);
+    String endpoint = String.format("%s/artifacts", repositoryUrl);
 
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
+        .queryParam("auid", auid)
         .queryParam("version", "all")
         .queryParam("urlPrefix", prefix);
 
@@ -1061,7 +1065,7 @@ public class RestLockssRepository implements LockssRepository {
 
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
         .queryParam("urlPrefix", prefix)
-        .queryParam("versions", versions.toString());
+        .queryParam("version", versions.toString());
 
     if (namespace != null) {
       builder.queryParam("namespace", namespace);
@@ -1085,9 +1089,10 @@ public class RestLockssRepository implements LockssRepository {
       throw new IllegalArgumentException("Null AUID or URL");
     }
 
-    String endpoint = String.format("%s/aus/%s/artifacts", repositoryUrl, auid);
+    String endpoint = String.format("%s/artifacts", repositoryUrl);
 
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
+        .queryParam("auid", auid)
         .queryParam("url", url)
         .queryParam("version", "all");
 
@@ -1115,7 +1120,7 @@ public class RestLockssRepository implements LockssRepository {
 
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
         .queryParam("url", url)
-        .queryParam("versions", versions.toString());
+        .queryParam("version", versions.toString());
 
     if (namespace != null) {
       builder.queryParam("namespace", namespace);
@@ -1144,9 +1149,10 @@ public class RestLockssRepository implements LockssRepository {
       return cached;
     }
 
-    String endpoint = String.format("%s/aus/%s/artifacts", repositoryUrl, auid);
+    String endpoint = String.format("%s/artifacts", repositoryUrl);
 
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
+        .queryParam("auid", auid)
         .queryParam("url", url)
         .queryParam("version", "latest");
 
@@ -1230,9 +1236,10 @@ public class RestLockssRepository implements LockssRepository {
       return cached;
     }
 
-    String endpoint = String.format("%s/aus/%s/artifacts", repositoryUrl, auid);
+    String endpoint = String.format("%s/artifacts", repositoryUrl);
 
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
+        .queryParam("auid", auid)
         .queryParam("url", url)
         .queryParam("version", version);
 

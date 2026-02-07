@@ -284,9 +284,12 @@ public class TestRestLockssRepositoryArtifactIterator extends LockssTestCase5 {
                                                  .setQueueGetTimeout(getTime)
                                                  .setPageSizes(ListUtil.list(2, 7, 20)));
 
-
     RestLockssRepositoryArtifactIterator.ThreadData td = repoIterator.getTD();
-    assertEquals(ListUtil.list(2, 7, 20), td.pageSizes);
+    // td.pageSizes is consumed by the producer thread, so we can only reliably
+    // check that it's not empty and contains the last value (which is retained
+    // for subsequent pages). The producer may have already consumed some elements.
+    assertFalse(td.pageSizes.isEmpty());
+    assertTrue(td.pageSizes.contains(20));
 
     // This is a race condition, as the producer thread may add an item
     // between the remainingCapacity() and size() calls.  There's no
