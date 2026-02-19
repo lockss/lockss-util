@@ -1152,18 +1152,23 @@ public class RestLockssRepository implements LockssRepository {
     String endpoint = String.format("%s/artifacts", repositoryUrl);
 
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
-        .queryParam("auid", auid)
-        .queryParam("url", url)
-        .queryParam("version", "latest");
+        .queryParam("auid", "{auid}")
+        .queryParam("url", "{url}")
+        .queryParam("version", "{version}");
 
+    Map<String,String> valMap =
+      org.lockss.util.MapUtil.map("auid", auid, "url", url, "version", "latest");
     if (namespace != null) {
-      builder.queryParam("namespace", namespace);
+      builder.queryParam("namespace", "{namespace}");
+      valMap.put("namespace", namespace);
     }
 
     try {
+      URI uri = builder.encode().build().expand(valMap).toUri();
+
       ResponseEntity<String> response =
           RestUtil.callRestService(restTemplate,
-              builder.build().encode().toUri(),
+              uri,
               HttpMethod.GET,
               new HttpEntity<>(null,
                   getInitializedHttpHeaders()),
