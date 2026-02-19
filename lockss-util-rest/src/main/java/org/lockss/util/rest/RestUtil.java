@@ -72,6 +72,7 @@ import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -611,21 +612,26 @@ public class RestUtil {
     UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uriString);
     log.trace("builder = {}", builder);
 
-    // Add any query parameters.
-    if (queryParams != null && !queryParams.isEmpty()) {
-      for (String key : queryParams.keySet()) {
-        String value = queryParams.get(key);
-        log.trace("key = {}, value = {}", key, value);
-        builder.queryParam(key, value);
-      }
+    Map<String,String> valMap = new HashMap<>();
+    if (uriVariables != null) {
+      valMap.putAll(uriVariables);
     }
 
-    // Interpolate any URI variables if present and build
-    UriComponents uriComponents =
-        (uriVariables != null && !uriVariables.isEmpty()) ?
-            builder.buildAndExpand(uriVariables) : builder.build();
+    // Add any query parameters.
+    if (queryParams != null) {
+      valMap.putAll(queryParams);
+      for (String key : queryParams.keySet()) {
+        builder.queryParam(key, "{" + key + "}");
+      }
+    }
+    log.trace("valMap = {}", valMap);
 
-    URI uri = uriComponents.encode().toUri();
+    // Interpolate any URI and query variables if present and build
+    URI uri = builder
+      .encode()
+      .build()
+      .expand(valMap)
+      .toUri();
     log.debug2("uri = {}", uri);
     return uri;
   }
