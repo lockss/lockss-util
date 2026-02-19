@@ -88,6 +88,33 @@ public class TestRestUtil extends LockssTestCase5 {
 
   private MockServerClient msClient;
 
+  @Test
+  public void testGetRestUri() {
+    assertEquals("http://foo/val1?q1=qv1&q2=qv2",
+                 RestUtil.getRestUri("http://foo/{param1}",
+                                     MapUtil.map("param1", "val1"),
+                                     MapUtil.map("q1", "qv1", "q2", "qv2"))
+                 .toString());
+    // Ensure query args get encoded, *including plus sign*
+    assertEquals("http://foo/val1?q1=qv1&q2=qv%2B2",
+                 RestUtil.getRestUri("http://foo/{param1}",
+                                     MapUtil.map("param1", "val1"),
+                                     MapUtil.map("q1", "qv1", "q2", "qv+2"))
+                 .toString());
+    // Ensure path args get encoded
+    assertEquals("http://foo/val%2F1?q1=qv1&q2=qv%2B2",
+                 RestUtil.getRestUri("http://foo/{param1}",
+                                     MapUtil.map("param1", "val/1"),
+                                     MapUtil.map("q1", "qv1", "q2", "qv+2"))
+                 .toString());
+    // Ensure path args get encoded, *including plus sign*
+    assertEquals("http://foo/val%2B1?q1=qv1&q2=qv%2B2",
+                 RestUtil.getRestUri("http://foo/{param1}",
+                                     MapUtil.map("param1", "val+1"),
+                                     MapUtil.map("q1", "qv1", "q2", "qv+2"))
+                 .toString());
+  }
+
   /**
    * Tests error reporting for network errors
    */
