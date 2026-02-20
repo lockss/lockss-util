@@ -116,7 +116,7 @@ public class RestLockssRepositoryArtifactIterator
    */
   RestLockssRepositoryArtifactIterator(RestTemplate restTemplate,
       UriComponentsBuilder builder) {
-    this(restTemplate, builder, null);
+    this(restTemplate, builder, null, Collections.emptyMap());
   }
 
   /**
@@ -132,12 +132,12 @@ public class RestLockssRepositoryArtifactIterator
    */
   RestLockssRepositoryArtifactIterator(RestTemplate restTemplate,
       UriComponentsBuilder builder, String authHeaderValue) {
-    this(restTemplate, builder, authHeaderValue, DEFAULT_PARAMS);
+    this(restTemplate, builder, authHeaderValue, DEFAULT_PARAMS, Collections.emptyMap());
   }
 
   /**
-   * Full constructor.
-   * 
+   * Constructor with default URI template variables.
+   *
    * @param restTemplate    A RestTemplate with the REST service template.
    * @param builder         An UriComponentsBuilder initialized with the
    *                        REST endpoint IRU.  Query params will be added
@@ -148,10 +148,35 @@ public class RestLockssRepositoryArtifactIterator
    * @param params          Parameters controlling queue length, page sizes,
    *                        timeouts
    */
-  RestLockssRepositoryArtifactIterator(RestTemplate restTemplate,
+   RestLockssRepositoryArtifactIterator(RestTemplate restTemplate,
                                        UriComponentsBuilder builder,
                                        String authHeaderValue,
                                        Params params) {
+    this(restTemplate, builder, authHeaderValue, params, Collections.emptyMap());
+  }
+
+  /**
+   * Full constructor.
+   *
+   * @param restTemplate    A RestTemplate with the REST service template.
+   * @param builder         An UriComponentsBuilder initialized with the
+   *                        REST endpoint IRU.  Query params will be added
+   *                        as needed
+   *                        builder.
+   * @param authHeaderValue A String with the Authorization header to be used
+   *                        when calling the REST service.
+   * @param params          Parameters controlling queue length, page sizes,
+   *                        timeouts
+   * @param uriVars         A Map of URI template variable names to values,
+   *                        used with encode().build().expand() to properly
+   *                        encode query parameter values (e.g., literal '+').
+   *                        May be null.
+   */
+  RestLockssRepositoryArtifactIterator(RestTemplate restTemplate,
+                                       UriComponentsBuilder builder,
+                                       String authHeaderValue,
+                                       Params params,
+                                       Map<String, String> uriVars) {
     // Validation.
     if (restTemplate == null) {
       throw new IllegalArgumentException(
@@ -168,6 +193,7 @@ public class RestLockssRepositoryArtifactIterator
     tdata.restTemplate = restTemplate;
     tdata.builder = builder;
     tdata.authHeaderValue = authHeaderValue;
+    tdata.uriVars = uriVars;
 
     // Start producer thread in constructor so that first request is
     // made as early as possible
@@ -341,7 +367,7 @@ public class RestLockssRepositoryArtifactIterator
       }
 
       // Build the URI to make a request to the REST service.
-      URI uri = tdata.builder.build().encode().toUri();
+      URI uri = tdata.builder.encode().build().expand(tdata.uriVars).toUri();
 
       // Build the HttpEntity to include in the request to the REST service.
       HttpHeaders httpHeaders = new HttpHeaders();
@@ -468,6 +494,9 @@ public class RestLockssRepositoryArtifactIterator
     long iterWaitTime = 0;
     long fetchWaitTime = 0;
     long queuePutWaitTime = 0;
+
+    // URI template variables for encode().build().expand() pattern
+    Map<String, String> uriVars = Collections.emptyMap();
 
     // Flag set by Cleaner to force the thread to terminate.  Here so
     // test class can access it
