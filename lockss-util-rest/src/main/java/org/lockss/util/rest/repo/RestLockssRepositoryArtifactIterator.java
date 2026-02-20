@@ -116,7 +116,7 @@ public class RestLockssRepositoryArtifactIterator
    */
   RestLockssRepositoryArtifactIterator(RestTemplate restTemplate,
       UriComponentsBuilder builder) {
-    this(restTemplate, builder, null, Collections.emptyMap());
+    this(restTemplate, builder, null);
   }
 
   /**
