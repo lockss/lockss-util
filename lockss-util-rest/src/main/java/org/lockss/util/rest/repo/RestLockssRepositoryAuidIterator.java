@@ -45,8 +45,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 /**
@@ -67,6 +69,9 @@ public class RestLockssRepositoryAuidIterator implements Iterator<String> {
   // service.
   private String authHeaderValue = null;
 
+  // URI template variables for encode().build().expand() pattern
+  private Map<String, String> uriVars = new HashMap<>();
+
   // The internal buffer used to store locally the auids provided by the REST
   // service.
   private List<String> auidBuffer = null;
@@ -86,7 +91,7 @@ public class RestLockssRepositoryAuidIterator implements Iterator<String> {
    */
   public RestLockssRepositoryAuidIterator(RestTemplate restTemplate,
       UriComponentsBuilder builder) {
-    this(restTemplate, builder, null, null);
+    this(restTemplate, builder, null, (Integer) null);
   }
 
   /**
@@ -100,7 +105,44 @@ public class RestLockssRepositoryAuidIterator implements Iterator<String> {
    */
   public RestLockssRepositoryAuidIterator(RestTemplate restTemplate,
       UriComponentsBuilder builder, String authHeaderValue) {
-    this(restTemplate, builder, authHeaderValue, null);
+    this(restTemplate, builder, authHeaderValue, (Integer) null);
+  }
+
+  /**
+   * Constructor with Authorization header and URI template variables.
+   *
+   * @param restTemplate    A RestTemplate with the REST service template.
+   * @param builder         An UriComponentsBuilder with the REST service URI
+   *                        builder.
+   * @param authHeaderValue A String with the Authorization header to be used
+   *                        when calling the REST service.
+   * @param uriVars         A Map of URI template variable names to values.
+   */
+  public RestLockssRepositoryAuidIterator(RestTemplate restTemplate,
+      UriComponentsBuilder builder, String authHeaderValue,
+      Map<String, String> uriVars) {
+
+    // Validation.
+    if (restTemplate == null) {
+      throw new IllegalArgumentException(
+	  "REST service template cannot be null");
+    }
+
+    if (builder == null) {
+      throw new IllegalArgumentException(
+	  "REST service URI builder cannot be null");
+    }
+
+    // Initialization.
+    this.restTemplate = restTemplate;
+    this.builder = builder;
+    this.authHeaderValue = authHeaderValue;
+
+    if (uriVars != null) {
+      this.uriVars = new HashMap<>(uriVars);
+    }
+
+    fillAuidBuffer();
   }
 
   /**
@@ -224,11 +266,12 @@ public class RestLockssRepositoryAuidIterator implements Iterator<String> {
     // Check whether a previous response provided a continuation token.
     if (continuationToken != null) {
       // Yes: Incorporate it to the next request.
-      builder.replaceQueryParam("continuationToken", continuationToken);
+      builder.replaceQueryParam("continuationToken", "{continuationToken}");
+      uriVars.put("continuationToken", continuationToken);
     }
 
     // Build the URI to make a request to the REST service.
-    URI uri = builder.build().encode().toUri();
+    URI uri = builder.encode().build().expand(uriVars).toUri();
     log.trace("uri = {}", uri);
 
     // Build the HttpEntity to include in the request to the REST service.

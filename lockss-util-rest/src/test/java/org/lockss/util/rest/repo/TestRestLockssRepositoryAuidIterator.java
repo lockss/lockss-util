@@ -130,8 +130,10 @@ public class TestRestLockssRepositoryAuidIterator extends LockssTestCase5 {
 	MediaType.APPLICATION_JSON));
 
     // Second server call.
+    // continuationToken value goes through encode().build().expand() which
+    // percent-encodes ':' as '%3A' - the server decodes this correctly.
     mockServer.expect(MockRestRequestMatchers.requestTo(endpoint
-	+ "?namespace="+NS1+"&limit=2&continuationToken=auid2:1234567"))
+	+ "?namespace="+NS1+"&limit=2&continuationToken=auid2%3A1234567"))
     .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
     .andRespond(MockRestResponseCreators.withSuccess("{\"auids\":[\"auid3\",\"auid4\"],\"pageInfo\":{}}",
 	MediaType.APPLICATION_JSON));

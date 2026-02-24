@@ -193,7 +193,7 @@ public class RestLockssRepositoryArtifactIterator
     tdata.restTemplate = restTemplate;
     tdata.builder = builder;
     tdata.authHeaderValue = authHeaderValue;
-    tdata.uriVars = uriVars;
+    tdata.uriVars = (uriVars != null) ? new HashMap<>(uriVars) : new HashMap<>();
 
     // Start producer thread in constructor so that first request is
     // made as early as possible
@@ -363,7 +363,8 @@ public class RestLockssRepositoryArtifactIterator
       // Check whether a previous response provided a continuation token.
       if (!StringUtils.isEmpty(continuationToken)) {
         // Yes: Incorporate it to the next request.
-        tdata.builder.replaceQueryParam("continuationToken", continuationToken);
+        tdata.builder.replaceQueryParam("continuationToken", "{continuationToken}");
+        tdata.uriVars.put("continuationToken", continuationToken);
       }
 
       // Build the URI to make a request to the REST service.
@@ -451,7 +452,8 @@ public class RestLockssRepositoryArtifactIterator
       LinkedList<Integer> lst = tdata.pageSizes;
       if (lst != null && !lst.isEmpty()) {
         int limit = (lst.size() > 1) ? lst.pop() : lst.get(0);
-        tdata.builder.replaceQueryParam("limit", limit);
+        tdata.builder.replaceQueryParam("limit", "{limit}");
+        tdata.uriVars.put("limit", String.valueOf(limit));
       }
     }
 
