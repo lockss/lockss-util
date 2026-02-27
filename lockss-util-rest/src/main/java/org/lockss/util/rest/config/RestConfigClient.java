@@ -146,9 +146,6 @@ public class RestConfigClient extends RestBaseClient<RestConfigClient> {
     queryParams.put("url", url);
     log.trace("queryParams = {}", queryParams);
 
-    // FIXME need to pass this uri into callRestService
-//     URI uri = RestUtil.getRestUri("/utils/normalizeurl", null, queryParams);
-
     ResponseEntity<List> response = callRestService(
         "/utils/normalizeurl", null, queryParams, HttpMethod.GET, null,
         null, List.class, "Could not normalize URL");

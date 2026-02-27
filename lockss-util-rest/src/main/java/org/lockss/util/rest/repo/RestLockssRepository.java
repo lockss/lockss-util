@@ -201,8 +201,7 @@ public class RestLockssRepository implements LockssRepository {
    * @return A {@code URI} containing the REST endpoint to an artifact in the repository.
    */
   private URI artifactEndpoint(String namespace, String artifactUuid, IncludeContentEnum includeContent) {
-    Map<String, String> uriParams = new HashMap<>();
-    uriParams.put("uuid", artifactUuid);
+    Map<String, String> uriParams = Collections.singletonMap("uuid", artifactUuid);
 
     Map<String, String> queryParams = new HashMap<>();
 
@@ -708,8 +707,7 @@ public class RestLockssRepository implements LockssRepository {
       throw new IllegalArgumentException("Null artifact UUID");
     }
 
-    Map<String, String> uriVars = new HashMap<>();
-    uriVars.put("committed", "true");
+    Map<String, String> uriVars = Collections.singletonMap("committed", "true");
 
     UriComponentsBuilder builder = UriComponentsBuilder.fromUri(artifactEndpoint(namespace, artifactUuid))
         .queryParam("committed", "{committed}");
@@ -1215,7 +1213,7 @@ public class RestLockssRepository implements LockssRepository {
         .queryParam("url", "{url}")
         .queryParam("version", "{version}");
 
-    Map<String, Object> uriVars = new HashMap<>();
+    Map<String, String> uriVars = new HashMap<>();
     uriVars.put("auid", auid);
     uriVars.put("url", url);
     uriVars.put("version", "latest");
@@ -1390,8 +1388,7 @@ public class RestLockssRepository implements LockssRepository {
     queryParams.put("namespace", namespace);
     queryParams.put("op", op.toString());
 
-    Map<String, String> uriParams = new HashMap<>();
-    uriParams.put("auid", auid);
+    Map<String, String> uriParams = Collections.singletonMap("auid", auid);
 
     URI endpointUri =
         RestUtil.getRestUri(repositoryUrl + "/aus/{auid}/bulk", uriParams, queryParams);
