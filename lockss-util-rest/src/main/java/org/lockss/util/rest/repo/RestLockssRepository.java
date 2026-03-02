@@ -201,8 +201,7 @@ public class RestLockssRepository implements LockssRepository {
    * @return A {@code URI} containing the REST endpoint to an artifact in the repository.
    */
   private URI artifactEndpoint(String namespace, String artifactUuid, IncludeContentEnum includeContent) {
-    Map<String, String> uriParams = new HashMap<>();
-    uriParams.put("uuid", artifactUuid);
+    Map<String, String> uriParams = Collections.singletonMap("uuid", artifactUuid);
 
     Map<String, String> queryParams = new HashMap<>();
 
@@ -308,7 +307,7 @@ public class RestLockssRepository implements LockssRepository {
     try {
       ResponseEntity<String> response =
           RestUtil.callRestService(restTemplate,
-              builder.build().encode().toUri(),
+              builder.encode().build().toUri(),
               HttpMethod.POST,
               multipartEntity,
               // TODO: Change this to Artifact and remove OjectMapper below
@@ -708,8 +707,10 @@ public class RestLockssRepository implements LockssRepository {
       throw new IllegalArgumentException("Null artifact UUID");
     }
 
+    Map<String, String> uriVars = Collections.singletonMap("committed", "true");
+
     UriComponentsBuilder builder = UriComponentsBuilder.fromUri(artifactEndpoint(namespace, artifactUuid))
-        .queryParam("committed", "true");
+        .queryParam("committed", "{committed}");
 
     // Required by REST API specification
     HttpHeaders headers = getInitializedHttpHeaders();
@@ -721,7 +722,7 @@ public class RestLockssRepository implements LockssRepository {
     try {
       ResponseEntity<String> response =
           RestUtil.callRestService(restTemplate,
-              builder.build().encode().toUri(),
+              builder.encode().build().expand(uriVars).toUri(),
               HttpMethod.PUT,
               new HttpEntity<>(EMPTY_MULTIPART_MAP, headers),
               String.class,
@@ -839,7 +840,7 @@ public class RestLockssRepository implements LockssRepository {
     try {
       ResponseEntity<String> response =
           RestUtil.callRestService(restTemplate,
-              builder.build().encode().toUri(),
+              builder.encode().build().toUri(),
               HttpMethod.GET,
               new HttpEntity<>(null,
                   getInitializedHttpHeaders()),
@@ -870,13 +871,15 @@ public class RestLockssRepository implements LockssRepository {
 
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint);
 
+    Map<String, String> uriVars = new HashMap<>();
     if (namespace != null) {
-      builder.queryParam("namespace", namespace);
+      builder.queryParam("namespace", "{namespace}");
+      uriVars.put("namespace", namespace);
     }
 
     try {
       return IteratorUtils.asIterable(
-          new RestLockssRepositoryAuidIterator(restTemplate, builder, authHeaderValue));
+          new RestLockssRepositoryAuidIterator(restTemplate, builder, authHeaderValue, uriVars));
 
     } catch (LockssUncheckedIOException e) {
       // Re-throw wrapped checked IOException
@@ -1102,14 +1105,19 @@ public class RestLockssRepository implements LockssRepository {
     String endpoint = String.format("%s/artifacts", repositoryUrl);
 
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
-        .queryParam("urlPrefix", prefix)
-        .queryParam("version", versions.toString());
+        .queryParam("urlPrefix", "{urlPrefix}")
+        .queryParam("version", "{version}");
+
+    Map<String, String> uriVars = new HashMap<>();
+    uriVars.put("urlPrefix", prefix);
+    uriVars.put("version", versions.toString());
 
     if (namespace != null) {
-      builder.queryParam("namespace", namespace);
+      builder.queryParam("namespace", "{namespace}");
+      uriVars.put("namespace", namespace);
     }
 
-    return IteratorUtils.asIterable(artCache.cachingLatestIterator(getArtifactIterator(builder)));
+    return IteratorUtils.asIterable(artCache.cachingLatestIterator(getArtifactIterator(builder, uriVars)));
   }
 
   /**
@@ -1163,14 +1171,19 @@ public class RestLockssRepository implements LockssRepository {
     String endpoint = String.format("%s/artifacts", repositoryUrl);
 
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
-        .queryParam("url", url)
-        .queryParam("version", versions.toString());
+        .queryParam("url", "{url}")
+        .queryParam("version", "{version}");
+
+    Map<String, String> uriVars = new HashMap<>();
+    uriVars.put("url", url);
+    uriVars.put("version", versions.toString());
 
     if (namespace != null) {
-      builder.queryParam("namespace", namespace);
+      builder.queryParam("namespace", "{namespace}");
+      uriVars.put("namespace", namespace);
     }
 
-    return IteratorUtils.asIterable(artCache.cachingLatestIterator(getArtifactIterator(builder)));
+    return IteratorUtils.asIterable(artCache.cachingLatestIterator(getArtifactIterator(builder, uriVars)));
   }
 
   /**
@@ -1200,7 +1213,7 @@ public class RestLockssRepository implements LockssRepository {
         .queryParam("url", "{url}")
         .queryParam("version", "{version}");
 
-    Map<String, Object> uriVars = new HashMap<>();
+    Map<String, String> uriVars = new HashMap<>();
     uriVars.put("auid", auid);
     uriVars.put("url", url);
     uriVars.put("version", "latest");
@@ -1375,8 +1388,7 @@ public class RestLockssRepository implements LockssRepository {
     queryParams.put("namespace", namespace);
     queryParams.put("op", op.toString());
 
-    Map<String, String> uriParams = new HashMap<>();
-    uriParams.put("auid", auid);
+    Map<String, String> uriParams = Collections.singletonMap("auid", auid);
 
     URI endpointUri =
         RestUtil.getRestUri(repositoryUrl + "/aus/{auid}/bulk", uriParams, queryParams);
@@ -1459,7 +1471,7 @@ public class RestLockssRepository implements LockssRepository {
     try {
       ResponseEntity<String> response =
           RestUtil.callRestService(restTemplate,
-              builder.build().encode().toUri(),
+              builder.encode().build().toUri(),
               HttpMethod.GET,
               new HttpEntity<>(null,
                   getInitializedHttpHeaders()),
@@ -1489,7 +1501,7 @@ public class RestLockssRepository implements LockssRepository {
     try {
       ResponseEntity<String> response =
           RestUtil.callRestService(restTemplate,
-              builder.build().encode().toUri(),
+              builder.encode().build().toUri(),
               HttpMethod.GET,
               new HttpEntity<>(null,
                   getInitializedHttpHeaders()),

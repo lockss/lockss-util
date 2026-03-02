@@ -113,7 +113,9 @@ public class TestRestLockssRepositoryArtifactIterator extends LockssTestCase5 {
         size = -size;
       }
       if (lastContTok != null) {
-        reqUrl +=  "&continuationToken=" + lastContTok;
+        // continuationToken goes through encode().build().expand() which
+        // percent-encodes ':' as '%3A' - the server decodes this correctly.
+        reqUrl +=  "&continuationToken=" + lastContTok.replace(":", "%3A");
       }
       ResponseActions m =
         mockServer.expect(MockRestRequestMatchers.requestTo(reqUrl));

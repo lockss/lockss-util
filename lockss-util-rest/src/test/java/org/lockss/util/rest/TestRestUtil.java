@@ -95,6 +95,7 @@ public class TestRestUtil extends LockssTestCase5 {
                                      MapUtil.map("param1", "val1"),
                                      MapUtil.map("q1", "qv1", "q2", "qv2"))
                  .toString());
+
     // Ensure query args get encoded, *including plus sign*
     assertEquals("http://foo/val1?q1=qv1&q2=qv%2B2",
                  RestUtil.getRestUri("http://foo/{param1}",
@@ -112,6 +113,27 @@ public class TestRestUtil extends LockssTestCase5 {
                  RestUtil.getRestUri("http://foo/{param1}",
                                      MapUtil.map("param1", "val+1"),
                                      MapUtil.map("q1", "qv1", "q2", "qv+2"))
+                 .toString());
+
+    // Space in path should be encoded as %20
+    assertEquals("http://foo/val%201?q1=qv1",
+                 RestUtil.getRestUri("http://foo/{param1}",
+                                     MapUtil.map("param1", "val 1"),
+                                     MapUtil.map("q1", "qv1"))
+                 .toString());
+
+    // Space in query should be encoded as %20
+    assertEquals("http://foo/val1?q1=qv%201",
+                 RestUtil.getRestUri("http://foo/{param1}",
+                                     MapUtil.map("param1", "val1"),
+                                     MapUtil.map("q1", "qv 1"))
+                 .toString());
+
+    // Space in both path and query
+    assertEquals("http://foo/val%201?q1=qv%201",
+                 RestUtil.getRestUri("http://foo/{param1}",
+                                     MapUtil.map("param1", "val 1"),
+                                     MapUtil.map("q1", "qv 1"))
                  .toString());
   }
 
