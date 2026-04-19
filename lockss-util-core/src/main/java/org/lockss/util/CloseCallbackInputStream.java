@@ -36,18 +36,25 @@ import org.lockss.log.L4JLogger;
 
 /**
  * Wrapper InputStream that calls a user-supplied callback when closed.
- * Useful for deleting temporary files
+ * Useful for deleting temporary files.  The cookie can be used to
+ * identify the stream in the close callback, and/or to prevent some
+ * other object from being GCed until the stream is closed.  See {@link
+ * org.lockss.util.io.DeferredTempFileOutputStream}.
  */
 public class CloseCallbackInputStream extends ProxyInputStream {
   private static final L4JLogger log = L4JLogger.getLogger();
 
   private Callback cb;
   private Object cookie;
+  private String cookieName;
 
   public CloseCallbackInputStream(InputStream in, Callback cb, Object cookie) {
     super(in);
     this.cb = cb;
-    this.cookie = cookie;
+    if (cookie != null) {
+      this.cookie = cookie;
+      cookieName = cookie.toString();
+    }
   }
 
   @Override
@@ -59,10 +66,13 @@ public class CloseCallbackInputStream extends ProxyInputStream {
                e);
     } finally {
       try {
-	cb.streamClosed(cookie);
+        if (cb != null) {
+          cb.streamClosed(cookie);
+        }
       } catch (Exception e ) {
 	log.warn("Error in streamClosed callback", e);
       }
+      cookie = null;
     }
   }
 
@@ -102,6 +112,6 @@ public class CloseCallbackInputStream extends ProxyInputStream {
   }
   
   public String toString() {
-    return "[CCIS: " + cb + "]";
+    return "[CCIS: " + (cookie != null ? (cookie + ", ") : "") + cb + "]";
   }
 }
