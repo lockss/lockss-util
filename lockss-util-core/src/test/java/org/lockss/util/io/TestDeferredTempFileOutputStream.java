@@ -49,20 +49,18 @@ in this Software without prior written authorization from Stanford University.
 package org.lockss.util.io;
 
 import org.junit.jupiter.api.Test;
+import org.lockss.test.ThrowingOutputStream;
 import org.lockss.util.test.LockssTestCase5;
 import org.lockss.util.test.matcher.FindPattern;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 public class TestDeferredTempFileOutputStream extends LockssTestCase5 {
 
   /**
    * The test data as a string (which is the simplest form).
    */
-  private String testString = "0123456789";
+  private String testString = "0123456789".repeat(40);
 
   /**
    * The test data as a byte array, derived from the string.
@@ -185,18 +183,40 @@ public class TestDeferredTempFileOutputStream extends LockssTestCase5 {
   }
 
   /**
-   * Cause a DeferredTempFileOutputStream to become unreferences
+   * Cause a DeferredTempFileOutputStream to become unreferenced
    * without having been deleted.  Should cause a "Never deleted"
-   * stacktrace to be logger.
+   * stacktrace to be logged, and the file to be deleted
    */
   @Test
-  public void testNoDeleteTrace() throws Exception {
-    makeDFOS();
+  public void testNoDeleteAbandon() throws Exception {
+    DeferredTempFileOutputStream dfos = makeDFOS();
+    File file = dfos.getFile();
+    assertTrue(file.exists());
+    dfos = null;
     System.gc();
-    Thread.sleep(1000);   // Not really needed w/ Cleaner
+    Thread.sleep(1000);   // Shouldn't be needed w/ Cleaner
+    assertFalse(file.exists());
   }
 
-  private void makeDFOS() throws IOException {
+  /** Ensure that an existing InputStream obtained from the DTFOS
+   * prevents the Cleaner from deleting the file */
+  @Test
+  public void testNoDeleteAbandonWithInputStream() throws Exception {
+    DeferredTempFileOutputStream dfos = makeDFOS();
+    File file = dfos.getFile();
+    assertTrue(file.exists());
+    InputStream in = dfos.getInputStream();
+    dfos = null;
+    System.gc();
+    Thread.sleep(1000);
+    assertTrue(file.exists());
+    in = null;
+    System.gc();
+    Thread.sleep(1000);
+    assertFalse(file.exists());
+  }
+
+  private DeferredTempFileOutputStream makeDFOS() throws IOException {
     DeferredTempFileOutputStream dfos =
       new MyDeferredTempFileOutputStream(testBytes.length / 2);
     int chunkSize = testBytes.length / 3;
@@ -208,6 +228,55 @@ public class TestDeferredTempFileOutputStream extends LockssTestCase5 {
     dfos.close();
     assertFalse(dfos.isInMemory());
     assertNull(dfos.getData());
+    return dfos;
+  }
+
+  /**
+   * Ensure that the file is deleted if an exception is thrown writing to it.
+   */
+  @Test
+  public void testFileWriteError() throws IOException {
+    MyDeferredTempFileOutputStream dfos =
+      new MyDeferredTempFileOutputStream(testBytes.length / 2);
+    IOException writeError = new IOException("No space left on device");
+    dfos.setThrowSpec(writeError, null, testBytes.length + 20);
+    dfos.write(testBytes, 0, testBytes.length);
+    dfos.flush();
+    File file = dfos.getFile();
+    assertTrue(file.exists());
+    // The ThrowingOutputStream is wrapped in a BufferedOutputStream
+    // so we have to write a bunch of stuff, and we have to flush multiple
+    // times because the "afterBytes" comparison in
+    // ThrowingOutputStream isn't exact
+    try {
+      dfos.write(testBytes, 0, testBytes.length);
+      dfos.write(testBytes, 0, testBytes.length);
+      dfos.write(testBytes, 0, testBytes.length);
+      dfos.flush();
+      dfos.write(testBytes, 0, testBytes.length);
+      dfos.write(testBytes, 0, testBytes.length);
+      dfos.write(testBytes, 0, testBytes.length);
+      dfos.flush();
+      dfos.write(testBytes, 0, testBytes.length);
+      dfos.write(testBytes, 0, testBytes.length);
+      dfos.write(testBytes, 0, testBytes.length);
+      dfos.write(testBytes, 0, testBytes.length);
+      dfos.flush();
+      fail("DTFOS.write() should have thrown");
+    } catch (IOException e) {
+      assertFalse(file.exists());
+    }
+      
+//     dfos.close();
+//     File testFile = dfos.getFile();
+//     assertFalse(dfos.isInMemory());
+//     assertNull(dfos.getData());
+//     verifyResultFile(testFile);
+//     assertThat(testFile.getName(),
+// 	       FindPattern.findPattern("deferred-temp-file"));
+//     verifyResultStream(dfos.getInputStream());
+//     assertTrue(testFile.exists());
+//     verifyResultStream(dfos.getDeleteOnCloseInputStream());
   }
 
   /**
@@ -241,16 +310,46 @@ public class TestDeferredTempFileOutputStream extends LockssTestCase5 {
 
   static class MyDeferredTempFileOutputStream
     extends DeferredTempFileOutputStream {
+
+    private IOException throwOnWrite;
+    private IOException throwOnClose;
+    private long afterBytes = 0;
+    
     public MyDeferredTempFileOutputStream(int threshold) {
       super(threshold);
     }
     public MyDeferredTempFileOutputStream(int threshold, String name) {
       super(threshold, name);
     }
+
+    MyDeferredTempFileOutputStream setThrowSpec(IOException throwOnWrite,
+                                                IOException throwOnClose,
+                                                long afterBytes) {
+      this.throwOnWrite = throwOnWrite;
+      this.throwOnClose = throwOnClose;
+      this.afterBytes = afterBytes;
+      return this;
+    }
+
+    @Override
     protected File createTempFile(String name) throws IOException {
       File file = super.createTempFile(name);
       file.deleteOnExit();
       return file;
     }
+
+    @Override
+    protected OutputStream createFileOutputStream(File fileName)
+        throws IOException {
+      OutputStream res = super.createFileOutputStream(fileName);
+      if (throwOnWrite == null && throwOnClose == null) {
+        return res;
+      }
+      ThrowingOutputStream tos =
+        new ThrowingOutputStream(res, throwOnWrite, throwOnClose);
+      tos.setAfterBytes(afterBytes);
+      return tos;
+    }
   }
+
 }

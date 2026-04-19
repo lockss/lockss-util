@@ -63,22 +63,27 @@ import java.lang.ref.*;
  * closed before the threshold is reached, the temp file will not be
  * created.<br>
 
- * The temp file (if any) must be deleted, either by calling {@link
+ * The temp file (if any) should be deleted, either by calling {@link
  * #deleteTempFile()} or by (eventually) closing the stream returned
  * by {@link #getDeleteOnCloseInputStream()}.  (This should be done
  * even if {@link #isInMemory()} is true.)  If the file has not been
- * deleted by the time this is GC'ed, and this class's log level is
- * debug2 or above, the stack trace showing where it was created will
- * be logged, as a debugging aid.
+ * deleted by the time this is GC'ed, the file fill be deleted and, if
+ * this class's log level is debug2 or above, the stack trace showing
+ * where it was created will be logged, as a debugging aid.<br>
+ *
+ * Additionally, if an error occurs writing to the file, the file will
+ * be closed and deleted, and that fact logged.
  */
-public class DeferredTempFileOutputStream extends ThresholdingOutputStream {
+public class DeferredTempFileOutputStream extends ProxyOutputStream {
   private static final L4JLogger log = L4JLogger.getLogger();
 
   private static final Format TIMESTAMP_DATEFORMAT =
     FastDateFormat.getInstance("HH:mm:ss.SSS");
 
+  protected ThreshStream inner;
+
   /**
-   * The output stream to which data will be written prior to the theshold
+   * The output stream to which data will be written prior to the threshold
    * being reached.
    */
   protected UnsynchronizedByteArrayOutputStream memoryOutputStream;
@@ -145,50 +150,66 @@ public class DeferredTempFileOutputStream extends ThresholdingOutputStream {
    * @param name  Prefix to use for temp file name.
    */
   public DeferredTempFileOutputStream(int threshold, String name) {
-    super(threshold);
+    super(null);
+    inner = new ThreshStream(threshold);
+    setReference(inner);
     tempName = name;
     memoryOutputStream = new UnsynchronizedByteArrayOutputStream();
     currentOutputStream = memoryOutputStream;
-    if (log.isDebug2Enabled()) {
-      dfc = new DFCleaner(name);
-      cleanable = cleaner.register(this, dfc);
+    dfc = new DFCleaner(name);
+    cleanable = cleaner.register(this, dfc);
+
+  }
+
+  class ThreshStream extends ThresholdingOutputStream {
+
+    // --------------------------------------- ThresholdingOutputStream methods
+
+    ThreshStream(int threshold) {
+      super(threshold);
     }
 
-  }
+    /**
+     * Returns the current output stream. This may be memory based or disk
+     * based, depending on the current state with respect to the threshold.
+     *
+     * @return The underlying output stream.
+     *
+     * @exception IOException if an error occurs.
+     */
+    @Override
+    protected OutputStream getStream() throws IOException {
+      return currentOutputStream;
+    }
 
-  // --------------------------------------- ThresholdingOutputStream methods
+    /**
+     * Switches the underlying output stream from a memory based stream to
+     * one that is backed by a temp file on disk.
+     *
+     * @exception IOException if an error occurs.
+     */
+    @Override
+    protected void thresholdReached() throws IOException {
+      tempFile = createTempFile(tempName);
+      dfc.setFile(tempFile);
+      OutputStream fos = createFileOutputStream(tempFile);
+      BufferedOutputStream bos = new BufferedOutputStream(fos, 100 * 1024);
+      memoryOutputStream.writeTo(bos);
+      currentOutputStream = bos;
+      memoryOutputStream = null;
+    }
 
-  /**
-   * Returns the current output stream. This may be memory based or disk
-   * based, depending on the current state with respect to the threshold.
-   *
-   * @return The underlying output stream.
-   *
-   * @exception IOException if an error occurs.
-   */
-  protected OutputStream getStream() throws IOException {
-    return currentOutputStream;
-  }
-
-  /**
-   * Switches the underlying output stream from a memory based stream to
-   * one that is backed by a temp file on disk.
-   *
-   * @exception IOException if an error occurs.
-   */
-  @Override
-  protected void thresholdReached() throws IOException {
-    tempFile = createTempFile(tempName);
-    FileOutputStream fos = new FileOutputStream(tempFile);
-    BufferedOutputStream bos = new BufferedOutputStream(fos, 100 * 1024);
-    memoryOutputStream.writeTo(bos);
-    currentOutputStream = bos;
-    memoryOutputStream = null;
   }
 
   // Overridable for testing
   protected File createTempFile(String name) throws IOException {
     return FileUtil.createTempFile(name, ".tmp", tmpDir);
+  }
+
+  // Overridable for testing
+  protected OutputStream createFileOutputStream(File fileName)
+      throws IOException {
+    return new FileOutputStream(tempFile);
   }
 
   // --------------------------------------------------------- Public methods
@@ -201,7 +222,7 @@ public class DeferredTempFileOutputStream extends ThresholdingOutputStream {
    *         <code>false</code> otherwise.
    */
   public boolean isInMemory() {
-    return (!isThresholdExceeded());
+    return (!inner.isThresholdExceeded());
   }
 
   /**
@@ -222,6 +243,15 @@ public class DeferredTempFileOutputStream extends ThresholdingOutputStream {
   }
 
   /**
+   * Returns the number of bytes that have been written to this output stream.
+   *
+   * @return The number of bytes written.
+   */
+  public long getByteCount() {
+    return inner.getByteCount();
+  }
+
+  /**
    * Return an InputStream open on the contents written to the
    * OutputStream.
    *
@@ -231,7 +261,9 @@ public class DeferredTempFileOutputStream extends ThresholdingOutputStream {
     if (isInMemory()) {
       return new ByteArrayInputStream(getData());
     } else {
-      return new BufferedInputStream(new FileInputStream(getFile()));
+      return
+        new BufferedInputStream(new CloseCallbackInputStream(new FileInputStream(getFile()),
+                                                             null, this));
     }
   }
 
@@ -255,7 +287,7 @@ public class DeferredTempFileOutputStream extends ThresholdingOutputStream {
         };
       return
         new BufferedInputStream(new CloseCallbackInputStream(getInputStream(),
-                                                             cb, null));
+                                                             cb, this));
     }
   }
 
@@ -285,7 +317,7 @@ public class DeferredTempFileOutputStream extends ThresholdingOutputStream {
    */
   public void deleteTempFile() {
     if (!closed) {
-      log.warn("Deleted while still open: " + tempName);
+      log.warn("Deleted while still open: {}", tempName);
       IOUtils.closeQuietly(this);
     }
     if (tempFile != null) {
@@ -298,10 +330,22 @@ public class DeferredTempFileOutputStream extends ThresholdingOutputStream {
     }
   }
 
+  @Override
+  protected void handleIOException(IOException e) throws IOException {
+    log.warn("Exception thrown while writing: {}", tempName, e);
+    if (!isInMemory()) {
+      log.warn("Closing and deleting tempfile: {}", tempName);
+      IOUtils.closeQuietly(this);
+      deleteTempFile();
+    }
+    throw e;
+  }
+
   /** The Cleaner state and Runnable */
   private static class DFCleaner implements Runnable {
 
     private boolean isDeleted = false;
+    private File file;
     private String createStack;
     private String name;
     private long openTime;
@@ -313,14 +357,20 @@ public class DeferredTempFileOutputStream extends ThresholdingOutputStream {
     private DFCleaner(String name) {
       this.name = name;
 
-      // Record the current stack
-      Throwable th = new Exception("Create");
-      StringWriter sw = new StringWriter();
-      PrintWriter pw = new PrintWriter(sw);
-      th.printStackTrace(pw);
-      createStack = sw.toString();
+      if (log.isDebug2Enabled()) {
+        // Record the current stack
+        Throwable th = new Exception("Create");
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        th.printStackTrace(pw);
+        createStack = sw.toString();
+      }
 
       openTime = System.currentTimeMillis();
+    }
+
+    private void setFile(File file) {
+      this.file = file;
     }
 
     private void setDeleted() {
@@ -329,11 +379,22 @@ public class DeferredTempFileOutputStream extends ThresholdingOutputStream {
 
     public void run() {
       if (!isDeleted) {
-        log.warn("Never deleted" +
-                 (name != null ? " (" + name + ")" : "") +
-                 ".  Created at " +
-                 TIMESTAMP_DATEFORMAT.format(openTime) +
-                 " at " + createStack);
+        FileUtils.deleteQuietly(file);
+        file = null;
+        StringBuilder sb = new StringBuilder();
+        sb.append("Never deleted");
+        if (name != null) {
+          sb.append(" (");
+          sb.append(name);
+          sb.append(")");
+        }
+        sb.append(".  Created at ");
+        sb.append(TIMESTAMP_DATEFORMAT.format(openTime));
+          if (createStack != null) {
+            sb.append(" at ");
+            sb.append(createStack);
+          }
+        log.warn(sb.toString());
       }
     }
   }
