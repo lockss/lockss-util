@@ -152,7 +152,8 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
   public DeferredTempFileOutputStream(int threshold, String name) {
     super(null);
     inner = new ThreshStream(threshold);
-    setReference(inner);
+    out = inner;
+//     setReference(inner);
     tempName = name;
     memoryOutputStream = new UnsynchronizedByteArrayOutputStream();
     currentOutputStream = memoryOutputStream;
