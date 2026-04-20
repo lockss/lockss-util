@@ -73,6 +73,7 @@ public class CloseCallbackInputStream extends ProxyInputStream {
 	log.warn("Error in streamClosed callback", e);
       }
       cookie = null;
+      cb = null;
     }
   }
 
