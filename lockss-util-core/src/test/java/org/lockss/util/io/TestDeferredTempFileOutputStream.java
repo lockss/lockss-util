@@ -266,17 +266,6 @@ public class TestDeferredTempFileOutputStream extends LockssTestCase5 {
     } catch (IOException e) {
       assertFalse(file.exists());
     }
-      
-//     dfos.close();
-//     File testFile = dfos.getFile();
-//     assertFalse(dfos.isInMemory());
-//     assertNull(dfos.getData());
-//     verifyResultFile(testFile);
-//     assertThat(testFile.getName(),
-// 	       FindPattern.findPattern("deferred-temp-file"));
-//     verifyResultStream(dfos.getInputStream());
-//     assertTrue(testFile.exists());
-//     verifyResultStream(dfos.getDeleteOnCloseInputStream());
   }
 
   /**
