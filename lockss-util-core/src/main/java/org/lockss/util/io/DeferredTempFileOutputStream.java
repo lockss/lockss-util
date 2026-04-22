@@ -106,6 +106,9 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
   /** Prefix for temp file name */
   protected String tempName;
     
+  /** The name of the temp file for log messages */
+  protected String logName;
+
   /**
    * True when close() has been called successfully.
    */
@@ -155,11 +158,11 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
     out = inner;
 //     setReference(inner);
     tempName = name;
+    logName = tempName;
     memoryOutputStream = new UnsynchronizedByteArrayOutputStream();
     currentOutputStream = memoryOutputStream;
     dfc = new DFCleaner(name);
     cleanable = cleaner.register(this, dfc);
-
   }
 
   class ThreshStream extends ThresholdingOutputStream {
@@ -192,6 +195,7 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
     @Override
     protected void thresholdReached() throws IOException {
       tempFile = createTempFile(tempName);
+      logName = tempFile.getName();
       dfc.setFile(tempFile);
       OutputStream fos = createFileOutputStream(tempFile);
       BufferedOutputStream bos = new BufferedOutputStream(fos, 100 * 1024);
@@ -224,6 +228,10 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
    */
   public boolean isInMemory() {
     return (!inner.isThresholdExceeded());
+  }
+
+  public String tempFileName() {
+    return logName;
   }
 
   /**
@@ -318,7 +326,7 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
    */
   public void deleteTempFile() {
     if (!closed) {
-      log.warn("Deleted while still open: {}", tempName);
+      log.warn("Deleted while still open: {}", logName);
       IOUtils.closeQuietly(this);
     }
     if (tempFile != null) {
@@ -333,9 +341,9 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
 
   @Override
   protected void handleIOException(IOException e) throws IOException {
-    log.warn("Exception thrown while writing: {}", tempName, e);
+    log.warn("Exception thrown while writing: {}", logName, e);
     if (!isInMemory()) {
-      log.warn("Closing and deleting tempfile: {}", tempName);
+      log.warn("Closing and deleting tempfile: {}", logName);
       IOUtils.closeQuietly(this);
       deleteTempFile();
     }
