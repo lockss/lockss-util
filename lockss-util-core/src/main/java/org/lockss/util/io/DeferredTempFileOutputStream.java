@@ -285,21 +285,18 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
    * @return An InputStream open on the data written to the OutputStream
    */
   public InputStream getDeleteOnCloseInputStream() throws IOException {
-    if (isInMemory()) {
-      return new CloseCallbackInputStream(new ByteArrayInputStream(getData()),
-                                          null, this);
-    } else {
-      CloseCallbackInputStream.Callback cb =
-        new CloseCallbackInputStream.Callback() {
-          @Override
-          public void streamClosed(Object cookie) {
-            deleteTempFile();
-          }
-        };
-      return
-        new BufferedInputStream(new CloseCallbackInputStream(getInputStream(),
-                                                             cb, this));
-    }
+    // Always use a CloseCallbackInputStream with a callback in order
+    // to avoid false "never deleted" warnings when the file is in memory
+    CloseCallbackInputStream.Callback cb =
+      new CloseCallbackInputStream.Callback() {
+        @Override
+        public void streamClosed(Object cookie) {
+          deleteTempFile();
+        }
+      };
+    return
+      new BufferedInputStream(new CloseCallbackInputStream(getInputStream(),
+                                                           cb, this));
   }
 
   /**
