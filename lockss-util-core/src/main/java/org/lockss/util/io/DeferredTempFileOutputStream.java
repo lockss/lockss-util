@@ -268,7 +268,8 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
    */
   public InputStream getInputStream() throws IOException {
     if (isInMemory()) {
-      return new ByteArrayInputStream(getData());
+      return new CloseCallbackInputStream(new ByteArrayInputStream(getData()),
+                                          null, this);
     } else {
       return
         new BufferedInputStream(new CloseCallbackInputStream(new FileInputStream(getFile()),
@@ -285,7 +286,8 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
    */
   public InputStream getDeleteOnCloseInputStream() throws IOException {
     if (isInMemory()) {
-      return new ByteArrayInputStream(getData());
+      return new CloseCallbackInputStream(new ByteArrayInputStream(getData()),
+                                          null, this);
     } else {
       CloseCallbackInputStream.Callback cb =
         new CloseCallbackInputStream.Callback() {
