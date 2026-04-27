@@ -275,7 +275,10 @@ public class RestUtil {
       // was not configured with our LockssResponseErrorHandler. Handle default RestClientResponseException and its
       // subclasses here.
 
-      throw LockssRestHttpException.fromRestClientResponseException(e, restTemplate.getMessageConverters());
+      LockssRestHttpException lrhe =
+          LockssRestHttpException.fromRestClientResponseException(e, restTemplate.getMessageConverters());
+      lrhe.setClientErrorMessage(clientExceptionMessage);
+      throw lrhe;
 
     } catch (ResourceAccessException e) {
       // Get the cause, or this exception if there is no cause.
