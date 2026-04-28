@@ -161,7 +161,7 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
     logName = tempName;
     memoryOutputStream = new UnsynchronizedByteArrayOutputStream();
     currentOutputStream = memoryOutputStream;
-    dfc = new DFCleaner(name);
+    dfc = new DFCleaner(logName);
     cleanable = cleaner.register(this, dfc);
   }
 
@@ -325,7 +325,7 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
    */
   public void deleteTempFile() {
     if (!closed) {
-      log.warn("Deleted while still open: {}", logName);
+      log.error("Deleted while still open: {}", logName, new Throwable());
       IOUtils.closeQuietly(this);
     }
     if (tempFile != null) {
@@ -386,22 +386,29 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
     }
 
     public void run() {
-      if (!isDeleted) {
-        FileUtils.deleteQuietly(file);
-        file = null;
+      if (isDeleted) {
+        return;
+      }
+      if (file == null) {
+        log.warn("Never deleted (in mem): {}", name);
+      } else {
         StringBuilder sb = new StringBuilder();
-        sb.append("Never deleted");
-        if (name != null) {
-          sb.append(" (");
-          sb.append(name);
-          sb.append(")");
+        sb.append("Never deleted: ");
+        sb.append(file.getName());
+        try {
+          if (!file.delete()) {
+            sb.append(" DELETE FAILED");
+          }
+        } catch (Exception e) {
+            sb.append(" DELETE FAILED: ");
+            sb.append(e.toString());
         }
         sb.append(".  Created at ");
         sb.append(TIMESTAMP_DATEFORMAT.format(openTime));
-          if (createStack != null) {
-            sb.append(" at ");
-            sb.append(createStack);
-          }
+        if (createStack != null) {
+          sb.append(" at ");
+          sb.append(createStack);
+        }
         log.warn(sb.toString());
       }
     }
