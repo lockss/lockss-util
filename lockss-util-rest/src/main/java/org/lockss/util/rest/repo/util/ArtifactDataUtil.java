@@ -609,7 +609,7 @@ public class ArtifactDataUtil {
   }
 
   public static Header[] transformHttpHeadersToHeaderArray(HttpHeaders headers) {
-    Header[] result = headers.entrySet()
+    Header[] result = headers.headerSet()
         .stream()
         .flatMap(entry -> entry.getValue()
             .stream()

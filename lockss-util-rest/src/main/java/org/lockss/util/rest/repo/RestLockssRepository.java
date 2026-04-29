@@ -301,7 +301,7 @@ public class RestLockssRepository implements LockssRepository {
 
     // Build REST endpoint to /artifacts
     String endpoint = String.format("%s/artifacts", repositoryUrl);
-    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint);
+    UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(endpoint);
 
     // Perform REST call: POST the multipart entity to the remote LOCKSS repository
     try {
@@ -473,11 +473,11 @@ public class RestLockssRepository implements LockssRepository {
       HttpHeaders responseHeaders = response.getHeaders();
 
       boolean receivedOnlyHeaders =
-          responseHeaders.containsKey(ArtifactConstants.INCLUDES_CONTENT) &&
+          responseHeaders.containsHeader(ArtifactConstants.INCLUDES_CONTENT) &&
           responseHeaders.getFirst(ArtifactConstants.INCLUDES_CONTENT).equals("false");
 
       boolean receivedResourceType =
-          responseHeaders.containsKey(ArtifactConstants.ARTIFACT_DATA_TYPE) &&
+          responseHeaders.containsHeader(ArtifactConstants.ARTIFACT_DATA_TYPE) &&
           responseHeaders.getFirst(ArtifactConstants.ARTIFACT_DATA_TYPE).equals("resource");
 
       InputStream responseBodyStream = body.getInputStream();
@@ -581,7 +581,7 @@ public class RestLockssRepository implements LockssRepository {
       HttpHeaders responseHeaders = response.getHeaders();
 
       boolean receivedOnlyHeaders =
-          responseHeaders.containsKey(ArtifactConstants.INCLUDES_CONTENT) &&
+          responseHeaders.containsHeader(ArtifactConstants.INCLUDES_CONTENT) &&
               responseHeaders.getFirst(ArtifactConstants.INCLUDES_CONTENT).equals("false");
 
       HttpHeaders artifactHeaders = new HttpHeaders();
@@ -835,7 +835,7 @@ public class RestLockssRepository implements LockssRepository {
   public Iterable<String> getNamespaces() throws IOException {
     String endpoint = String.format("%s/namespaces", repositoryUrl);
 
-    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint);
+    UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(endpoint);
 
     try {
       ResponseEntity<String> response =
@@ -869,7 +869,7 @@ public class RestLockssRepository implements LockssRepository {
   public Iterable<String> getAuIds(String namespace) throws IOException {
     String endpoint = String.format("%s/aus", repositoryUrl);
 
-    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint);
+    UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(endpoint);
 
     Map<String, String> uriVars = new HashMap<>();
     if (namespace != null) {
@@ -969,7 +969,7 @@ public class RestLockssRepository implements LockssRepository {
 
     String endpoint = String.format("%s/artifacts", repositoryUrl);
 
-    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
+    UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(endpoint)
         .queryParam("auid", "{auid}")
         .queryParam("version", "{version}");
 
@@ -1000,7 +1000,7 @@ public class RestLockssRepository implements LockssRepository {
 
     String endpoint = String.format("%s/artifacts", repositoryUrl);
 
-    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
+    UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(endpoint)
         .queryParam("auid", "{auid}")
         .queryParam("version", "{version}");
 
@@ -1034,7 +1034,7 @@ public class RestLockssRepository implements LockssRepository {
 
     String endpoint = String.format("%s/artifacts", repositoryUrl);
 
-    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
+    UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(endpoint)
         .queryParam("auid", "{auid}")
         .queryParam("urlPrefix", "{urlPrefix}");
 
@@ -1068,7 +1068,7 @@ public class RestLockssRepository implements LockssRepository {
 
     String endpoint = String.format("%s/artifacts", repositoryUrl);
 
-    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
+    UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(endpoint)
         .queryParam("auid", "{auid}")
         .queryParam("version", "{version}")
         .queryParam("urlPrefix", "{urlPrefix}");
@@ -1104,7 +1104,7 @@ public class RestLockssRepository implements LockssRepository {
 
     String endpoint = String.format("%s/artifacts", repositoryUrl);
 
-    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
+    UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(endpoint)
         .queryParam("urlPrefix", "{urlPrefix}")
         .queryParam("version", "{version}");
 
@@ -1137,7 +1137,7 @@ public class RestLockssRepository implements LockssRepository {
 
     String endpoint = String.format("%s/artifacts", repositoryUrl);
 
-    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
+    UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(endpoint)
         .queryParam("auid", "{auid}")
         .queryParam("url", "{url}")
         .queryParam("version", "{version}");
@@ -1170,7 +1170,7 @@ public class RestLockssRepository implements LockssRepository {
 
     String endpoint = String.format("%s/artifacts", repositoryUrl);
 
-    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
+    UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(endpoint)
         .queryParam("url", "{url}")
         .queryParam("version", "{version}");
 
@@ -1208,7 +1208,7 @@ public class RestLockssRepository implements LockssRepository {
 
     String endpoint = String.format("%s/artifacts", repositoryUrl);
 
-    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
+    UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(endpoint)
         .queryParam("auid", "{auid}")
         .queryParam("url", "{url}")
         .queryParam("version", "{version}");
@@ -1300,7 +1300,7 @@ public class RestLockssRepository implements LockssRepository {
 
     String endpoint = String.format("%s/artifacts", repositoryUrl);
 
-    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint)
+    UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(endpoint)
         .queryParam("auid", "{auid}")
         .queryParam("url", "{url}")
         .queryParam("version", "{version}");
@@ -1426,7 +1426,7 @@ public class RestLockssRepository implements LockssRepository {
     }
 
     UriComponentsBuilder builder = UriComponentsBuilder
-        .fromHttpUrl(repositoryUrl + "/aus/{auid}/size")
+        .fromUriString(repositoryUrl + "/aus/{auid}/size")
         .queryParam("version", "{version}");
 
     Map<String, Object> uriVars = new HashMap<>();
@@ -1466,7 +1466,7 @@ public class RestLockssRepository implements LockssRepository {
     String endpoint = String.format("%s/repoinfo", repositoryUrl);
     log.trace("endpoint = {}", endpoint);
 
-    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint);
+    UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(endpoint);
 
     try {
       ResponseEntity<String> response =
@@ -1496,7 +1496,7 @@ public class RestLockssRepository implements LockssRepository {
     String endpoint = String.format("%s/repoinfo/storage", repositoryUrl);
     log.trace("endpoint = {}", endpoint);
 
-    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint);
+    UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(endpoint);
 
     try {
       ResponseEntity<String> response =

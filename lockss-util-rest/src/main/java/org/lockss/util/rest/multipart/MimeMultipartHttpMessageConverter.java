@@ -75,7 +75,7 @@ public class MimeMultipartHttpMessageConverter
       return MultipartUtil.parse(inputMessage.getBody());
     } catch (MessagingException me) {
       throw new HttpMessageNotReadableException("Error reading HTTP message",
-	  me);
+	  me, inputMessage);
     }
   }
 

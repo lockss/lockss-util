@@ -264,7 +264,7 @@ public class LockssRestHttpException extends LockssRestException {
     LockssRestHttpException lrhe = new LockssRestHttpException();
 
     // Populate LockssRestHttpException with base information
-    lrhe.setHttpStatus(HttpStatus.valueOf(e1.getRawStatusCode()));
+    lrhe.setHttpStatus(HttpStatus.valueOf(e1.getStatusCode().value()));
     lrhe.setHttpResponseHeaders(e1.getResponseHeaders());
 //    lrhe.setServerErrorMessage(e1.getMessage());
 

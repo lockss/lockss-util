@@ -2,7 +2,7 @@
 
   <!-- Needed for tests in org.lockss.log. -->
 
-<Configuration status="WARN" packages="org.lockss.log">
+<Configuration status="WARN">
 
   <Appenders>
     <ListAppender name="ListAppender">

@@ -41,7 +41,7 @@ public class TestSpringHeaderUtil extends LockssTestCase5 {
   private static L4JLogger log = L4JLogger.getLogger();
 
   void assertEmpty(HttpHeaders h) {
-    assertEmpty(h.entrySet());
+    assertEmpty(h.headerNames());
   }
 
   @Test

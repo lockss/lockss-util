@@ -29,19 +29,18 @@ in this Software without prior written authorization from Stanford University.
 package org.lockss.log;
 
 import java.net.URI;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import org.apache.commons.collections4.SetValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
-import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.logging.log4j.*;
 import org.apache.logging.log4j.core.*;
 import org.apache.logging.log4j.core.config.*;
 import org.apache.logging.log4j.core.util.CronExpression;
 import org.apache.logging.log4j.message.MessageFactory;
 import org.apache.logging.log4j.status.StatusLogger;
-
-import org.lockss.util.time.*;
 
 /**
  * This LoggerContext:<ul>
@@ -105,9 +104,9 @@ public class L4JLoggerContext extends LoggerContext {
     if (once()) {
       // Log a Timestamp: message at startup
       L4JLogger tslog = new L4JLogger(ctx, "Timestamp", messageFactory);
-      FastDateFormat df =
-	FastDateFormat.getInstance("EEE dd MMM yyyy HH:mm:ss zzz");
-      tslog.info(TS_MARKER, df.format(TimeBase.nowDate()) + "\n");
+      DateTimeFormatter df =
+	DateTimeFormatter.ofPattern("EEE dd MMM yyyy HH:mm:ss zzz");
+      tslog.info(TS_MARKER, ZonedDateTime.now().format(df) + "\n");
 
       // Schedule a Timestamp message every midnight.
       try {
@@ -122,7 +121,7 @@ public class L4JLoggerContext extends LoggerContext {
 	scheduler.scheduleWithCron(new CronExpression("0 0 0 * * ?"),
 				   new Runnable() {
 	    public void run() {
-	      tslog.info(TS_MARKER, df.format(TimeBase.nowDate()) + "\n");
+	      tslog.info(TS_MARKER, ZonedDateTime.now().format(df) + "\n");
 	    }});
       } catch (java.text.ParseException e) {
 	log.warn("Can't schedule midnight timestamp", e);

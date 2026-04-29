@@ -64,7 +64,7 @@ public class TestRestLockssRepositoryAuidIterator extends LockssTestCase5 {
     restTemplate = RestUtil.getRestTemplate();
     mockServer = MockRestServiceServer.createServer(restTemplate);
     endpoint = String.format("%s/aus", BASEURL, NS1);
-    builder = UriComponentsBuilder.fromHttpUrl(endpoint)
+    builder = UriComponentsBuilder.fromUriString(endpoint)
         .queryParam("namespace", NS1);
 
   }

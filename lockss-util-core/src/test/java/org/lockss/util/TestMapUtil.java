@@ -47,8 +47,8 @@ public class TestMapUtil extends LockssTestCase5 {
     for (int ix = 0 ; ix < arr.length ; ) {
       exp.put(arr[ix++], arr[ix++]);
     }
-    assertEquals(exp, MapUtil.map(arr));
-    assertEquals(exp, MapUtil.map(String.class, String.class, arr));
+    assertEquals(exp, MapUtil.map((Object[])arr));
+    assertEquals(exp, MapUtil.map(String.class, String.class, (Object[])arr));
   }
   
   @Test

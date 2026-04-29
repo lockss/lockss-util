@@ -45,10 +45,8 @@ import org.lockss.util.rest.exception.LockssRestHttpException;
 import org.lockss.util.rest.exception.LockssRestNetworkException;
 import org.lockss.util.rest.multipart.MultipartMessageHttpMessageConverter;
 import org.lockss.util.time.TimerUtil;
-import org.springframework.boot.context.properties.PropertyMapper;
 import org.springframework.boot.ssl.SslBundle;
 import org.springframework.boot.ssl.SslOptions;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
@@ -57,6 +55,8 @@ import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.ResourceHttpMessageConverter;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
@@ -310,7 +310,7 @@ public class RestUtil {
     return getRestTemplate(0, 0);
   }
 
-  public static RestTemplateBuilder getRestTemplateBuilder(long connectTimeout, long readTimeout) {
+  public static RestTemplate buildRestTemplate(long connectTimeout, long readTimeout) {
     log.debug2("connectTimeout = {}", connectTimeout);
     log.debug2("readTimeout = {}", readTimeout);
 
@@ -325,14 +325,20 @@ public class RestUtil {
     LockssRestTemplateSettings settings =
         LockssRestTemplateSettings.withTimeouts(connectTimeout, readTimeout);
 
-    return getRestTemplateBuilder(settings);
+    return buildRestTemplate(settings);
   }
 
-  public static RestTemplateBuilder getRestTemplateBuilder(LockssRestTemplateSettings settings) {
-    // Q: Do we need to configure message converters?
-    return new RestTemplateBuilder()
-        .requestFactory(() -> createConfiguredRequestFactory(settings))
-        .errorHandler(new LockssResponseErrorHandler(new RestTemplate().getMessageConverters()));
+  public static RestTemplate buildRestTemplate(LockssRestTemplateSettings settings) {
+    RestTemplate restTemplate = new RestTemplate();
+    restTemplate.setRequestFactory(createConfiguredRequestFactory(settings));
+    // No-op error handler: return all responses without throwing, for test use
+    restTemplate.setErrorHandler(new DefaultResponseErrorHandler() {
+      @Override
+      public boolean hasError(ClientHttpResponse response) {
+        return false;
+      }
+    });
+    return restTemplate;
   }
 
   /**
@@ -347,17 +353,15 @@ public class RestUtil {
    */
   public static RestTemplate getRestTemplate(long connectTimeout, long readTimeout) {
     // Q: Do we need to configure message converters? Error handlers?
-    RestTemplate restTemplate = getRestTemplateBuilder(connectTimeout, readTimeout).build();
+    RestTemplate restTemplate = buildRestTemplate(connectTimeout, readTimeout);
+    restTemplate.setErrorHandler(new LockssResponseErrorHandler(restTemplate.getMessageConverters()));
     log.debug2("restTemplate = {}", restTemplate);
     return restTemplate;
   }
 
   private static HttpComponentsClientHttpRequestFactory createConfiguredRequestFactory(LockssRestTemplateSettings settings) {
-    HttpComponentsClientHttpRequestFactory requestFactory = createRequestFactory(settings);
-    PropertyMapper map = PropertyMapper.get().alwaysApplyingWhenNonNull();
-    map.from(Duration.ofMillis(settings.connectTimeout()))
-        .asInt(Duration::toMillis).to(requestFactory::setConnectTimeout);
-    return requestFactory;
+    // Connect timeout is configured on the HttpClient's ConnectionConfig in createPoolingConnectionManager
+    return createRequestFactory(settings);
   }
 
   private static HttpComponentsClientHttpRequestFactory createRequestFactory(LockssRestTemplateSettings settings) {
@@ -496,10 +500,10 @@ public class RestUtil {
 
   public static RestTemplate getRestTemplate(LockssRestTemplateSettings settings,
                                              List<HttpMessageConverter<?>> msgConverters) {
-    return getRestTemplateBuilder(settings)
-        .messageConverters(msgConverters)
-        .errorHandler(new LockssResponseErrorHandler(new RestTemplate().getMessageConverters()))
-        .build();
+    RestTemplate restTemplate = buildRestTemplate(settings);
+    restTemplate.setMessageConverters(msgConverters);
+    restTemplate.setErrorHandler(new LockssResponseErrorHandler(restTemplate.getMessageConverters()));
+    return restTemplate;
   }
 
   private static List<HttpMessageConverter<?>> replaceHttpMessageConverter(List<HttpMessageConverter<?>> msgConverters,

@@ -51,7 +51,7 @@ public class RepoUtil {
   public static Map<String,String> mapFromHttpHeaders(HttpHeaders hdrs) {
     Map<String,String> res = new HashMap<String,String>();
     if (hdrs != null) {
-      for (String key : hdrs.keySet()) {
+      for (String key : hdrs.headerNames()) {
         res.put(key, String.join(",", hdrs.get(key)));
       }
     }

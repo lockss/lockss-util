@@ -222,7 +222,7 @@ public class MultipartConnector {
       log.trace("response = {}", response);
 
       // Parse the response and return it.
-      return new HttpResponseStatusAndHeaders(response.getStatusCodeValue(),
+      return new HttpResponseStatusAndHeaders(response.getStatusCode().value(),
 	  null, response.getHeaders());
     } catch (LockssRestException lre) {
       log.debug2("Exception caught updating MultipartMessage object", lre);

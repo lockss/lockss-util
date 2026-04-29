@@ -62,7 +62,7 @@ public class RestStatusClient extends RestBaseClient<RestStatusClient> {
       ResponseEntity<ApiStatus> response = callRestService("/status", null,
 	  null, HttpMethod.GET, null, null, ApiStatus.class,
           "Can't get status", RestUtil.NO_RETRY_BACKOFFS);
-      int status = response.getStatusCodeValue();
+      int status = response.getStatusCode().value();
       log.debug2("status = " + status);
       ApiStatus result = response.getBody();
       log.debug2("result = " + result);

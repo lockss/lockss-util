@@ -1,7 +1,6 @@
 package org.lockss.util.rest;
 
 import org.lockss.log.L4JLogger;
-import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.rest.exception.LockssRestHttpException;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.client.ClientHttpResponse;
@@ -34,25 +33,27 @@ public class LockssResponseErrorHandler extends DefaultResponseErrorHandler {
   }
 
   /**
-   * Overrides {@link DefaultResponseErrorHandler#handleError(ClientHttpResponse)} to intercept 5xx server errors
-   * and determine the type of error the LOCKSS Spring Boot application is experiencing.
+   * Overrides {@link DefaultResponseErrorHandler#handleError(URI, HttpMethod, ClientHttpResponse)} to intercept
+   * error responses and determine the type of error the LOCKSS Spring Boot application is experiencing.
    * <p>
    * Use a provided list of {@link HttpMessageConverter}s to deserialize the error responses from LOCKSS Spring Boot
    * applications into {@link RestResponseErrorBody.RestResponseError} objects, which are then used to populate the
    * {@link LockssRestHttpException} that's wrapped and thrown within a {@link WrappedLockssRestHttpException} to
    * the client call.
    *
+   * @param url The URL for the request.
+   * @param method The HTTP method for the request.
    * @param response A {@link ClientHttpResponse} representing the HTTP error response from the Spring Boot application.
    * @throws IOException
    */
   @Override
-  public void handleError(ClientHttpResponse response) throws IOException {
+  public void handleError(URI url, HttpMethod method, ClientHttpResponse response) throws IOException {
     try {
       // We could process the ClientHttpResponse directly but the RestClientResponseException thrown
       // by the super class method has a convenient access to the error response body byte array, which
       // in-turn is useful for avoiding successive HttpMessageConverters from using an exhausted InputStream
       // from the ClientHttpResponse. See below and ByteArrayHttpInputMessage.
-      super.handleError(response);
+      super.handleError(url, method, response);
 
     } catch (RestClientResponseException e1) {
       //// Intercept RestClientResponseException and translate to LockssRestHttpException

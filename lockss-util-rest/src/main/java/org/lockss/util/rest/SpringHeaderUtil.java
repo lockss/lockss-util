@@ -76,7 +76,7 @@ public class SpringHeaderUtil {
       toHeaders = new HttpHeaders();
     }
     if (headers != null) {
-      for (Map.Entry<String,List<String>> ent : headers.entrySet()) {
+      for (Map.Entry<String,List<String>> ent : headers.headerSet()) {
 	for (String val : ent.getValue()) {
 	  if (replace) {
 	    toHeaders.put(ent.getKey(), ent.getValue());

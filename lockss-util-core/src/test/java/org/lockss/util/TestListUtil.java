@@ -111,7 +111,7 @@ public class TestListUtil extends LockssTestCase5 {
   public void testAppend() {
     assertThat(ListUtil.append(), empty());
     
-    assertThat(ListUtil.append(null), empty());
+    assertThat(ListUtil.append((List<String>)null), empty());
     
     assertThat(ListUtil.append(null, null, null), empty());
     
