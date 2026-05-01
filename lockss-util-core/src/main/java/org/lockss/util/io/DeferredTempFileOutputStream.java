@@ -389,10 +389,11 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
       if (isDeleted) {
         return;
       }
+      StringBuilder sb = new StringBuilder();
       if (file == null) {
-        log.warn("Never deleted (in mem): {}", name);
+        sb.append("Never deleted (in mem): ");
+        sb.append(name);
       } else {
-        StringBuilder sb = new StringBuilder();
         sb.append("Never deleted: ");
         sb.append(file.getName());
         try {
@@ -403,14 +404,14 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
             sb.append(" DELETE FAILED: ");
             sb.append(e.toString());
         }
-        sb.append(".  Created at ");
-        sb.append(TIMESTAMP_DATEFORMAT.format(openTime));
-        if (createStack != null) {
-          sb.append(" at ");
-          sb.append(createStack);
-        }
-        log.warn(sb.toString());
       }
+      sb.append(".  Created at ");
+      sb.append(TIMESTAMP_DATEFORMAT.format(openTime));
+      if (createStack != null) {
+        sb.append(" at ");
+        sb.append(createStack);
+      }
+      log.warn(sb.toString());
     }
   }
 }
