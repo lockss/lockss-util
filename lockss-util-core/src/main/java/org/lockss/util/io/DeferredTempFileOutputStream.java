@@ -352,11 +352,11 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
   /** The Cleaner state and Runnable */
   private static class DFCleaner implements Runnable {
 
-    private boolean isDeleted = false;
-    private File file;
-    private String createStack;
-    private String name;
-    private long openTime;
+    private volatile boolean isDeleted = false;
+    private volatile File file;
+    private volatile String createStack;
+    private volatile String name;
+    private volatile long openTime;
 
     private DFCleaner() {
       this(null);
