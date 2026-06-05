@@ -48,15 +48,18 @@ in this Software without prior written authorization from Stanford University.
  */
 
 package org.lockss.util.io;
+
+import java.io.*;
+import java.lang.ref.*;
 import java.text.Format;
+import java.util.concurrent.atomic.*;
+
 import org.apache.commons.io.output.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.lockss.log.*;
 import org.lockss.util.CloseCallbackInputStream;
-import java.io.*;
-import java.lang.ref.*;
 
 /** An output stream backed by memory below a specified threshold size,
  * then by a temp file if it grows over the threshold.  If the stream is
@@ -79,6 +82,8 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
 
   private static final Format TIMESTAMP_DATEFORMAT =
     FastDateFormat.getInstance("HH:mm:ss.SSS");
+
+  private static AtomicInteger counter = new AtomicInteger(0);
 
   protected ThreshStream inner;
 
@@ -124,6 +129,10 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
   private Cleaner.Cleanable cleanable = null;
   private DFCleaner dfc;
 
+  private static String defaultName() {
+    return "deferred-temp-file-" + counter.incrementAndGet();
+  }
+
   /**
    * Return an OutputStream that will create a tempfile iff the size
    * exceeds threshold.  The tempfile will be named
@@ -132,7 +141,7 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
    * in-memory to disk file
    */
   public DeferredTempFileOutputStream(int threshold) {
-    this(threshold, "deferred-temp-file");
+    this(threshold, defaultName());
   }
 
   /**
@@ -142,7 +151,7 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
    * @param tmpDir  Dir in which temp file will be created.
    */
   public DeferredTempFileOutputStream(int threshold, File tmpDir) {
-    this(threshold, "deferred-temp-file");
+    this(threshold, defaultName());
     this.tmpDir = tmpDir;
   }
 
@@ -334,6 +343,7 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
     }
     if (dfc != null) {
       dfc.setDeleted();                // Tell cleaner delete was called
+      log.debug2("Deleted {}", logName);
       cleanable.clean();               // ??? Cleaner doc suggests this
     }
   }
