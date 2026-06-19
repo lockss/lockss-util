@@ -85,6 +85,12 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
 
   private static AtomicInteger counter = new AtomicInteger(0);
 
+  private static boolean avoidExcessiveNeverDeletedLogging = false;
+
+  public static void setAvoidExcessiveNeverDeletedLogging(boolean val) {
+    avoidExcessiveNeverDeletedLogging = val;
+  }
+
   protected ThreshStream inner;
 
   /**
@@ -421,7 +427,11 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
         sb.append(" at ");
         sb.append(createStack);
       }
-      log.warn(sb.toString());
+      if (avoidExcessiveNeverDeletedLogging) {
+        log.debug2(sb.toString());
+      } else {
+        log.warn(sb.toString());
+      }
     }
   }
 }
