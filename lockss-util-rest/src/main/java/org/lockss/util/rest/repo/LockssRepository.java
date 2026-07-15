@@ -100,17 +100,6 @@ public interface LockssRepository extends Ready {
   ImportStatusIterable addArtifacts(String namespace, String auId, InputStream inputStream,
                                     ArchiveType type, boolean storeDuplicate, String excludeStatusPattern) throws IOException;
 
-  /**
-   * NEVER: Artifact content should never be included. The client does not want it, period.
-   * IF_SMALL: Include the artifact content if the artifact is small enough.
-   * ALWAYS: Artifact content must be included.
-   */
-  enum IncludeContent {
-    NEVER,
-    IF_SMALL,
-    ALWAYS
-  }
-
   default void initRepository() throws IOException {
     // NOP
   }
@@ -138,7 +127,7 @@ public interface LockssRepository extends Ready {
    * @throws IOException
    */
   default ArtifactData getArtifactData(Artifact artifact) throws IOException {
-    return getArtifactData(artifact, IncludeContent.ALWAYS);
+    return getArtifactData(artifact, IncludeContentEnum.ALWAYS);
   }
 
   /**
@@ -147,12 +136,12 @@ public interface LockssRepository extends Ready {
    * ArtifactData})
    *
    * @param artifact           An artifact to retrieve from this repository.
-   * @param includeContent A {@link IncludeContent} indicating whether the artifact content should be included in the
+   * @param includeContent A {@link IncludeContentEnum} indicating whether the artifact content should be included in the
    *                       {@link ArtifactData} returned by this method.
    * @return The {@code ArtifactData} referenced by this artifact.
    * @throws IOException
    */
-  ArtifactData getArtifactData(Artifact artifact, IncludeContent includeContent) throws IOException;
+  ArtifactData getArtifactData(Artifact artifact, IncludeContentEnum includeContent) throws IOException;
 
   /**
    * Commits an artifact to this LOCKSS repository for permanent storage and inclusion in LOCKSS repository queries.
@@ -277,14 +266,14 @@ public interface LockssRepository extends Ready {
    *
    * @param namespace A String with the namespace.
    * @param prefix     A String with the URL prefix.
-   * @param versions   A {@link ArtifactVersions} indicating whether to include all versions or only the latest
+   * @param versions   A {@link VersionsEnum} indicating whether to include all versions or only the latest
    *                   versions of an artifact.
    * @return An {@code Iterable<Artifact>} containing the committed artifacts of all versions of all URLs matching a
    * prefix.
    */
   Iterable<Artifact> getArtifactsWithUrlPrefixFromAllAus(String namespace,
                                                          String prefix,
-                                                         ArtifactVersions versions)
+                                                         VersionsEnum versions)
       throws IOException;
 
   /**
@@ -306,13 +295,13 @@ public interface LockssRepository extends Ready {
    *
    * @param namespace A {@code String} with the namespace.
    * @param url        A {@code String} with the URL to be matched.
-   * @param versions   A {@link ArtifactVersions} indicating whether to include all versions or only the latest
+   * @param versions   A {@link VersionsEnum} indicating whether to include all versions or only the latest
    *                   versions of an artifact.
    * @return An {@code Iterable<Artifact>} containing the committed artifacts of all versions of a given URL.
    */
   Iterable<Artifact> getArtifactsWithUrlFromAllAus(String namespace,
                                                    String url,
-                                                   ArtifactVersions versions)
+                                                   VersionsEnum versions)
       throws IOException;
 
   /**

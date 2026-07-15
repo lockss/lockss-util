@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2000-2024, Board of Trustees of Leland Stanford Jr. University
+Copyright (c) 2000-2025, Board of Trustees of Leland Stanford Jr. University
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -31,15 +31,17 @@ POSSIBILITY OF SUCH DAMAGE.
  */
 package org.lockss.util.rest.crawler;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
+import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.springframework.validation.annotation.Validated;
-
-import java.util.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 
 /**
  * A descriptor for a crawl.
@@ -58,36 +60,6 @@ public class CrawlDesc   {
   // The identifier of the archival unit to be crawled.
   @JsonProperty("auId")
   private String auId = null;
-
-  /**
-   * The kind of crawl being performed either 'newContent' or 'repair'.
-   */
-  public enum CrawlKindEnum {
-    NEWCONTENT("newContent"),
-    REPAIR("repair");
-
-    private String value;
-
-    CrawlKindEnum(String value) {
-      this.value = value;
-    }
-
-    @Override
-    @JsonValue
-    public String toString() {
-      return String.valueOf(value);
-    }
-
-    @JsonCreator
-    public static CrawlKindEnum fromValue(String text) {
-      for (CrawlKindEnum b : CrawlKindEnum.values()) {
-        if (String.valueOf(b.value).equals(text)) {
-          return b;
-        }
-      }
-      return null;
-    }
-  }
 
   @JsonProperty("crawlKind")
   private CrawlKindEnum crawlKind = null;
@@ -147,6 +119,7 @@ public class CrawlDesc   {
   @Schema(required = true, description = "The kind of crawl being performed either 'newContent' or 'repair'.")
       @NotNull
 
+    @Valid
     public CrawlKindEnum getCrawlKind() {
     return crawlKind;
   }

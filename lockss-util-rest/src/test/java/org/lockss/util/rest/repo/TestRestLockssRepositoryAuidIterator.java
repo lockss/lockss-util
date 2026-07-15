@@ -29,8 +29,7 @@
  */
 package org.lockss.util.rest.repo;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.*;
 import org.lockss.util.rest.RestUtil;
 import org.lockss.util.test.LockssTestCase5;
 import org.springframework.http.HttpMethod;
@@ -60,7 +59,7 @@ public class TestRestLockssRepositoryAuidIterator extends LockssTestCase5 {
   /**
    * Set up code to be run before each test.
    */
-  @Before
+  @BeforeEach
   public void makeRepoIterator() {
     restTemplate = RestUtil.getRestTemplate();
     mockServer = MockRestServiceServer.createServer(restTemplate);
@@ -131,8 +130,10 @@ public class TestRestLockssRepositoryAuidIterator extends LockssTestCase5 {
 	MediaType.APPLICATION_JSON));
 
     // Second server call.
+    // continuationToken value goes through encode().build().expand() which
+    // percent-encodes ':' as '%3A' - the server decodes this correctly.
     mockServer.expect(MockRestRequestMatchers.requestTo(endpoint
-	+ "?namespace="+NS1+"&limit=2&continuationToken=auid2:1234567"))
+	+ "?namespace="+NS1+"&limit=2&continuationToken=auid2%3A1234567"))
     .andExpect(MockRestRequestMatchers.method(HttpMethod.GET))
     .andRespond(MockRestResponseCreators.withSuccess("{\"auids\":[\"auid3\",\"auid4\"],\"pageInfo\":{}}",
 	MediaType.APPLICATION_JSON));

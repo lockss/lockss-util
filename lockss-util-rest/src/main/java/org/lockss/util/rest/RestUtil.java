@@ -29,6 +29,14 @@ package org.lockss.util.rest;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.config.ConnectionConfig;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.ssl.DefaultHostnameVerifier;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.core5.http.io.SocketConfig;
 import org.lockss.log.L4JLogger;
 import org.lockss.util.io.DeferredTempFileOutputStream;
 import org.lockss.util.lang.ExceptionUtil;
@@ -37,10 +45,14 @@ import org.lockss.util.rest.exception.LockssRestHttpException;
 import org.lockss.util.rest.exception.LockssRestNetworkException;
 import org.lockss.util.rest.multipart.MultipartMessageHttpMessageConverter;
 import org.lockss.util.time.TimerUtil;
+import org.springframework.boot.context.properties.PropertyMapper;
+import org.springframework.boot.ssl.SslBundle;
+import org.springframework.boot.ssl.SslOptions;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -60,6 +72,8 @@ import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Utility methods used for invoking REST services.
@@ -70,6 +84,9 @@ public class RestUtil {
   public static final long[] DEFAULT_RETRY_BACKOFFS =
     new long[] {1000L /*, 10000L*/};
   public static final long[] NO_RETRY_BACKOFFS = new long[] {};
+
+  public static final int DEFAULT_MAX_CONNECTIONS = 25;
+  public static final int DEFAULT_MAX_CONNECTIONS_PER_ROUTE = 5;
 
   /**
    * Performs a call to a REST service with the default retry backoffs
@@ -290,8 +307,7 @@ public class RestUtil {
     return getRestTemplate(0, 0);
   }
 
-  public static RestTemplateBuilder getRestTemplateBuilder(long connectTimeout,
-                                                           long readTimeout) {
+  public static RestTemplateBuilder getRestTemplateBuilder(long connectTimeout, long readTimeout) {
     log.debug2("connectTimeout = {}", connectTimeout);
     log.debug2("readTimeout = {}", readTimeout);
 
@@ -303,9 +319,16 @@ public class RestUtil {
       log.warn("readTimeout < 1 sec: {}", readTimeout);
     }
 
+    LockssRestTemplateSettings settings =
+        LockssRestTemplateSettings.withTimeouts(connectTimeout, readTimeout);
+
+    return getRestTemplateBuilder(settings);
+  }
+
+  public static RestTemplateBuilder getRestTemplateBuilder(LockssRestTemplateSettings settings) {
+    // Q: Do we need to configure message converters?
     return new RestTemplateBuilder()
-        .setConnectTimeout(Duration.ofMillis(connectTimeout))
-        .setReadTimeout(Duration.ofMillis(readTimeout))
+        .requestFactory(() -> createConfiguredRequestFactory(settings))
         .errorHandler(new LockssResponseErrorHandler(new RestTemplate().getMessageConverters()));
   }
 
@@ -319,27 +342,129 @@ public class RestUtil {
    *
    * @return a RestTemplate with the REST template.
    */
-  public static RestTemplate getRestTemplate(long connectTimeout,
-      long readTimeout) {
-    log.debug2("connectTimeout = {}", connectTimeout);
-    log.debug2("readTimeout = {}", readTimeout);
-
-    if (connectTimeout > 0 && connectTimeout < 1000) {
-      log.warn("connectTimeout < 1 sec: {}", connectTimeout);
-    }
-    if (readTimeout > 0 && readTimeout < 1000) {
-      log.warn("readTimeout < 1 sec: {}", readTimeout);
-    }
-
-    RestTemplateBuilder builder = new RestTemplateBuilder()
-        .setConnectTimeout(Duration.ofMillis(connectTimeout))
-        .setReadTimeout(Duration.ofMillis(readTimeout))
-        .errorHandler(new LockssResponseErrorHandler(new RestTemplate().getMessageConverters()));
-
-    RestTemplate restTemplate =	builder.build();
-
+  public static RestTemplate getRestTemplate(long connectTimeout, long readTimeout) {
+    // Q: Do we need to configure message converters? Error handlers?
+    RestTemplate restTemplate = getRestTemplateBuilder(connectTimeout, readTimeout).build();
     log.debug2("restTemplate = {}", restTemplate);
     return restTemplate;
+  }
+
+  private static HttpComponentsClientHttpRequestFactory createConfiguredRequestFactory(LockssRestTemplateSettings settings) {
+    HttpComponentsClientHttpRequestFactory requestFactory = createRequestFactory(settings);
+    PropertyMapper map = PropertyMapper.get().alwaysApplyingWhenNonNull();
+    map.from(Duration.ofMillis(settings.connectTimeout()))
+        .asInt(Duration::toMillis).to(requestFactory::setConnectTimeout);
+    return requestFactory;
+  }
+
+  private static HttpComponentsClientHttpRequestFactory createRequestFactory(LockssRestTemplateSettings settings) {
+    return new HttpComponentsClientHttpRequestFactory(createHttpClient(settings));
+  }
+
+  private static HttpClient createHttpClient(LockssRestTemplateSettings settings) {
+    PoolingHttpClientConnectionManager connectionManager = createPoolingConnectionManager(settings);
+    return HttpClientBuilder.create().useSystemProperties().setConnectionManager(connectionManager)
+        .build();
+  }
+
+  private static PoolingHttpClientConnectionManager createPoolingConnectionManager(LockssRestTemplateSettings settings) {
+    PoolingHttpClientConnectionManagerBuilder connectionManagerBuilder =
+        PoolingHttpClientConnectionManagerBuilder.create();
+
+    connectionManagerBuilder.setMaxConnTotal(settings.maxConnections());
+    connectionManagerBuilder.setMaxConnPerRoute(settings.maxConnectionsPerRoute());
+
+    SocketConfig socketConfig = SocketConfig.custom()
+        .setSoTimeout((int) settings.readTimeout(), TimeUnit.MILLISECONDS)
+        .build();
+    connectionManagerBuilder.setDefaultSocketConfig(socketConfig);
+
+    ConnectionConfig connectionConfig = ConnectionConfig.custom()
+        .setConnectTimeout((int) settings.connectTimeout(), TimeUnit.MILLISECONDS)
+        .setSocketTimeout((int) settings.readTimeout(), TimeUnit.MILLISECONDS)
+        .build();
+    connectionManagerBuilder.setDefaultConnectionConfig(connectionConfig);
+
+    if (settings.sslBundle() != null) {
+      SslOptions options = settings.sslBundle().getOptions();
+      SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(settings.sslBundle().createSslContext(),
+          options.getEnabledProtocols(), options.getCiphers(), new DefaultHostnameVerifier());
+      connectionManagerBuilder.setSSLSocketFactory(socketFactory);
+    }
+
+    PoolingHttpClientConnectionManager connectionManager =
+        connectionManagerBuilder.useSystemProperties().build();
+
+    return connectionManager;
+  }
+
+  public static class LockssRestTemplateSettingsBuilder {
+    long connectTimeout;
+    long readTimeout;
+    int maxConnections;
+    int maxConnectionsPerRoute;
+    long dfosSizeThreshold;
+    File dfosTmpDir;
+    SslBundle sslBundle;
+
+    public LockssRestTemplateSettings build() {
+      return new LockssRestTemplateSettings(connectTimeout, readTimeout, maxConnections, maxConnectionsPerRoute,
+          dfosSizeThreshold, dfosTmpDir, sslBundle);
+    }
+
+    public LockssRestTemplateSettingsBuilder setConnectTimeout(long connectTimeout) {
+      this.connectTimeout = connectTimeout;
+      return this;
+    }
+
+    public LockssRestTemplateSettingsBuilder setReadTimeout(long readTimeout) {
+      this.readTimeout = readTimeout;
+      return this;
+    }
+
+    public LockssRestTemplateSettingsBuilder setMaxConnections(int maxConnections) {
+      this.maxConnections = maxConnections;
+      return this;
+    }
+
+    public LockssRestTemplateSettingsBuilder setMaxConnectionsPerRoute(int maxConnectionsPerRoute) {
+      this.maxConnectionsPerRoute = maxConnectionsPerRoute;
+      return this;
+    }
+
+    public LockssRestTemplateSettingsBuilder setDfosSizeThreshold(long dfosSizeThreshold) {
+      this.dfosSizeThreshold = dfosSizeThreshold;
+      return this;
+    }
+
+    public LockssRestTemplateSettingsBuilder setDfosTmpDir(File dfosTmpDir) {
+      this.dfosTmpDir = dfosTmpDir;
+      return this;
+    }
+
+    public LockssRestTemplateSettingsBuilder setSslBundle(SslBundle sslBundle) {
+      this.sslBundle = sslBundle;
+      return  this;
+    }
+  }
+
+  public record LockssRestTemplateSettings(
+    long connectTimeout,
+    long readTimeout,
+    int maxConnections,
+    int maxConnectionsPerRoute,
+    long dfosSizeThreshold,
+    File dfosTmpDir,
+    SslBundle sslBundle) {
+
+    public static LockssRestTemplateSettings withTimeouts(long connectTimeout, long readTimeout) {
+      return new LockssRestTemplateSettingsBuilder()
+          .setConnectTimeout(connectTimeout)
+          .setReadTimeout(readTimeout)
+          .setMaxConnections(DEFAULT_MAX_CONNECTIONS)
+          .setMaxConnectionsPerRoute(DEFAULT_MAX_CONNECTIONS_PER_ROUTE)
+          .build();
+    }
   }
 
   public static RestTemplate getRestTemplate(long connectTimeout,
@@ -352,21 +477,44 @@ public class RestUtil {
     log.debug2("sizeThreshold = {}", sizeThreshold);
     log.debug2("tmpDir = {}", tmpDir);
 
-    List<HttpMessageConverter<?>> msgConverters = new RestTemplate().getMessageConverters()
-        .stream()
-        .map(msgConv -> msgConv instanceof ResourceHttpMessageConverter ?
-            getResourceHttpMessageConverter(sizeThreshold, tmpDir) : msgConv)
-        .toList();
+    LockssRestTemplateSettings settings =
+        LockssRestTemplateSettings.withTimeouts(connectTimeout, readTimeout);
 
-    RestTemplateBuilder builder = new RestTemplateBuilder()
-        .setConnectTimeout(Duration.ofMillis(connectTimeout))
-        .setReadTimeout(Duration.ofMillis(readTimeout))
-        .messageConverters(msgConverters)
-        .errorHandler(new LockssResponseErrorHandler(new RestTemplate().getMessageConverters()));
-
-    return builder.build();
+    return getRestTemplate(settings, replaceHttpMessageConverter(new RestTemplate().getMessageConverters(),
+        ResourceHttpMessageConverter.class, getResourceHttpMessageConverter(sizeThreshold, tmpDir)));
   }
 
+  public static RestTemplate getRestTemplate(LockssRestTemplateSettings settings) {
+    return getRestTemplate(settings, replaceHttpMessageConverter(
+        new RestTemplate().getMessageConverters(),
+        ResourceHttpMessageConverter.class,
+        getResourceHttpMessageConverter((int) settings.dfosSizeThreshold(), settings.dfosTmpDir())));
+  }
+
+  public static RestTemplate getRestTemplate(LockssRestTemplateSettings settings,
+                                             List<HttpMessageConverter<?>> msgConverters) {
+    return getRestTemplateBuilder(settings)
+        .messageConverters(msgConverters)
+        .errorHandler(new LockssResponseErrorHandler(new RestTemplate().getMessageConverters()))
+        .build();
+  }
+
+  private static List<HttpMessageConverter<?>> replaceHttpMessageConverter(List<HttpMessageConverter<?>> msgConverters,
+                                                                           Class<? extends HttpMessageConverter> msgConverterClass,
+                                                                           HttpMessageConverter<?> msgConverter) {
+    return msgConverters.stream()
+        .map(converter -> converter.getClass() == msgConverterClass ? msgConverter : converter)
+        .toList();
+  }
+
+  /**
+   * This method creates a {@link ResourceHttpMessageConverter} that manages large resource data
+   * by leveraging a deferred file output stream in cases where data exceeds a specified size threshold.
+   *
+   * @param sizeThreshold the size threshold (in bytes) above which the resource data will be written to a temporary file
+   * @param tmpDir the directory to use for storing temporary files when the size threshold is exceeded
+   * @return a configured {@link ResourceHttpMessageConverter} instance for handling {@link Resource} instances
+   */
   private static HttpMessageConverter<?> getResourceHttpMessageConverter(int sizeThreshold, File tmpDir) {
     return new ResourceHttpMessageConverter(true) {
       @Override
@@ -464,21 +612,26 @@ public class RestUtil {
     UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uriString);
     log.trace("builder = {}", builder);
 
-    // Add any query parameters.
-    if (queryParams != null && !queryParams.isEmpty()) {
-      for (String key : queryParams.keySet()) {
-        String value = queryParams.get(key);
-        log.trace("key = {}, value = {}", key, value);
-        builder.queryParam(key, value);
-      }
+    Map<String,String> valMap = new HashMap<>();
+    if (uriVariables != null) {
+      valMap.putAll(uriVariables);
     }
 
-    // Interpolate any URI variables if present and build
-    UriComponents uriComponents =
-        (uriVariables != null && !uriVariables.isEmpty()) ?
-            builder.buildAndExpand(uriVariables) : builder.build();
+    // Add any query parameters.
+    if (queryParams != null) {
+      valMap.putAll(queryParams);
+      for (String key : queryParams.keySet()) {
+        builder.queryParam(key, "{" + key + "}");
+      }
+    }
+    log.trace("valMap = {}", valMap);
 
-    URI uri = uriComponents.encode().toUri();
+    // Interpolate any URI and query variables if present and build
+    URI uri = builder
+      .encode()
+      .build()
+      .expand(valMap)
+      .toUri();
     log.debug2("uri = {}", uri);
     return uri;
   }
@@ -494,4 +647,5 @@ public class RestUtil {
   public static boolean isSuccess(HttpStatusCode statusCode) {
     return statusCode.is2xxSuccessful();
   }
+
 }

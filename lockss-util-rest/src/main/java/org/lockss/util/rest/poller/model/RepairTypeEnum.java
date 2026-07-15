@@ -1,0 +1,36 @@
+package org.lockss.util.rest.poller.model;
+
+import com.fasterxml.jackson.annotation.JsonValue;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+
+/**
+ * The repair queue elements to return
+ */
+public enum RepairTypeEnum {
+  PENDING("pending"),
+    ACTIVE("active"),
+    COMPLETED("completed");
+
+  private String value;
+
+  RepairTypeEnum(String value) {
+    this.value = value;
+  }
+
+  @Override
+  @JsonValue
+  public String toString() {
+    return String.valueOf(value);
+  }
+
+  @JsonCreator
+  public static RepairTypeEnum fromValue(String text) {
+    for (RepairTypeEnum b : RepairTypeEnum.values()) {
+      if (String.valueOf(b.value).equals(text)) {
+        return b;
+      }
+    }
+    return null;
+  }
+}

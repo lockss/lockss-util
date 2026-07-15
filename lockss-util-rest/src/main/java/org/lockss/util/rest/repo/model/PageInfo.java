@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2000-2019 Board of Trustees of Leland Stanford Jr. University,
+Copyright (c) 2000-2025 Board of Trustees of Leland Stanford Jr. University,
 all rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,11 +28,13 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- */
+*/
+
 package org.lockss.util.rest.repo.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.validation.annotation.Validated;
 
@@ -41,17 +43,15 @@ import java.util.Objects;
 /**
  * The information related to pagination of content.
  */
-@Schema(description = "The information related to pagination of content")
+@Schema(title = "Page Information",
+        description = "The information related to pagination of content")
 @Validated
-
-
-
 public class PageInfo   {
   @JsonProperty("totalCount")
   private Integer totalCount = null;
 
-  @JsonProperty("resultsPerPage")
-  private Integer resultsPerPage = null;
+  @JsonProperty("itemsInPage")
+  private Integer itemsInPage = null;
 
   @JsonProperty("continuationToken")
   private String continuationToken = null;
@@ -68,13 +68,15 @@ public class PageInfo   {
   }
 
   /**
-   * The total number of results
+   * The total number of items
    * @return totalCount
    **/
-  @Schema(required = true, description = "The total number of results")
-      @NotNull
-
-    public Integer getTotalCount() {
+  @Schema(title = "Total Count",
+          description = "The total number of items",
+          requiredMode = RequiredMode.REQUIRED,
+          nullable = true)
+  @NotNull
+  public Integer getTotalCount() {
     return totalCount;
   }
 
@@ -87,30 +89,31 @@ public class PageInfo   {
     this.totalCount = totalCount;
   }
 
-  public PageInfo resultsPerPage(Integer resultsPerPage) {
-    this.resultsPerPage = resultsPerPage;
+  public PageInfo itemsInPage(Integer itemsInPage) {
+    this.itemsInPage = itemsInPage;
     return this;
   }
 
   /**
-   * The number of results per page
-   * @return resultsPerPage
+   * The number of items in the page
+   * @return itemsInPage
    **/
-  @Schema(required = true, description = "The number of results per page")
-      @NotNull
-    public Integer getResultsPerPage() {
-    return resultsPerPage;
+  @Schema(title = "Items in Page",
+          description = "The number of items in the page",
+          requiredMode = RequiredMode.REQUIRED,
+          nullable = false)
+  @NotNull
+  public Integer getItemsInPage() {
+    return itemsInPage;
   }
 
   /**
-   * Saves the number of results per page.
+   * Saves the number of items in page.
    *
-   * @param resultsPerPage An Integer with the number of results per page.
+   * @param itemsInPage An Integer with the number of items in page.
    */
-  @Schema(required = true, description = "The number of results per page")
-      @NotNull
-  public void setResultsPerPage(Integer resultsPerPage) {
-    this.resultsPerPage = resultsPerPage;
+  public void setItemsInPage(Integer itemsInPage) {
+    this.itemsInPage = itemsInPage;
   }
 
   public PageInfo continuationToken(String continuationToken) {
@@ -122,9 +125,12 @@ public class PageInfo   {
    * The continuation token
    * @return continuationToken
    **/
-  @Schema(required = true, description = "The continuation token")
-      @NotNull
-    public String getContinuationToken() {
+  @Schema(title = "Continuation Token",
+          description = "The continuation token",
+          requiredMode = RequiredMode.REQUIRED,
+          nullable = true)
+  @NotNull
+  public String getContinuationToken() {
     return continuationToken;
   }
 
@@ -146,9 +152,12 @@ public class PageInfo   {
    * The link of the current request
    * @return curLink
    **/
-  @Schema(required = true, description = "The link of the current request")
-      @NotNull
-    public String getCurLink() {
+  @Schema(title = "Current Request",
+          description = "The link of the current request",
+          requiredMode = RequiredMode.REQUIRED,
+          nullable = false)
+  @NotNull
+  public String getCurLink() {
     return curLink;
   }
 
@@ -170,9 +179,12 @@ public class PageInfo   {
    * The link of the next request
    * @return nextLink
    **/
-  @Schema(required = true, description = "The link of the next request")
-      @NotNull
-    public String getNextLink() {
+  @Schema(title = "Next Request",
+          description = "The link of the next request",
+          requiredMode = RequiredMode.REQUIRED,
+          nullable = true)
+  @NotNull
+  public String getNextLink() {
     return nextLink;
   }
 
@@ -195,7 +207,7 @@ public class PageInfo   {
     }
     PageInfo pageInfo = (PageInfo) o;
     return Objects.equals(this.totalCount, pageInfo.totalCount) &&
-	Objects.equals(this.resultsPerPage, pageInfo.resultsPerPage) &&
+	Objects.equals(this.itemsInPage, pageInfo.itemsInPage) &&
         Objects.equals(this.continuationToken, pageInfo.continuationToken) &&
         Objects.equals(this.curLink, pageInfo.curLink) &&
         Objects.equals(this.nextLink, pageInfo.nextLink);
@@ -203,7 +215,7 @@ public class PageInfo   {
 
   @Override
   public int hashCode() {
-    return Objects.hash(totalCount, resultsPerPage, continuationToken, curLink,
+    return Objects.hash(totalCount, itemsInPage, continuationToken, curLink,
 	nextLink);
   }
 
@@ -213,7 +225,7 @@ public class PageInfo   {
     sb.append("PageInfo [\n");
 
     sb.append("    totalCount: ").append(toIndentedString(totalCount)).append("\n");
-    sb.append("    resultsPerPage: ").append(toIndentedString(resultsPerPage)).append("\n");
+    sb.append("    itemsInPage: ").append(toIndentedString(itemsInPage)).append("\n");
     sb.append("    continuationToken: ").append(toIndentedString(continuationToken)).append("\n");
     sb.append("    curLink: ").append(toIndentedString(curLink)).append("\n");
     sb.append("    nextLink: ").append(toIndentedString(nextLink)).append("\n");

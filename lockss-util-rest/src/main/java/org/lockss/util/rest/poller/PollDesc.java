@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2000-2024, Board of Trustees of Leland Stanford Jr. University
+Copyright (c) 2000-2025, Board of Trustees of Leland Stanford Jr. University
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -33,9 +33,8 @@ package org.lockss.util.rest.poller;
 
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.lockss.util.rest.poller.model.PollVariantEnum;
 import org.springframework.validation.annotation.Validated;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -64,42 +63,8 @@ public class PollDesc   {
   @JsonProperty("pluginPollVersion")
   private String pluginPollVersion = null;
 
-  /**
-   * The V3 poll variation.
-   */
-  public enum VariantEnum {
-    POR("PoR"),
-
-    POP("PoP"),
-
-    LOCAL("Local"),
-
-    NOPOLL("NoPoll");
-
-    private String value;
-
-    VariantEnum(String value) {
-      this.value = value;
-    }
-
-    @Override
-    @JsonValue
-    public String toString() {
-      return String.valueOf(value);
-    }
-
-    @JsonCreator
-    public static VariantEnum fromValue(String text) {
-      for (VariantEnum b : VariantEnum.values()) {
-        if (String.valueOf(b.value).equals(text)) {
-          return b;
-        }
-      }
-      return null;
-    }
-  }
   @JsonProperty("variant")
-  private VariantEnum variant = null;
+  private PollVariantEnum variant = null;
 
   @JsonProperty("modulus")
   private Integer modulus = null;
@@ -134,7 +99,7 @@ public class PollDesc   {
    * @return cuSetSpec
    **/
   @Schema(description = "")
-
+  
     @Valid
     public CachedUriSetSpec getCuSetSpec() {
     return cuSetSpec;
@@ -155,7 +120,7 @@ public class PollDesc   {
    * @return pollType
    **/
   @Schema(description = "The type of poll to run. Only V3 is supported.")
-
+  
   @Min(3)  public Integer getPollType() {
     return pollType;
   }
@@ -174,7 +139,7 @@ public class PollDesc   {
    * @return protocol
    **/
   @Schema(description = "The version of polling protocol.")
-
+  
     public Integer getProtocol() {
     return protocol;
   }
@@ -193,7 +158,7 @@ public class PollDesc   {
    * @return pluginPollVersion
    **/
   @Schema(description = "The version of the polling features needed by the plugin.")
-
+  
     public String getPluginPollVersion() {
     return pluginPollVersion;
   }
@@ -202,7 +167,7 @@ public class PollDesc   {
     this.pluginPollVersion = pluginPollVersion;
   }
 
-  public PollDesc variant(VariantEnum variant) {
+  public PollDesc variant(PollVariantEnum variant) {
     this.variant = variant;
     return this;
   }
@@ -212,12 +177,13 @@ public class PollDesc   {
    * @return variant
    **/
   @Schema(description = "The V3 poll variation.")
-
-    public VariantEnum getVariant() {
+  
+    @Valid
+    public PollVariantEnum getVariant() {
     return variant;
   }
 
-  public void setVariant(VariantEnum variant) {
+  public void setVariant(PollVariantEnum variant) {
     this.variant = variant;
   }
 
@@ -231,7 +197,7 @@ public class PollDesc   {
    * @return modulus
    **/
   @Schema(description = "Poll on every 'n'th url.")
-
+  
     public Integer getModulus() {
     return modulus;
   }
@@ -268,7 +234,7 @@ public class PollDesc   {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class PollDesc {\n");
-
+    
     sb.append("    auId: ").append(toIndentedString(auId)).append("\n");
     sb.append("    cuSetSpec: ").append(toIndentedString(cuSetSpec)).append("\n");
     sb.append("    pollType: ").append(toIndentedString(pollType)).append("\n");

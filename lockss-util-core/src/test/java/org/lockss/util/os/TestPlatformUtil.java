@@ -94,6 +94,7 @@ public class TestPlatformUtil extends LockssTestCase5 {
   // The best it can do, which isn't much, is test that
   // SYSPROP_LOCKSS_TMPDIR (if set) takes precedence of
   // SYSPROP_JAVA_IO_TMPDIR.
+  @Test
   public void testGetSystemTempDir() throws IOException {
     String platTmpDir = PlatformUtil.getSystemTempDir();
     if (System.getProperty(PlatformUtil.SYSPROP_LOCKSS_TMPDIR) != null) {
@@ -110,6 +111,7 @@ public class TestPlatformUtil extends LockssTestCase5 {
     log.info("cwd: " + info.getCwd());
   }
 
+  @Test
   public void testGetUnfilteredTcpPorts() throws Exception {
     assertEmpty(info.getUnfilteredTcpPorts());
     System.setProperty(PlatformUtil.SYSPROP_UNFILTERED_TCP_PORTS, "9909");
@@ -129,6 +131,7 @@ public class TestPlatformUtil extends LockssTestCase5 {
     assertEquals(-1, du);
   }
 
+  @Test
   public void testDiskUsage() throws Exception {
     long du;
     File tmpdir = getTempDir();

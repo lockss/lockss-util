@@ -502,15 +502,18 @@ public class TestFileUtil extends LockssTestCase5 {
 	createFile(tempDirPath + "supsec", password).getAbsolutePath()));
   }
 
+  @Test
   public void testAddSeparator() {
     assertEquals("foo/", FileUtil.addSeparator("foo/"));
     assertEquals("foo/", FileUtil.addSeparator("foo"));
   }
 
+  @Test
   public void testRelativeName() {
     assertEquals("foo/bar.x", FileUtil.relativeName("/a/b/foo/bar.x", "/a/b"));
   }
 
+  @Test
   public void testRelativeFile() {
     assertEquals(new File("foo/bar.x"),
                  FileUtil.relativeFile(new File("/a/b/foo/bar.x"), "/a/b"));

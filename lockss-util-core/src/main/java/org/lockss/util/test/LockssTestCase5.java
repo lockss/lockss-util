@@ -34,6 +34,8 @@ package org.lockss.util.test;
 
 import java.io.*;
 import java.math.BigDecimal;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
 import java.util.function.*;
@@ -2508,12 +2510,13 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     return th;
   }
 
-  /** Read a byte, fail with a detailed message if an IOException is
+  /** Read bytes, fail with a detailed message if an IOException is
    * thrown. */
-  int paranoidRead(InputStream in, String streamName, long cnt, long expLen,
-                   String message) {
+  private byte[] paranoidReadNBytes(InputStream in, int len, String streamName,
+                                    long cnt, long expLen, String message) {
     try {
-      return in.read();
+      // Could use StreamUtil.readBytes() to reuse a byte array buffer
+      return in.readNBytes(len);
     } catch (IOException e) {
       fail( ( buildPrefix(message) + "after " + cnt + " bytes" +
               (expLen >= 0 ? " of " + expLen : "") +
@@ -2571,33 +2574,43 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     if (!(actual instanceof BufferedInputStream)) {
       actual = new BufferedInputStream(actual);
     }
+
     long cnt = 0;
-    int ch = paranoidRead(expected, "expected", cnt, expLen, message);
-    while (-1 != ch) {
-      int ch2 = paranoidRead(actual, "actual", cnt, expLen, message);
-      if (-1 == ch2) {
+
+    while (true) {
+      byte[] a = paranoidReadNBytes(expected, 8192, "expected", cnt, expLen, message);
+      byte[] b = paranoidReadNBytes(actual, 8192, "actual", cnt, expLen, message);
+
+      if (a.length < b.length) {
+        cnt += a.length;
         fail(buildPrefix(message) +
-             "actual stream ran out early, at byte position " + cnt);
+            "expected stream ran out early, at byte position " + cnt);
+      } else if (b.length < a.length) {
+        cnt += b.length;
+        fail(buildPrefix(message) +
+            "actual stream ran out early, at byte position " + cnt);
       }
-      cnt++;
 
-      if (ch != ch2) {      // Avoid building fail message unless necessary
-	assertEquals(ch, ch2,
-		     buildPrefix(message) + "at byte position " + cnt);
+      // Exit loop if no bytes read from either stream
+      if (a.length == 0) {
+        break;
       }
-      ch = paranoidRead(expected, "expected", cnt, expLen, message);
+
+      // Compare bytes read
+      for (int i = 0; i < a.length; i++) {
+        cnt++;
+        if (a[i] != b[i]) { // Avoid building fail message unless necessary
+          assertEquals(a[i], b[i],
+              buildPrefix(message) + "at byte position " + cnt);
+        }
+      }
     }
 
-    int ch2 = paranoidRead(actual, "actual", cnt, expLen, message);
-    if (-1 != ch2) {
-      fail(buildPrefix(message) +
-           "expected stream ran out early, at byte position " + cnt);
-    }
     if (expLen >= 0) {
       assertEquals(expLen, cnt, "Both streams were wrong length");
     }
   }
-  
+
   static String buildPrefix(String message) {
     return (StringUtils.isNotBlank(message) ? message + " ==> " : "");
   }
@@ -3013,4 +3026,63 @@ public void testWithSuccessRate(RepetitionInfo repetitionInfo) {
     return i;
   }
   
+  /** Convenience method for test classes to obtain a URL on a test file.
+   * @param name name of file in same directory as <tt>this</tt> (the code
+   * making this call), or a modified package name (dots replaced by
+   * slashes), interpreted as absolute if starts with shash, else relative
+   * to the package containing <tt>this</tt>.  If the resource is not
+   * found, an assertion failure will occur.
+   * @return The URL of the resource.  Null is never returned.
+   */
+  protected URL getResource(String name) {
+    URL res = getClass().getResource(name);
+    assertNotNull(res, "Resource not found: " + name);
+    return res;
+  }
+
+  /** Convenience method for test classes to obtain an InputStream on a
+   * test file.
+   * @param name name of file in same directory as <tt>this</tt> (the code
+   * making this call), or a modified package name (dots replaced by
+   * slashes), interpreted as absolute if starts with shash, else relative
+   * to the package containing <tt>this</tt>.  If the resource is not
+   * found, an assertion failure will occur.
+   * @return An InputStream open on the resource.  Null is never returned.
+   */
+  protected InputStream getResourceAsStream(String name) {
+    return getResourceAsStream(name, true);
+  }
+
+  /** Convenience method for test classes to obtain an InputStream on a
+   * test file.
+   * @param name name of file in same directory as <tt>this</tt> (the code
+   * making this call), or a modified package name (dots replaced by
+   * slashes), interpreted as absolute if starts with shash, else relative
+   * to the package containing <tt>this</tt>.
+   * @param failOnNull A boolean indicating whether an assertion failure should
+   * occur if the resource is not found.
+   * @return An InputStream open on the resource.
+   */
+  protected InputStream getResourceAsStream(String name, boolean failOnNull) {
+    InputStream res = getClass().getResourceAsStream(name);
+    if (failOnNull) {
+      assertNotNull(res, "Resource not found: " + name);
+    }
+    return res;
+  }
+
+  /** Convenience method for test classes to obtain the content of a
+   * test file.
+   * @param name name of file in same directory as <tt>this</tt> (the code
+   * making this call), or a modified package name (dots replaced by
+   * slashes), interpreted as absolute if starts with shash, else relative
+   * to the package containing <tt>this</tt>.
+   * @return The file content
+   */
+  protected String getResourceContent(String name) throws IOException {
+    try (InputStream in = getResourceAsStream(name)) {
+      return IOUtils.toString(in, StandardCharsets.UTF_8);
+    }
+  }
+
 }

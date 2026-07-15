@@ -27,36 +27,51 @@
  */
 package org.lockss.util.rest;
 
-import java.io.*;
-import java.util.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.hc.client5.http.ConnectTimeoutException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.lockss.log.L4JLogger;
+import org.lockss.util.ListUtil;
+import org.lockss.util.MapUtil;
+import org.lockss.util.rest.RestUtil.LockssRestTemplateSettings;
+import org.lockss.util.rest.RestUtil.LockssRestTemplateSettingsBuilder;
+import org.lockss.util.rest.exception.LockssRestException;
+import org.lockss.util.rest.exception.LockssRestHttpException;
+import org.lockss.util.rest.multipart.MultipartMessage;
+import org.lockss.util.rest.multipart.MultipartMessageHttpMessageConverter;
+import org.lockss.util.rest.multipart.MultipartResponse;
+import org.lockss.util.test.LockssTestCase5;
+import org.lockss.util.time.TimeBase;
+import org.mockserver.client.MockServerClient;
+import org.mockserver.configuration.Configuration;
+import org.mockserver.junit.jupiter.MockServerExtension;
+import org.mockserver.model.Header;
+import org.springframework.http.*;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.io.IOException;
 import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.UnknownHostException;
-import org.apache.hc.client5.http.ConnectTimeoutException;
-import org.junit.*;
-import org.lockss.util.*;
-import org.lockss.util.rest.exception.*;
-import org.lockss.util.rest.multipart.*;
-import org.lockss.util.test.*;
-import org.lockss.log.*;
-import com.fasterxml.jackson.core.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.*;
-import org.springframework.http.converter.FormHttpMessageConverter;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
-import org.mockserver.junit.*;
-import org.mockserver.client.*;
-import org.mockserver.model.Header;
-import static org.mockserver.model.HttpRequest.*;
-import static org.mockserver.model.HttpResponse.*;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import static org.mockserver.model.HttpError.error;
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
 
 /**
  * Test class for org.lockss.util.rest.RestUtil.
  */
+@ExtendWith(MockServerExtension.class)
 public class TestRestUtil extends LockssTestCase5 {
   private static L4JLogger log = L4JLogger.getLogger();
 
@@ -64,15 +79,63 @@ public class TestRestUtil extends LockssTestCase5 {
 
   int port;
 
-  @Rule
-  public MockServerRule msRule = new MockServerRule(this);
-
-  @Before
-  public void getPort() throws LockssRestException {
-    port = msRule.getPort();
+  @BeforeEach
+  public void getPort(MockServerClient client) throws LockssRestException {
+    msClient = client;
+    port = client.getPort();
+    client.reset();
   }
 
   private MockServerClient msClient;
+
+  @Test
+  public void testGetRestUri() {
+    assertEquals("http://foo/val1?q1=qv1&q2=qv2",
+                 RestUtil.getRestUri("http://foo/{param1}",
+                                     MapUtil.map("param1", "val1"),
+                                     MapUtil.map("q1", "qv1", "q2", "qv2"))
+                 .toString());
+
+    // Ensure query args get encoded, *including plus sign*
+    assertEquals("http://foo/val1?q1=qv1&q2=qv%2B2",
+                 RestUtil.getRestUri("http://foo/{param1}",
+                                     MapUtil.map("param1", "val1"),
+                                     MapUtil.map("q1", "qv1", "q2", "qv+2"))
+                 .toString());
+    // Ensure path args get encoded
+    assertEquals("http://foo/val%2F1?q1=qv1&q2=qv%2B2",
+                 RestUtil.getRestUri("http://foo/{param1}",
+                                     MapUtil.map("param1", "val/1"),
+                                     MapUtil.map("q1", "qv1", "q2", "qv+2"))
+                 .toString());
+    // Ensure path args get encoded, *including plus sign*
+    assertEquals("http://foo/val%2B1?q1=qv1&q2=qv%2B2",
+                 RestUtil.getRestUri("http://foo/{param1}",
+                                     MapUtil.map("param1", "val+1"),
+                                     MapUtil.map("q1", "qv1", "q2", "qv+2"))
+                 .toString());
+
+    // Space in path should be encoded as %20
+    assertEquals("http://foo/val%201?q1=qv1",
+                 RestUtil.getRestUri("http://foo/{param1}",
+                                     MapUtil.map("param1", "val 1"),
+                                     MapUtil.map("q1", "qv1"))
+                 .toString());
+
+    // Space in query should be encoded as %20
+    assertEquals("http://foo/val1?q1=qv%201",
+                 RestUtil.getRestUri("http://foo/{param1}",
+                                     MapUtil.map("param1", "val1"),
+                                     MapUtil.map("q1", "qv 1"))
+                 .toString());
+
+    // Space in both path and query
+    assertEquals("http://foo/val%201?q1=qv%201",
+                 RestUtil.getRestUri("http://foo/{param1}",
+                                     MapUtil.map("param1", "val 1"),
+                                     MapUtil.map("q1", "qv 1"))
+                 .toString());
+  }
 
   /**
    * Tests error reporting for network errors
@@ -265,7 +328,7 @@ public class TestRestUtil extends LockssTestCase5 {
       ResponseEntity<RestResponseErrorBody.RestResponseError> resp =
           doCallRestService("http://localhost:" + port + "/foo", "bar",
 			  RestResponseErrorBody.RestResponseError.class);
-      Assert.fail("Should have thrown, but returned: " + resp);
+      fail("Should have thrown, but returned: " + resp);
     } catch (LockssRestHttpException e) {
       assertEquals(HttpStatus.UNAUTHORIZED, e.getHttpStatus());
       assertEquals(error, e.getRestResponseError());
@@ -289,7 +352,7 @@ public class TestRestUtil extends LockssTestCase5 {
       ResponseEntity<RestResponseErrorBody.RestResponseError> resp =
           doCallRestService("http://localhost:" + port + "/foo", "bar",
 			  RestResponseErrorBody.RestResponseError.class);
-      Assert.fail("Should have thrown, but returned: " + resp);
+      fail("Should have thrown, but returned: " + resp);
     } catch (LockssRestHttpException e) {
       assertEquals(HttpStatus.NOT_FOUND, e.getHttpStatus());
       assertEquals("Error body", e.getServerErrorMessage());
@@ -328,9 +391,50 @@ public class TestRestUtil extends LockssTestCase5 {
       ResponseEntity<Map> resp =
 	doCallRestService("http://localhost:" + port + "/foo", "bar",
 			  hdrs, Map.class);
-      Assert.fail("Should have thrown, but returned: " + resp);
+      fail("Should have thrown, but returned: " + resp);
     } catch (LockssRestHttpException e) {
       assertEquals(HttpStatus.UNAUTHORIZED, e.getHttpStatus());
+    }
+  }
+
+  @Test
+  public void testConnectionTimeout() throws Exception {
+    RestTemplate template = RestUtil.getRestTemplate(1, 1000);
+
+    try {
+      ResponseEntity<String> resp =
+          template.exchange("http://10.255.255.1/foo", HttpMethod.GET, null, String.class);
+      fail("Should have thrown, but returned: " + resp);
+    } catch (ResourceAccessException e) {
+      assertMatchesRE(".*Connect to .* timed out", e.getMessage());
+    }
+  }
+
+  @Test
+  public void testReadTimeout() throws Exception {
+    msClient
+        .when(request()
+            .withMethod("GET")
+            .withPath("/foo"))
+        .respond(response()
+            .withDelay(TimeUnit.SECONDS, 10)
+            .withStatusCode(200)
+            .withHeaders(new Header("Content-Type", "text/plain"))
+            .withBody("Hello"));
+
+    RestTemplate template = RestUtil.getRestTemplate(1000, 1000);
+
+    long startMs = TimeBase.nowMs();
+    try {
+      ResponseEntity<String> resp =
+          template.exchange("http://localhost:" + port + "/foo", HttpMethod.GET, null, String.class);
+      fail("Should have thrown, but returned: " + resp);
+    } catch (ResourceAccessException e) {
+      if (TimeBase.msSince(startMs) < 1000) {
+        fail("Should have taken at least 1 second to throw a read timeout exception, but took " +
+             TimeBase.msSince(startMs) + " ms");
+      }
+      assertMatchesRE(".*Read timed out", e.getMessage());
     }
   }
 

@@ -31,10 +31,12 @@ package org.lockss.test;
 import java.io.*;
 import java.util.*;
 
-/** An output stream that can throw an exception on demand. */
+/** An output stream that can throw an exception on write (possibly
+ * after some number of bytes have been written) or on close. */
 public class ThrowingOutputStream extends FilterOutputStream {
   private IOException throwOnWrite;
   private IOException throwOnClose;
+  private long afterBytes = 0;
 
   public ThrowingOutputStream(OutputStream out,
 			      IOException throwOnWrite,
@@ -44,25 +46,34 @@ public class ThrowingOutputStream extends FilterOutputStream {
     this.throwOnClose = throwOnClose;
   }
 
-  public void write(int b) throws IOException {
-    if (throwOnWrite != null) {
+  /** Set the minimum number of byte to write before throwing the
+   * write exception.  Checked at the start of each write, so buffer
+   * size will likely cause more to be written before the exception
+   * occurs. */
+  public ThrowingOutputStream setAfterBytes(long bytes) {
+    afterBytes = bytes;
+    return this;
+  }
+
+  private void checkWrite(int len) throws IOException {
+    if (throwOnWrite != null && afterBytes <= 0) {
       throw throwOnWrite;
-    } else {
-      out.write(b);
     }
+    afterBytes -= len;
+  }
+
+  public void write(int b) throws IOException {
+    checkWrite(1);
+    out.write(b);
   }
 
   public void write(byte[] b, int off, int len) throws IOException {
-    if (throwOnWrite != null) {
-      throw throwOnWrite;
-    }
+    checkWrite(len);
     out.write(b, off, len);
   }
 
   public void write(byte[] b) throws IOException {
-    if (throwOnWrite != null) {
-      throw throwOnWrite;
-    }
+    checkWrite(b.length);
     out.write(b);
   }
 

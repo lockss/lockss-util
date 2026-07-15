@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2000-2022, Board of Trustees of Leland Stanford Jr. University
+Copyright (c) 2000-2024, Board of Trustees of Leland Stanford Jr. University
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -30,12 +30,20 @@ POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-package org.lockss.util.rest.repo.model;
+package org.lockss.util.rest.repo;
 
-public interface AuJournalEntry {
-    String LOCKSS_MD_ARTIFACTUUID_KEY = "artifactUuid";
-    String JOURNAL_ENTRY_DATE= "entryDate";
+import java.io.IOException;
+import org.lockss.util.rest.repo.model.ArtifactIdentifier;
 
-    String getArtifactUuid();
-    long getEntryDate();
+public class LockssArtifactAlreadyExistsException extends IOException  {
+  private ArtifactIdentifier artifactId;
+
+  public LockssArtifactAlreadyExistsException(ArtifactIdentifier artifactId) {
+    super();
+    this.artifactId = artifactId;
+  }
+
+  public ArtifactIdentifier getArtifactId() {
+    return artifactId;
+  }
 }

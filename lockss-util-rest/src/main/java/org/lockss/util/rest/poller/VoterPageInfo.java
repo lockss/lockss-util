@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2020 Board of Trustees of Leland Stanford Jr. University,
+Copyright (c) 2000-2025 Board of Trustees of Leland Stanford Jr. University,
 all rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,67 +28,96 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- */
-package org.lockss.util.rest.mdx;
+*/
+
+package org.lockss.util.rest.poller;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
+
+import org.lockss.util.rest.repo.model.PageInfo;
 import org.springframework.validation.annotation.Validated;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
 /**
- * The information defining an AU metadata update operation
+ * A display page of voter poll summaries
  */
-@Schema(description = "The information defining an AU metadata update operation")
+@Schema(description = "A display page of voter poll summaries")
 @Validated
 
 
 
-public class MetadataUpdateSpec   {
-  @JsonProperty("auid")
-  private String auid = null;
+public class VoterPageInfo   {
+  @JsonProperty("polls")
+  @Valid
+  private List<VoterSummary> polls = new ArrayList<>();
 
-  @JsonProperty("updateType")
-  private String updateType = null;
+  @JsonProperty("pageInfo")
+  private PageInfo pageInfo = null;
 
-  public MetadataUpdateSpec auid(String auid) {
-    this.auid = auid;
+  public VoterPageInfo polls(List<VoterSummary> polls) {
+    this.polls = polls;
+    return this;
+  }
+
+  public VoterPageInfo addPollsItem(VoterSummary pollsItem) {
+    this.polls.add(pollsItem);
     return this;
   }
 
   /**
-   * The identifier of the AU for which the metadata update is to be performed
-   * @return auid
+   * The poll summaries included in the page
+   * @return polls
    **/
-  @Schema(required = true, description = "The identifier of the AU for which the metadata update is to be performed")
-      @NotNull
-
-    public String getAuid() {
-    return auid;
+  @Schema(title = "Polls",
+          description = "The poll summaries included in the page",
+          requiredMode = RequiredMode.REQUIRED,
+          nullable = false)
+  @NotNull
+  @Valid
+  public List<VoterSummary> getPolls() {
+    return polls;
   }
 
-  public void setAuid(String auid) {
-    this.auid = auid;
+  /**
+   * Saves the poll summaries included in the page.
+   * @param polls A List<VoterSummary> with the poll summaries included in the page.
+   **/
+  public void setPolls(List<VoterSummary> polls) {
+    this.polls = polls;
   }
 
-  public MetadataUpdateSpec updateType(String updateType) {
-    this.updateType = updateType;
+  public VoterPageInfo pageInfo(PageInfo pageInfo) {
+    this.pageInfo = pageInfo;
     return this;
   }
 
   /**
-   * The type of metadata update to be performed
-   * @return updateType
+   * Information about the page
+   * @return pageInfo
    **/
-  @Schema(example = "full_extraction | incremental_extraction | delete", required = true, description = "The type of metadata update to be performed")
-      @NotNull
-
-    public String getUpdateType() {
-    return updateType;
+  @Schema(title = "Page Information",
+          description = "Information about the page",
+          requiredMode = RequiredMode.REQUIRED,
+          nullable = false)
+  @NotNull
+  @Valid
+  public PageInfo getPageInfo() {
+    return pageInfo;
   }
 
-  public void setUpdateType(String updateType) {
-    this.updateType = updateType;
+  /**
+   * Saves the pagination information.
+   *
+   * @param pageInfo A PageInfo with the pagination information.
+   */
+  public void setPageInfo(PageInfo pageInfo) {
+    this.pageInfo = pageInfo;
   }
 
 
@@ -100,24 +129,24 @@ public class MetadataUpdateSpec   {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    MetadataUpdateSpec metadataUpdateSpec = (MetadataUpdateSpec) o;
-    return Objects.equals(this.auid, metadataUpdateSpec.auid) &&
-      Objects.equals(this.updateType, metadataUpdateSpec.updateType);
+    VoterPageInfo voterPageInfo = (VoterPageInfo) o;
+    return Objects.equals(this.polls, voterPageInfo.polls) &&
+        Objects.equals(this.pageInfo, voterPageInfo.pageInfo);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(auid, updateType);
+    return Objects.hash(polls, pageInfo);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class MetadataUpdateSpec {\n");
+    sb.append("VoterPageInfo [\n");
 
-    sb.append("    auid: ").append(toIndentedString(auid)).append("\n");
-    sb.append("    updateType: ").append(toIndentedString(updateType)).append("\n");
-    sb.append("}");
+    sb.append("    polls: ").append(toIndentedString(polls)).append("\n");
+    sb.append("    pageInfo: ").append(toIndentedString(pageInfo)).append("\n");
+    sb.append("]");
     return sb.toString();
   }
 

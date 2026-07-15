@@ -120,7 +120,7 @@ public class ArtifactSpec implements Comparable<Object> {
   String ns = NS1;
   String auid = AUID1;
   String url;
-  int fixedVer = -1;
+  Integer fixedVer = -1;
 
   // used for creation and comparison of actual with expected
   boolean toDelete = false;
@@ -206,7 +206,7 @@ public class ArtifactSpec implements Comparable<Object> {
     return this;
   }
 
-  public ArtifactSpec setVersion(int version) {
+  public ArtifactSpec setVersion(Integer version) {
     this.fixedVer = version;
     return this;
   }
@@ -301,12 +301,12 @@ public class ArtifactSpec implements Comparable<Object> {
     return auid;
   }
 
-  public int getVersion() {
+  public Integer getVersion() {
     return fixedVer;
   }
 
   public boolean hasVersion() {
-    return fixedVer >= 0;
+    return fixedVer != null && fixedVer >= 0;
   }
 
   public int getExpVer() {
@@ -662,7 +662,7 @@ public class ArtifactSpec implements Comparable<Object> {
     StringBuilder sb = new StringBuilder();
     sb.append(String.format("[ArtifactSpec: (%s,%s,%s,%d)", url, ns, auid, fixedVer));
     if (isCommitted()) {
-      sb.append("C");
+      sb.append(", commmitted");
     }
     if (hasContent()) {
       if (len >= 0 || content != null) {
