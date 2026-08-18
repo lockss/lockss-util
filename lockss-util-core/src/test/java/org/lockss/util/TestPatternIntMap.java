@@ -115,4 +115,11 @@ public class TestPatternIntMap extends LockssTestCase5 {
     }
   }
 
+  @Test
+  public void testSourcePlugin() {
+    String auid = "org|lockss|plugin|springer|ClockssSpringerJatsSourcePlugin&base_url~https%3A%2F%2Fclockss-ingest%2Elockss%2Eorg%2Fsourcefiles%2Fspringerjats-released%2F&directory~2024_08";
+    PatternIntMap ppm1 = PatternIntMap.fromSpec("SourcePlugin,-20000");
+    assertEquals(-20000, ppm1.getMatch(auid));
+  }
+
 }
