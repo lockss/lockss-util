@@ -48,15 +48,18 @@ in this Software without prior written authorization from Stanford University.
  */
 
 package org.lockss.util.io;
+
+import java.io.*;
+import java.lang.ref.*;
 import java.text.Format;
+import java.util.concurrent.atomic.*;
+
 import org.apache.commons.io.output.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.lockss.log.*;
 import org.lockss.util.CloseCallbackInputStream;
-import java.io.*;
-import java.lang.ref.*;
 
 /** An output stream backed by memory below a specified threshold size,
  * then by a temp file if it grows over the threshold.  If the stream is
@@ -79,6 +82,14 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
 
   private static final Format TIMESTAMP_DATEFORMAT =
     FastDateFormat.getInstance("HH:mm:ss.SSS");
+
+  private static AtomicInteger counter = new AtomicInteger(0);
+
+  private static boolean avoidExcessiveNeverDeletedLogging = false;
+
+  public static void setAvoidExcessiveNeverDeletedLogging(boolean val) {
+    avoidExcessiveNeverDeletedLogging = val;
+  }
 
   protected ThreshStream inner;
 
@@ -124,6 +135,10 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
   private Cleaner.Cleanable cleanable = null;
   private DFCleaner dfc;
 
+  private static String defaultName() {
+    return "deferred-temp-file-" + counter.incrementAndGet();
+  }
+
   /**
    * Return an OutputStream that will create a tempfile iff the size
    * exceeds threshold.  The tempfile will be named
@@ -132,7 +147,7 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
    * in-memory to disk file
    */
   public DeferredTempFileOutputStream(int threshold) {
-    this(threshold, "deferred-temp-file");
+    this(threshold, defaultName());
   }
 
   /**
@@ -142,7 +157,7 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
    * @param tmpDir  Dir in which temp file will be created.
    */
   public DeferredTempFileOutputStream(int threshold, File tmpDir) {
-    this(threshold, "deferred-temp-file");
+    this(threshold, defaultName());
     this.tmpDir = tmpDir;
   }
 
@@ -161,7 +176,7 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
     logName = tempName;
     memoryOutputStream = new UnsynchronizedByteArrayOutputStream();
     currentOutputStream = memoryOutputStream;
-    dfc = new DFCleaner(name);
+    dfc = new DFCleaner(logName);
     cleanable = cleaner.register(this, dfc);
   }
 
@@ -325,7 +340,7 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
    */
   public void deleteTempFile() {
     if (!closed) {
-      log.warn("Deleted while still open: {}", logName);
+      log.error("Deleted while still open: {}", logName, new Throwable());
       IOUtils.closeQuietly(this);
     }
     if (tempFile != null) {
@@ -334,6 +349,7 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
     }
     if (dfc != null) {
       dfc.setDeleted();                // Tell cleaner delete was called
+      log.debug2("Deleted {}", logName);
       cleanable.clean();               // ??? Cleaner doc suggests this
     }
   }
@@ -352,11 +368,11 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
   /** The Cleaner state and Runnable */
   private static class DFCleaner implements Runnable {
 
-    private boolean isDeleted = false;
-    private File file;
-    private String createStack;
-    private String name;
-    private long openTime;
+    private volatile boolean isDeleted = false;
+    private volatile File file;
+    private volatile String createStack;
+    private volatile String name;
+    private volatile long openTime;
 
     private DFCleaner() {
       this(null);
@@ -386,22 +402,34 @@ public class DeferredTempFileOutputStream extends ProxyOutputStream {
     }
 
     public void run() {
-      if (!isDeleted) {
-        FileUtils.deleteQuietly(file);
-        file = null;
-        StringBuilder sb = new StringBuilder();
-        sb.append("Never deleted");
-        if (name != null) {
-          sb.append(" (");
-          sb.append(name);
-          sb.append(")");
-        }
-        sb.append(".  Created at ");
-        sb.append(TIMESTAMP_DATEFORMAT.format(openTime));
-          if (createStack != null) {
-            sb.append(" at ");
-            sb.append(createStack);
+      if (isDeleted) {
+        return;
+      }
+      StringBuilder sb = new StringBuilder();
+      if (file == null) {
+        sb.append("Never deleted (in mem): ");
+        sb.append(name);
+      } else {
+        sb.append("Never deleted: ");
+        sb.append(file.getName());
+        try {
+          if (!file.delete()) {
+            sb.append(" DELETE FAILED");
           }
+        } catch (Exception e) {
+            sb.append(" DELETE FAILED: ");
+            sb.append(e.toString());
+        }
+      }
+      sb.append(".  Created at ");
+      sb.append(TIMESTAMP_DATEFORMAT.format(openTime));
+      if (createStack != null) {
+        sb.append(" at ");
+        sb.append(createStack);
+      }
+      if (avoidExcessiveNeverDeletedLogging) {
+        log.debug2(sb.toString());
+      } else {
         log.warn(sb.toString());
       }
     }
