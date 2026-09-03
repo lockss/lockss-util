@@ -128,7 +128,8 @@ public class RestLockssRepository implements LockssRepository {
   @Deprecated
   public RestLockssRepository(URL repositoryUrl, String userName, String password) throws IOException {
     this(repositoryUrl,
-        RestUtil.getRestTemplate(0, 0, (int) (16 * FileUtils.ONE_MB), null),
+        RestUtil.getRestTemplate(RestUtil.DEFAULT_CONNECT_TIMEOUT,
+            RestUtil.DEFAULT_READ_TIMEOUT, (int) (16 * FileUtils.ONE_MB), null),
         userName, password);
   }
 
@@ -303,10 +304,12 @@ public class RestLockssRepository implements LockssRepository {
     String endpoint = String.format("%s/artifacts", repositoryUrl);
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint);
 
-    // Perform REST call: POST the multipart entity to the remote LOCKSS repository
+    // Perform REST call: POST the multipart entity to the remote LOCKSS
+    // repository.  This is a long-running call: the service doesn't respond
+    // until it has compressed the artifact and stored it in a temporary WARC
     try {
       ResponseEntity<String> response =
-          RestUtil.callRestService(restTemplate,
+          RestUtil.callLongRunningRestService(restTemplate,
               builder.encode().build().toUri(),
               HttpMethod.POST,
               multipartEntity,
@@ -387,8 +390,10 @@ public class RestLockssRepository implements LockssRepository {
     }
 
     try {
+      // Long-running call: the service doesn't respond until it has imported
+      // every artifact in the archive
       ResponseEntity<Resource> response =
-          RestUtil.callRestService(restTemplate,
+          RestUtil.callLongRunningRestService(restTemplate,
               RestUtil.getRestUri(archivesEndpoint, null, queryParams),
               HttpMethod.POST,
               new HttpEntity<>(parts, getInitializedHttpHeaders()),
@@ -1397,7 +1402,16 @@ public class RestLockssRepository implements LockssRepository {
     HttpEntity<Void> requestEntity = new HttpEntity<>(null, requestHeaders);
 
     try {
-      ResponseEntity<String> response =
+      // Finishing a bulk store is a long-running call: the service waits for
+      // the AU's artifacts to be copied to permanent storage and indexed
+      // before responding
+      ResponseEntity<String> response = op == BulkAuOpEnum.FINISH ?
+          RestUtil.callLongRunningRestService(restTemplate,
+              endpointUri,
+              HttpMethod.POST,
+              requestEntity,
+              String.class,
+              "doBulkOp failed") :
           RestUtil.callRestService(restTemplate,
               endpointUri,
               HttpMethod.POST,

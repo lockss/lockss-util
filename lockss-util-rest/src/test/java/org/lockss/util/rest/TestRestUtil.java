@@ -30,16 +30,19 @@ package org.lockss.util.rest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hc.client5.http.ConnectTimeoutException;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.lockss.log.L4JLogger;
+import org.lockss.util.Constants;
 import org.lockss.util.ListUtil;
 import org.lockss.util.MapUtil;
 import org.lockss.util.rest.RestUtil.LockssRestTemplateSettings;
 import org.lockss.util.rest.RestUtil.LockssRestTemplateSettingsBuilder;
 import org.lockss.util.rest.exception.LockssRestException;
 import org.lockss.util.rest.exception.LockssRestHttpException;
+import org.lockss.util.rest.exception.LockssRestNetworkException;
 import org.lockss.util.rest.multipart.MultipartMessage;
 import org.lockss.util.rest.multipart.MultipartMessageHttpMessageConverter;
 import org.lockss.util.rest.multipart.MultipartResponse;
@@ -436,6 +439,145 @@ public class TestRestUtil extends LockssTestCase5 {
       }
       assertMatchesRE(".*Read timed out", e.getMessage());
     }
+  }
+
+  /**
+   * The RestTemplate returned by the no-argument getRestTemplate() must impose
+   * a socket timeout; the whole point of #241 is that a hung service should
+   * fail a single call rather than block a thread indefinitely.
+   */
+  @Test
+  public void testDefaultReadTimeout() throws Exception {
+    assertTrue(RestUtil.DEFAULT_READ_TIMEOUT > 0);
+    assertTrue(RestUtil.DEFAULT_LONG_READ_TIMEOUT >
+               RestUtil.DEFAULT_READ_TIMEOUT);
+
+    assertEquals(RestUtil.DEFAULT_READ_TIMEOUT,
+                 responseTimeoutOf(RestUtil.getRestTemplate()));
+
+    // An explicitly requested read timeout of zero still means no timeout
+    assertEquals(0, responseTimeoutOf(RestUtil.getRestTemplate(0, 0)));
+
+    assertEquals(3000, responseTimeoutOf(RestUtil.getRestTemplate(2000, 3000)));
+  }
+
+  /**
+   * A call made with callLongRunningRestService() gets the long read timeout,
+   * so that a call which legitimately produces no response for a long time
+   * (createArtifact) isn't killed by the general read timeout.
+   */
+  @Test
+  public void testLongRunningCallIsNotCutOffByReadTimeout() throws Exception {
+    msClient
+        .when(request()
+            .withMethod("GET")
+            .withPath("/slow"))
+        .respond(response()
+            .withDelay(TimeUnit.SECONDS, 3)
+            .withStatusCode(200)
+            .withHeaders(new Header("Content-Type", "text/plain"))
+            .withBody("Hello"));
+
+    // Normal read timeout well under the delay, long read timeout well over it
+    RestTemplate template = RestUtil.getRestTemplateBuilder(
+        LockssRestTemplateSettings.withTimeouts(1000, 1000)
+            .withLongReadTimeout(60 * Constants.SECOND)).build();
+
+    URI uri = URI.create("http://localhost:" + port + "/slow");
+
+    // A normal call gives up
+    try {
+      ResponseEntity<String> resp =
+          RestUtil.callRestService(template, uri, HttpMethod.GET, null,
+                                   String.class, "should time out");
+      fail("Should have thrown, but returned: " + resp);
+    } catch (LockssRestNetworkException e) {
+      assertClass(SocketTimeoutException.class, e.getCause());
+    }
+
+    // A long-running call waits
+    ResponseEntity<String> resp =
+        RestUtil.callLongRunningRestService(template, uri, HttpMethod.GET, null,
+                                            String.class, "should not time out");
+
+    assertEquals(HttpStatus.OK, HttpStatus.valueOf(resp.getStatusCode().value()));
+    assertEquals("Hello", resp.getBody());
+
+    // The long read timeout applies only to the call that asked for it: the
+    // next normal call on the same (pooled) connection gives up again
+    try {
+      ResponseEntity<String> resp2 =
+          RestUtil.callRestService(template, uri, HttpMethod.GET, null,
+                                   String.class, "should time out again");
+      fail("Should have thrown, but returned: " + resp2);
+    } catch (LockssRestNetworkException e) {
+      assertClass(SocketTimeoutException.class, e.getCause());
+    }
+  }
+
+  /**
+   * The long read timeout is a longer timeout, not the absence of one.
+   */
+  @Test
+  public void testLongRunningCallStillTimesOut() throws Exception {
+    msClient
+        .when(request()
+            .withMethod("GET")
+            .withPath("/hang"))
+        .respond(response()
+            .withDelay(TimeUnit.SECONDS, 30)
+            .withStatusCode(200)
+            .withBody("Hello"));
+
+    RestTemplate template = RestUtil.getRestTemplateBuilder(
+        LockssRestTemplateSettings.withTimeouts(1000, 1000)
+            .withLongReadTimeout(2 * Constants.SECOND)).build();
+
+    URI uri = URI.create("http://localhost:" + port + "/hang");
+
+    long startMs = TimeBase.nowMs();
+
+    try {
+      ResponseEntity<String> resp =
+          RestUtil.callLongRunningRestService(template, uri, HttpMethod.GET,
+                                              null, String.class,
+                                              "should time out");
+      fail("Should have thrown, but returned: " + resp);
+    } catch (LockssRestNetworkException e) {
+      assertClass(SocketTimeoutException.class, e.getCause());
+      // It waited for the long timeout, not the normal one
+      assertTrue(TimeBase.msSince(startMs) >= 2000,
+                 "Should have waited at least the long read timeout, but took " +
+                 TimeBase.msSince(startMs) + " ms");
+    }
+  }
+
+  /**
+   * A long-running call is never given less time than a normal one, and no
+   * read timeout at all means no read timeout for long-running calls either.
+   */
+  @Test
+  public void testEffectiveLongReadTimeout() {
+    assertEquals(60000, RestUtil.effectiveLongReadTimeout(1000, 60000));
+    // Never shorter than the normal read timeout
+    assertEquals(60000, RestUtil.effectiveLongReadTimeout(60000, 1000));
+    // No normal timeout implies no long timeout
+    assertEquals(0, RestUtil.effectiveLongReadTimeout(0, 60000));
+    assertEquals(0, RestUtil.effectiveLongReadTimeout(1000, 0));
+  }
+
+  /**
+   * Provides the response (socket) timeout, in milliseconds, that a
+   * RestTemplate applies to a normal call.
+   */
+  private long responseTimeoutOf(RestTemplate template) throws Exception {
+    RestUtil.LockssHttpRequestFactory factory =
+        (RestUtil.LockssHttpRequestFactory) template.getRequestFactory();
+
+    HttpClientContext context = (HttpClientContext)
+        factory.createHttpContext(HttpMethod.GET, URI.create("http://foo/bar"));
+
+    return context.getRequestConfig().getResponseTimeout().toMilliseconds();
   }
 
   String toJson(Map map) {

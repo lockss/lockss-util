@@ -31,13 +31,18 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.config.ConnectionConfig;
+import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
 import org.apache.hc.client5.http.ssl.DefaultHostnameVerifier;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
 import org.apache.hc.core5.http.io.SocketConfig;
+import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.util.Timeout;
 import org.lockss.log.L4JLogger;
+import org.lockss.util.Constants;
 import org.lockss.util.io.DeferredTempFileOutputStream;
 import org.lockss.util.lang.ExceptionUtil;
 import org.lockss.util.rest.exception.LockssRestException;
@@ -89,6 +94,38 @@ public class RestUtil {
   public static final int DEFAULT_MAX_CONNECTIONS_PER_ROUTE = 5;
 
   /**
+   * Default timeout, in milliseconds, for establishing a connection to a REST
+   * service.  Zero means no timeout.
+   */
+  public static final long DEFAULT_CONNECT_TIMEOUT = 30 * Constants.SECOND;
+
+  /**
+   * Default socket timeout, in milliseconds, for REST service calls.  This is
+   * an inactivity timeout: it limits how long a single read from the socket may
+   * block, not how long the call as a whole may take, so it does not limit the
+   * time spent transferring a large response.  Zero means no timeout.
+   */
+  public static final long DEFAULT_READ_TIMEOUT = 2 * Constants.MINUTE;
+
+  /**
+   * Default socket timeout, in milliseconds, for REST service calls that are
+   * expected to produce no response for a long time.  The archetype is
+   * createArtifact, which doesn't respond until the artifact has been
+   * compressed and stored.  Zero means no timeout.
+   *
+   * @see #callLongRunningRestService
+   */
+  public static final long DEFAULT_LONG_READ_TIMEOUT = 1 * Constants.HOUR;
+
+  /**
+   * Set while a call that {@link #callLongRunningRestService} is making is in
+   * progress, to tell {@link LockssHttpRequestFactory} to apply the long read
+   * timeout to it.
+   */
+  private static final ThreadLocal<Boolean> isLongRunningCall =
+      ThreadLocal.withInitial(() -> Boolean.FALSE);
+
+  /**
    * Performs a call to a REST service with the default retry backoffs
    *
    * @param restTemplate
@@ -117,6 +154,67 @@ public class RestUtil {
     return callRestService(restTemplate, uri, method, requestEntity,
                            responseType, clientExceptionMessage,
                            null);
+  }
+
+  /**
+   * Performs a call to a REST service that may legitimately produce no response
+   * for a long time, using the long read timeout of the {@link RestTemplate}
+   * instead of its normal read timeout.
+   * <p>
+   * Most REST calls have no excuse for taking a long time to <i>start</i>
+   * responding, and are better off failing than blocking a thread
+   * indefinitely.  A few do: createArtifact, for instance, doesn't respond
+   * until the artifact has been compressed and stored, which can take
+   * arbitrarily long.  Those calls should be made with this method.
+   * <p>
+   * The longer timeout applies only if the {@link RestTemplate} was built by
+   * {@link #getRestTemplateBuilder(LockssRestTemplateSettings)} or one of the
+   * methods that use it; with any other {@link RestTemplate} this behaves
+   * exactly like {@link #callRestService}.
+   *
+   * @param restTemplate
+   *          A RestTemplate with the REST template to be used to access the
+   *          REST service.
+   * @param uri
+   *          A String with the URI of the request to the REST service.
+   * @param method
+   *          An HttpMethod with the method of the request to the REST service.
+   * @param requestEntity
+   *          An HttpEntity with the entity of the request to the REST service.
+   * @param responseType
+   *          A {@code Class<T>} with the expected type of the response to the
+   *          request to the REST service.
+   * @param clientExceptionMessage
+   *          A String with the message to be returned if there are errors.
+   * @return a {@code ResponseEntity<T>} with the response to the request to the
+   *         REST service.
+   * @throws LockssRestException
+   *           if there are problems making the request to the REST service.
+   */
+  public static <T> ResponseEntity<T> callLongRunningRestService(
+      RestTemplate restTemplate,
+      URI uri, HttpMethod method, HttpEntity<?> requestEntity,
+      Class<T> responseType, String clientExceptionMessage)
+	  throws LockssRestException {
+    isLongRunningCall.set(Boolean.TRUE);
+
+    try {
+      return callRestService(restTemplate, uri, method, requestEntity,
+                             responseType, clientExceptionMessage);
+    } finally {
+      isLongRunningCall.remove();
+    }
+  }
+
+  /**
+   * Provides an indication of whether the call in progress on this thread was
+   * made by {@link #callLongRunningRestService}.
+   *
+   * @return a boolean with <code>true</code> if the long read timeout should be
+   *         applied to the request being created.
+   */
+  static boolean isLongRunningCall() {
+    return isLongRunningCall.get();
   }
 
   /**
@@ -298,13 +396,14 @@ public class RestUtil {
 
   /**
    * Provides the REST template to be used to make the call to a REST service
-   * using the HttpComponentsClientHttpRequestFactory, default timeouts and not
+   * using the HttpComponentsClientHttpRequestFactory, {@link
+   * #DEFAULT_CONNECT_TIMEOUT} and {@link #DEFAULT_READ_TIMEOUT}, and not
    * throwing exceptions.
    *
    * @return a RestTemplate with the REST template.
    */
   public static RestTemplate getRestTemplate() {
-    return getRestTemplate(0, 0);
+    return getRestTemplate(DEFAULT_CONNECT_TIMEOUT, DEFAULT_READ_TIMEOUT);
   }
 
   public static RestTemplateBuilder getRestTemplateBuilder(long connectTimeout, long readTimeout) {
@@ -358,7 +457,113 @@ public class RestUtil {
   }
 
   private static HttpComponentsClientHttpRequestFactory createRequestFactory(LockssRestTemplateSettings settings) {
-    return new HttpComponentsClientHttpRequestFactory(createHttpClient(settings));
+    return new LockssHttpRequestFactory(createHttpClient(settings),
+                                        settings.readTimeout(),
+                                        settings.longReadTimeout());
+  }
+
+  /**
+   * Provides the socket timeout that a {@link RestTemplate} built by this class
+   * applies to normal calls.  Intended for tests and diagnostics: the timeouts
+   * are otherwise not retrievable from a {@link RestTemplate}.
+   *
+   * @param restTemplate A RestTemplate.
+   * @return a long with the read timeout in milliseconds, zero if there is no
+   *         timeout, or -1 if the RestTemplate was not built by this class.
+   */
+  public static long getReadTimeout(RestTemplate restTemplate) {
+    return restTemplate.getRequestFactory() instanceof LockssHttpRequestFactory factory ?
+        factory.getReadTimeout() : -1;
+  }
+
+  /**
+   * Provides the socket timeout that a {@link RestTemplate} built by this class
+   * applies to calls made by {@link #callLongRunningRestService}.  Intended for
+   * tests and diagnostics.
+   *
+   * @param restTemplate A RestTemplate.
+   * @return a long with the long read timeout in milliseconds, zero if there is
+   *         no timeout, or -1 if the RestTemplate was not built by this class.
+   */
+  public static long getLongReadTimeout(RestTemplate restTemplate) {
+    return restTemplate.getRequestFactory() instanceof LockssHttpRequestFactory factory ?
+        factory.getLongReadTimeout() : -1;
+  }
+
+  /**
+   * Provides the read timeout to apply to a long-running call.  A long-running
+   * call is never given less time than a normal one, and a normal read timeout
+   * of zero (no timeout) implies no timeout for long-running calls either.
+   *
+   * @param readTimeout     A long with the normal read timeout in milliseconds.
+   * @param longReadTimeout A long with the requested long read timeout in
+   *                        milliseconds.
+   * @return a long with the read timeout to apply, in milliseconds.
+   */
+  static long effectiveLongReadTimeout(long readTimeout, long longReadTimeout) {
+    if (readTimeout <= 0 || longReadTimeout <= 0) {
+      return 0;
+    }
+
+    return Math.max(readTimeout, longReadTimeout);
+  }
+
+  /**
+   * A request factory that applies the read timeout appropriate to the call
+   * being made: the long read timeout if the call was made by {@link
+   * #callLongRunningRestService}, the normal read timeout otherwise.
+   * <p>
+   * The socket timeout configured on the connection manager can't do this,
+   * because it is a property of the pooled connection, not of the request.  A
+   * response timeout in the request's {@link RequestConfig} overrides it for
+   * the duration of the exchange, and is set explicitly on every request so
+   * that no request inherits the timeout of the one that used the connection
+   * before it.
+   */
+  static class LockssHttpRequestFactory
+      extends HttpComponentsClientHttpRequestFactory {
+
+    private final long readTimeout;
+    private final long longReadTimeout;
+
+    LockssHttpRequestFactory(HttpClient httpClient, long readTimeout,
+                             long longReadTimeout) {
+      super(httpClient);
+      this.readTimeout = readTimeout;
+      this.longReadTimeout =
+          effectiveLongReadTimeout(readTimeout, longReadTimeout);
+    }
+
+    long getReadTimeout() {
+      return readTimeout;
+    }
+
+    long getLongReadTimeout() {
+      return longReadTimeout;
+    }
+
+    @Override
+    protected HttpContext createHttpContext(HttpMethod httpMethod, URI uri) {
+      long timeout = isLongRunningCall() ? longReadTimeout : readTimeout;
+
+      log.debug2("Read timeout for {} {}: {}", httpMethod, uri, timeout);
+
+      // Start from the config Spring would otherwise have used, so that
+      // everything else it configures (notably the connection request timeout)
+      // is preserved
+      RequestConfig requestConfig = createRequestConfig(getHttpClient());
+
+      RequestConfig.Builder builder = requestConfig == null ?
+          RequestConfig.custom() : RequestConfig.copy(requestConfig);
+
+      // Timeout.ofMilliseconds(0) means no timeout, which is the convention
+      // used for the timeouts throughout this class
+      builder.setResponseTimeout(Timeout.ofMilliseconds(Math.max(timeout, 0)));
+
+      HttpClientContext context = HttpClientContext.create();
+      context.setRequestConfig(builder.build());
+      return context;
+    }
   }
 
   private static HttpClient createHttpClient(LockssRestTemplateSettings settings) {
@@ -401,6 +606,7 @@ public class RestUtil {
   public static class LockssRestTemplateSettingsBuilder {
     long connectTimeout;
     long readTimeout;
+    long longReadTimeout = DEFAULT_LONG_READ_TIMEOUT;
     int maxConnections;
     int maxConnectionsPerRoute;
     long dfosSizeThreshold;
@@ -408,8 +614,8 @@ public class RestUtil {
     SslBundle sslBundle;
 
     public LockssRestTemplateSettings build() {
-      return new LockssRestTemplateSettings(connectTimeout, readTimeout, maxConnections, maxConnectionsPerRoute,
-          dfosSizeThreshold, dfosTmpDir, sslBundle);
+      return new LockssRestTemplateSettings(connectTimeout, readTimeout, longReadTimeout, maxConnections,
+          maxConnectionsPerRoute, dfosSizeThreshold, dfosTmpDir, sslBundle);
     }
 
     public LockssRestTemplateSettingsBuilder setConnectTimeout(long connectTimeout) {
@@ -419,6 +625,13 @@ public class RestUtil {
 
     public LockssRestTemplateSettingsBuilder setReadTimeout(long readTimeout) {
       this.readTimeout = readTimeout;
+      return this;
+    }
+
+    /** Set the read timeout used for calls made by {@link
+     * RestUtil#callLongRunningRestService} */
+    public LockssRestTemplateSettingsBuilder setLongReadTimeout(long longReadTimeout) {
+      this.longReadTimeout = longReadTimeout;
       return this;
     }
 
@@ -451,6 +664,7 @@ public class RestUtil {
   public record LockssRestTemplateSettings(
     long connectTimeout,
     long readTimeout,
+    long longReadTimeout,
     int maxConnections,
     int maxConnectionsPerRoute,
     long dfosSizeThreshold,
@@ -464,6 +678,14 @@ public class RestUtil {
           .setMaxConnections(DEFAULT_MAX_CONNECTIONS)
           .setMaxConnectionsPerRoute(DEFAULT_MAX_CONNECTIONS_PER_ROUTE)
           .build();
+    }
+
+    /** Provides a copy of these settings with the given read timeout for
+     * calls made by {@link RestUtil#callLongRunningRestService} */
+    public LockssRestTemplateSettings withLongReadTimeout(long longReadTimeout) {
+      return new LockssRestTemplateSettings(connectTimeout, readTimeout,
+          longReadTimeout, maxConnections, maxConnectionsPerRoute,
+          dfosSizeThreshold, dfosTmpDir, sslBundle);
     }
   }
 
