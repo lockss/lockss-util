@@ -211,6 +211,32 @@ public interface LockssRepository extends Ready {
   Iterable<String> getAuIds(String namespace) throws IOException;
 
   /**
+   * Returns the number of Archival Units in a namespace.
+   * <p>
+   * Callers that only want the number should use this rather than counting what
+   * {@link #getAuIds(String)} returns. Over the REST implementation that
+   * distinction is the difference between one request and paging every AUID in
+   * the namespace across the network only to discard them.
+   * <p>
+   * The default counts {@link #getAuIds(String)}, which is what callers used to
+   * do for themselves, so an implementation that cannot answer the question any
+   * faster needs to do nothing.
+   *
+   * @param namespace A {code String} containing the namespace.
+   * @return A long with the number of AUIDs in this namespace.
+   * @throws IOException
+   */
+  default long getAuIdCount(String namespace) throws IOException {
+    long count = 0;
+
+    for (String auid : getAuIds(namespace)) {
+      count++;
+    }
+
+    return count;
+  }
+
+  /**
    * Returns the committed artifacts of the latest version of all URLs, from a specified Archival Unit and namespace.
    *
    * @param namespace A {code String} containing the namespace of the artifact.

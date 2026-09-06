@@ -888,6 +888,62 @@ public class RestLockssRepository implements LockssRepository {
   }
 
   /**
+   * Returns the number of Archival Units in a namespace, in one request.
+   * <p>
+   * The service reports the total in the page info of the AUs endpoint, so this
+   * asks for the smallest page it will return and reads the count off that
+   * rather than paging the AUIDs themselves.
+   *
+   * @param namespace A {@code String} containing the namespace.
+   * @return A long with the number of AUIDs in this namespace.
+   */
+  @Override
+  public long getAuIdCount(String namespace) throws IOException {
+    String endpoint = String.format("%s/aus", repositoryUrl);
+
+    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint);
+
+    Map<String, String> uriVars = new HashMap<>();
+
+    if (namespace != null) {
+      builder.queryParam("namespace", "{namespace}");
+      uriVars.put("namespace", namespace);
+    }
+
+    // The AUIDs in the page are not wanted, only the total alongside them; ask
+    // for as few as the endpoint allows.
+    builder.queryParam("limit", "1");
+
+    try {
+      ResponseEntity<String> response =
+          RestUtil.callRestService(restTemplate,
+              builder.encode().build().expand(uriVars).toUri(),
+              HttpMethod.GET,
+              new HttpEntity<>(null, getInitializedHttpHeaders()),
+              String.class,
+              "getAuIdCount");
+      checkStatusOk(response);
+
+      AuidPageInfo api =
+          new ObjectMapper().readValue(response.getBody(), AuidPageInfo.class);
+
+      PageInfo pageInfo = api.getPageInfo();
+
+      if (pageInfo != null && pageInfo.getTotalCount() != null) {
+        return pageInfo.getTotalCount().longValue();
+      }
+    } catch (LockssRestException e) {
+      log.error("Could not get AUID count", e);
+      throw e;
+    }
+
+    // A service too old to report a total. Fall back to counting them, which is
+    // slow but is what this call did before the total existed.
+    log.debug("Service did not report a total AUID count; counting instead");
+    return LockssRepository.super.getAuIdCount(namespace);
+  }
+
+  /**
    * Returns an iterator over artifacts, given a REST endpoint that returns artifacts.
    *
    * @param builder A {@code UriComponentsBuilder} containing a REST endpoint that returns artifacts.
