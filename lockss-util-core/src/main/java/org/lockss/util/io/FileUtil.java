@@ -490,6 +490,7 @@ public class FileUtil {
             pathStr.equals("") ||
             pathStr.equals("/") ||
             pathStr.equals(".") ||
+            pathStr.equals("./") ||
             pathStr.equals("..") ||
             pathStr.startsWith("../"));
   }
