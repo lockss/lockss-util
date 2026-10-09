@@ -39,6 +39,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.FileUtils;
 import org.lockss.log.*;
 import org.lockss.util.lang.LockssRandom;
 import org.lockss.util.os.PlatformUtil;
@@ -475,47 +476,153 @@ public class FileUtil {
     return f.toPath().normalize().toString().trim();
   }
 
-  private static boolean isDangerousDirToDelete(File dir) {
-    String ndir = normalize(dir);
-    return (ndir.equals("") || ndir.equals("..") || ndir.startsWith("../"));
+  private static boolean isDangerousDirToDelete(File normPath) {
+    return isDangerousDirToDelete(normPath.toPath());
+  }
+
+  /** True if the path is one we that delTree() & fastDelTree() should
+   * reject.
+   * @param normPath an already-normalized path
+   */
+  private static boolean isDangerousDirToDelete(Path normPath) {
+    String pathStr = normPath.toString();
+    return (normPath.getNameCount() == 0 ||
+            pathStr.equals("") ||
+            pathStr.equals("/") ||
+            pathStr.equals(".") ||
+            pathStr.equals("..") ||
+            pathStr.startsWith("../"));
+  }
+
+  /** True if normPath is the current working directory */
+  static boolean isCwd(Path normPath) {
+    Path abs = Paths.get("").toAbsolutePath().normalize();
+    return normPath.equals(abs);
+  }
+
+  /** Normalize the dir name or throw if delTree() should reject it */
+  static Path normalizeAndCheckDirToDelete(File dir) {
+    return normalizeAndCheckDirToDelete(dir.toPath());
+  }
+
+  /** Normalize the dir name or throw if delTree() should reject it */
+  static Path normalizeAndCheckDirToDelete(Path path) {
+    // Check the path before normalizing.  Not completely redundant as
+    // we don't want to accept, e.g., an empty path, no matter what it
+    // resolves to
+    if (isDangerousDirToDelete(path)) {
+      throw new IllegalArgumentException("Cowardly refusing to delete dir: " + path);
+    }
+    Path npath = path.normalize().toAbsolutePath();
+    // Check again after normalizing
+    if (isDangerousDirToDelete(npath)) {
+      throw new IllegalArgumentException("Cowardly refusing to delete dir: " + npath);
+    }
+    // Also ensure the normalized path isn't the current working directory
+    if (isCwd(npath)) {
+      throw new IllegalArgumentException("Cowardly refusing to delete cwd: " + npath);
+    }
+    return npath;
   }
 
   /** Delete the contents of a directory, leaving the empty directory.
-   * @return true iff successful */
+   * @param dir The directory path
+   * @return true iff successful
+   * @throws {@link IllegalArgumentException} if given a path that exists but isn't a file */
   public static boolean emptyDir(File dir) {
-    if (isDangerousDirToDelete(dir)) {
-      throw new RuntimeException("Cowardly refusing to empty '.' (" +
-				 dir.getAbsolutePath() + ")");
+    Path normPath = normalizeAndCheckDirToDelete(dir);
+    try {
+      FileUtils.cleanDirectory(normPath.toFile());
+    } catch (IOException e) {
+      log.debug("Failed to empty dir, returning false: " + normPath, e);
+      return false;
     }
-    String files[] = dir.list();
-    if (files == null) {
-      return false;		  // true would imply there's an empty
-				  // dir, which there doesn't seem to be
-    }
-    boolean ret = true;
-    for (int i = 0; i < files.length; i++) {
-      File f = new File(dir, files[i]);
-      if (f.isDirectory()) {
-	ret = ret && emptyDir(f);
-      }
-      if (!f.delete()) {
-	ret = false;
-      }
-    }
-    return ret;
+    return true;
   }
 
   /** Delete a directory and its contents.
    * @return true iff successful */
   public static boolean delTree(File dir) {
-    if (isDangerousDirToDelete(dir)) {
-      throw new RuntimeException("Cowardly refusing to delete '.' (" +
-				 dir.getAbsolutePath() + ")");
-    }
-    emptyDir(dir);
-    if (dir.delete()) {
+    Path normPath = normalizeAndCheckDirToDelete(dir);
+    File file = normPath.toFile() ;
+
+    // NOFOLLOW_LINKS so that a dangling symlink is still removed
+    if (!Files.exists(normPath, LinkOption.NOFOLLOW_LINKS)) {
       return true;
-    } else return !dir.exists();
+    }
+    // XXX isDirectory() check disabled - do we want it?
+//     if (!dir.isDirectory()) {
+//       throw new IllegalArgumentException("Not a directory: " + file);
+//     }
+    return FileUtils.deleteQuietly(file);
+  }
+
+  /** Max lines of 'rm' output to log before suppressing the rest */
+  static final int MAX_RM_ERROR_LINES = 100;
+
+  /** Delete a directory and its contents by running <code>rm -rf</code>,
+   * which is much faster than walking the tree in Java.  Intended for
+   * bulk deletion of large trees.
+   * @return true iff successful
+   * @throws IllegalArgumentException if the path isn't allowed
+   * @throws IOException if the 'rm' process couldn't be run or was
+   * interrupted */
+  public static boolean fastDelTree(File dir) throws IOException {
+    return fastDelTree(dir.toPath());
+  }
+
+  /** Delete a directory and its contents by running <code>rm -rf</code>,
+   * which is much faster than walking the tree in Java.  Intended for
+   * bulk deletion of large trees.
+   * @return true iff successful
+   * @throws IllegalArgumentException if the path isn't allowed
+   * below the root
+   * @throws IOException if the 'rm' process couldn't be run or was
+   * interrupted */
+  public static boolean fastDelTree(Path dir) throws IOException {
+    Path normPath = normalizeAndCheckDirToDelete(dir);
+    // NOFOLLOW_LINKS so that a dangling symlink is still removed
+    if (!Files.exists(normPath, LinkOption.NOFOLLOW_LINKS)) {
+      return true;
+    }
+    String normStr = normPath.toString();
+    ProcessBuilder pb = new ProcessBuilder();
+    pb.command("/bin/rm", "-rf", normStr);
+    pb.redirectErrorStream(true);
+    log.debug2("fastDelTree: " + pb.command());
+    Process proc = pb.start();
+    try {
+      String pref = "rm -rf " + normStr + ": ";
+      try (BufferedReader br =
+           new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
+        String line;
+        int cnt = 0;
+        while ((line = br.readLine()) != null) {
+          if (cnt < MAX_RM_ERROR_LINES) {
+            log.warn(pref + line);
+          } else if (cnt == MAX_RM_ERROR_LINES) {
+            log.warn(pref + "Maximum error logging reached, " +
+                     "suppressing further output.");
+          }
+          cnt++;
+        }
+      }
+      int exitVal = proc.waitFor();
+      if (exitVal != 0) {
+        log.warn(pref + "exited with status " + exitVal);
+        return false;
+      }
+      return true;
+    } catch (InterruptedException e) {
+      proc.destroy();
+      Thread.currentThread().interrupt();
+      throw new InterruptedIOException("Interrupted waiting for 'rm' of " +
+                                       normStr);
+    } catch (IOException e) {
+      log.error("Error reading from 'rm' process", e);
+      proc.destroy();
+      throw e;
+    }
   }
 
   private static File generateFile(String prefix, String suffix, File dir)
