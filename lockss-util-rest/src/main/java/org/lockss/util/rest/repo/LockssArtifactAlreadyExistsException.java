@@ -43,6 +43,14 @@ public class LockssArtifactAlreadyExistsException extends IOException  {
     this.artifactId = artifactId;
   }
 
+  // For testing only - string constructor is required for use with
+  // error injection
+  public LockssArtifactAlreadyExistsException(String msg) {
+    super(msg);
+    this.artifactId = new ArtifactIdentifier("testing_ns", "testing_auid",
+                                             "testing_url", 1);
+  }
+
   public ArtifactIdentifier getArtifactId() {
     return artifactId;
   }
