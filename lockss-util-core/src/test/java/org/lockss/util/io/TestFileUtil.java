@@ -296,6 +296,7 @@ public class TestFileUtil extends LockssTestCase5 {
     assertTrue(new File(d1, "d1f1").createNewFile());
     assertTrue(new File(d2, "d2f1").createNewFile());
     assertFalse(dir.delete());
+    assertTrue(dir.exists());
     assertTrue(FileUtil.delTree(dir));
     assertFalse(dir.exists());
   }
@@ -306,6 +307,134 @@ public class TestFileUtil extends LockssTestCase5 {
     File d1 = new File(dir, "foo");
     assertFalse(d1.exists());
     assertTrue(FileUtil.delTree(d1));
+  }
+
+  @Test
+  public void testFastDelTree() throws IOException {
+    File dir = getTempDir("deltreey");
+    File d1 = new File(dir, "foo");
+    assertTrue(d1.mkdir());
+    File d2 = new File(d1, "bar");
+    assertTrue(d2.mkdir());
+    assertTrue(new File(dir, "f1").createNewFile());
+    assertTrue(new File(d1, "d1f1").createNewFile());
+    assertTrue(new File(d2, "d2f1").createNewFile());
+    assertFalse(dir.delete());
+    assertTrue(dir.exists());
+    assertTrue(FileUtil.fastDelTree(dir));
+    assertFalse(dir.exists());
+  }
+
+  @Test
+  public void testFastDelTreeNoDir() throws IOException {
+    File dir = getTempDir("deltree");
+    File d1 = new File(dir, "foo");
+    assertFalse(d1.exists());
+    assertTrue(FileUtil.fastDelTree(d1));
+  }
+
+  @Test
+  public void testDelTreeFile() throws IOException {
+    File dir = getTempDir("fastdeltree");
+    File f1 = new File(dir, "f1");
+    assertTrue(f1.createNewFile());
+    FileUtil.delTree(f1);
+    assertFalse(f1.exists());
+    assertTrue(dir.exists());
+
+    // Currently legal to delTree() and regular file
+//     try {
+//       FileUtil.delTree(f1);
+//       fail("Should have thrown IllegalArgumentException");
+//     } catch (IllegalArgumentException e) {
+//       // Expected; pass-through
+//     }
+//     assertTrue(f1.exists());
+//     assertTrue(dir.exists());
+  }
+
+  @Test
+  public void testFastDelTreeFile() throws IOException {
+    File dir = getTempDir("fastdeltree");
+    File f1 = new File(dir, "f1");
+    assertTrue(f1.createNewFile());
+    assertTrue(FileUtil.fastDelTree(f1));
+    assertFalse(f1.exists());
+    // Only the named file should be gone
+    assertTrue(dir.exists());
+  }
+
+  @Test
+  public void testFastDelTreeDeepTree() throws IOException {
+    File dir = getTempDir("fastdeltree");
+    File deep = dir;
+    for (int ix = 0; ix < 10; ix++) {
+      deep = new File(deep, "d" + ix);
+      assertTrue(deep.mkdir());
+      assertTrue(new File(deep, "f" + ix).createNewFile());
+    }
+    File d0 = new File(dir, "d0");
+    assertTrue(FileUtil.fastDelTree(d0));
+    assertFalse(d0.exists());
+    assertTrue(dir.exists());
+  }
+
+  /** The 'rm' process is exec'ed directly, not through a shell, so
+   * shell metacharacters in the name must be harmless. */
+  @Test
+  public void testFastDelTreeMetaChars() throws IOException {
+    File dir = getTempDir("fastdeltree");
+    File odd = new File(dir, "a b;rm -rf $x*'\"");
+    assertTrue(odd.mkdir());
+    assertTrue(new File(odd, "f1").createNewFile());
+    assertTrue(FileUtil.fastDelTree(odd));
+    assertFalse(odd.exists());
+    assertTrue(dir.exists());
+  }
+
+  @Test
+  public void testFastDelTreeDanglingSymlink() throws IOException {
+    File dir = getTempDir("fastdeltree");
+    Path link = new File(dir, "link").toPath();
+    Files.createSymbolicLink(link, new File(dir, "nonexistent").toPath());
+    assertTrue(Files.exists(link, LinkOption.NOFOLLOW_LINKS));
+    assertTrue(FileUtil.fastDelTree(link.toFile()));
+    assertFalse(Files.exists(link, LinkOption.NOFOLLOW_LINKS));
+  }
+
+  /** Deleting a symlink must not delete what it points at */
+  @Test
+  public void testFastDelTreeSymlinkNotFollowed() throws IOException {
+    File dir = getTempDir("fastdeltree");
+    File target = new File(dir, "target");
+    assertTrue(target.mkdir());
+    File inTarget = new File(target, "f1");
+    assertTrue(inTarget.createNewFile());
+    Path link = new File(dir, "link").toPath();
+    Files.createSymbolicLink(link, target.toPath());
+    assertTrue(FileUtil.fastDelTree(link.toFile()));
+    assertFalse(Files.exists(link, LinkOption.NOFOLLOW_LINKS));
+    assertTrue(target.exists());
+    assertTrue(inTarget.exists());
+  }
+
+  @Test
+  public void testDelTreeIllegalPath() throws IOException {
+    String[] illegal = {"/", "/tmp/..", "tmp/../", "",
+      "..", ".", "../", "./", "../foo", "../foo/"};
+    for (String pathStr : illegal) {
+      Path path0 = Paths.get(pathStr);
+      try {
+	FileUtil.normalizeAndCheckDirToDelete(path0);
+	fail("normalizeAndCheckDirToDelete(\"" + pathStr + "\") should throw");
+      } catch (IllegalArgumentException e) {
+      }
+      try {
+ 	FileUtil.fastDelTree(path0);
+ 	fail("fastDelTree(\"" + pathStr + "\") should throw");
+      } catch (IllegalArgumentException e) {
+      }
+    }
   }
 
   @Test
@@ -330,6 +459,20 @@ public class TestFileUtil extends LockssTestCase5 {
     File d1 = new File(dir, "foo");
     assertFalse(d1.exists());
     assertFalse(FileUtil.emptyDir(d1));
+  }
+
+  @Test
+  public void testEmptyDirNotADir() throws IOException {
+    File dir = getTempDir("deltree");
+    File f1 = new File(dir, "f1");
+    assertTrue(f1.createNewFile());
+    try {
+      FileUtil.emptyDir(f1);
+      fail("Should have thrown IllegalArgumentException");
+    } catch (IllegalArgumentException e) {
+      // Expected; pass-through
+    }
+    assertTrue(f1.exists());
   }
 
   @Test
